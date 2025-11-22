@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Furat Abdulle · Iftiin Flow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-soft: #0f172a;
+      --card: #020617;
+      --text: #e5e7eb;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #0f172a, #020617 60%);
+      color: var(--text);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 16px 60px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0 4px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(to bottom, rgba(2,6,23,0.98), rgba(2,6,23,0.8), transparent);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 25% 20%, #f97316, #a855f7);
+      box-shadow: 0 0 18px rgba(248, 250, 252, 0.5);
+      border: 2px solid rgba(15,23,42,0.9);
+    }
+
+    .brand-text-title {
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      font-size: 15px;
+    }
+
+    .brand-text-sub {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      font-size: 13px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-link {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      opacity: 0.85;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .nav-link:hover {
+      background: rgba(15,23,42,0.9);
+      border-color: rgba(148, 163, 184, 0.7);
+      opacity: 1;
+    }
+
+    .nav-link-primary {
+      background: var(--accent);
+      color: #020617;
+      border-color: transparent;
+      font-weight: 500;
+    }
+
+    main {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    section {
+      scroll-margin-top: 80px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .section-title {
+      font-size: 26px;
+      font-weight: 600;
+      margin: 0 0 12px;
+    }
+
+    .section-sub {
+      font-size: 14px;
+      opacity: 0.9;
+      max-width: 620px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.3fr);
+      gap: 28px;
+      align-items: center;
+      padding-top: 8px;
+    }
+
+    @media (max-width: 830px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hero-title {
+      font-size: 32px;
+      line-height: 1.15;
+      margin: 0 0 10px;
+    }
+
+    .hero-highlight {
+      background: linear-gradient(120deg, #38bdf8, #a855f7, #f97316);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 14px;
+      opacity: 0.9;
+      max-width: 520px;
+    }
+
+    .hero-actions {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      color: var(--text);
+      transition: background 0.1s ease, transform 0.07s ease, box-shadow 0.1s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(15,23,42,0.7);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #020617;
+      border-color: transparent;
+      font-weight: 500;
+    }
+
+    .btn-outline {
+      background: transparent;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      font-size: 11px;
+      border-radius: 999px;
+      padding: 4px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15,23,42,0.9);
+      opacity: 0.95;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .card {
+      background: rgba(15,23,42,0.9);
+      border-radius: 18px;
+      padding: 14px 14px 16px;
+      border: 1px solid rgba(148,163,184,0.6);
+      font-size: 13px;
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+    }
+
+    .card p {
+      margin: 0 0 6px;
+      opacity: 0.9;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .list-clean {
+      padding-left: 18px;
+      margin: 6px 0 0;
+      font-size: 13px;
+    }
+
+    .list-clean li {
+      margin-bottom: 4px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 20px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 830px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .service-meta {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .service-price {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .tag {
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(56,189,248,0.5);
+    }
+
+    .booking-box {
+      background: rgba(15,23,42,0.95);
+      border-radius: 18px;
+      padding: 14px 14px 16px;
+      border: 1px dashed rgba(148,163,184,0.7);
+      font-size: 13px;
+    }
+
+    footer {
+      margin-top: 28px;
+      font-size: 11px;
+      opacity: 0.7;
+      text-align: center;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- HEADER -->
+    <header>
+      <div class="brand">
+        <div class="brand-logo"></div>
+        <div>
+          <div class="brand-text-title">Furat Abdulle</div>
+          <div class="brand-text-sub">Consultant · Founder of Iftiin Flow</div>
+        </div>
+      </div>
+      <nav>
+        <a class="nav-link" href="#about">About</a>
+        <a class="nav-link" href="#iftiin">Iftiin Flow</a>
+        <a class="nav-link" href="#services">Services</a>
+        <a class="nav-link" href="#portfolio">Portfolio</a>
+        <a class="nav-link nav-link-primary" href="#booking">Book a call</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero" id="top">
+        <div>
+          <p class="section-label">PORTFOLIO · IFTIIN FLOW</p>
+          <h1 class="hero-title">
+            AI, language & learning for people who want to
+            <span class="hero-highlight">change structures – not just tools.</span>
+          </h1>
+          <p class="hero-sub">
+            I’m Furat, a Data & AI consultant, educator and founder of
+            <strong>Iftiin Flow</strong> – a digital education space for BIPoC
+            professionals and social entrepreneurs who want to understand and use
+            AI strategically, without losing their political and ethical awareness.
+          </p>
+          <div class="hero-actions">
+            <!-- TODO: Replace with your real booking link -->
+            <a href="#booking">
+              <button class="btn btn-primary">
+                <span>Book an AI & Automation Strategy Call</span> ▸
+              </button>
+            </a>
+            <a href="#services">
+              <button class="btn btn-outline">
+                <span>Explore services</span>
+              </button>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-meta">
+          <div class="pill-row">
+            <div class="pill">AI Enablement & Literacy</div>
+            <div class="pill">BIPoC-centered perspective</div>
+            <div class="pill">Workshops · Strategy · Speaking</div>
+          </div>
+          <div class="card-grid">
+            <div class="card">
+              <span class="badge">For professionals</span>
+              <h3>Strategic clarity in a noisy AI world</h3>
+              <p>
+                Cut through hype and fear. We unpack AI in clear language,
+                connect it to your work and design practical next steps you can implement immediately.
+              </p>
+            </div>
+            <div class="card">
+              <span class="badge">For teams & organisations</span>
+              <h3>AI literacy with political awareness</h3>
+              <p>
+                Workshops that combine concrete tools with critical thinking:
+                who builds technology, who benefits, and how can we use it to open doors instead of closing them?
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABOUT FURAT -->
+      <section id="about">
+        <p class="section-label">ABOUT</p>
+        <h2 class="section-title">Who I am when I bring all my worlds together</h2>
+        <p class="section-sub">
+          I move between consulting, education and artistic work with language.
+          My background spans philosophy, educational sciences and several years in
+          Data & AI consulting – working with large organisations while building spaces
+          that centre BIPoC experiences.
+        </p>
+
+        <div class="two-col">
+          <div>
+            <ul class="list-clean">
+              <li>Data & AI Enablement consultant for enterprise clients in Europe.</li>
+              <li>Founder of <strong>Iftiin Flow</strong>, a platform for digital & AI literacy.</li>
+              <li>Facilitator and lecturer on knowledge, power and technology.</li>
+              <li>Spoken word artist and community builder in Black and migrant contexts.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="badge">What this means for you</div>
+            <p>
+              You don’t just get tool recommendations. You get someone who understands:
+            </p>
+            <ul class="list-clean">
+              <li>how organisations actually work,</li>
+              <li>how people learn and resist change,</li>
+              <li>and how power and bias show up in technology.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- IFTIIN FLOW -->
+      <section id="iftiin">
+        <p class="section-label">IFTIIN FLOW</p>
+        <h2 class="section-title">Iftiin Flow – light and movement in the digital noise</h2>
+        <p class="section-sub">
+          <strong>Iftiin</strong> means “light” in Somali. Iftiin Flow is the place
+          where clarity meets motion: a space for people who want to understand AI and
+          digital technologies deeply enough to use them for liberation, not just efficiency.
+        </p>
+
+        <div class="card-grid">
+          <div class="card">
+            <span class="badge">Who it’s for</span>
+            <p>
+              BIPoC professionals, social entrepreneurs and teams who:
+            </p>
+            <ul class="list-clean">
+              <li>want to work with AI without losing their values,</li>
+              <li>need orientation in a fragmented learning landscape,</li>
+              <li>and care about access, not gatekeeping.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="badge">What we do together</span>
+            <ul class="list-clean">
+              <li>Build digital and AI literacy step by step.</li>
+              <li>Translate AI into your sector and daily work.</li>
+              <li>Design strategies and workflows that free up time and energy.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="badge">How it feels</span>
+            <p>
+              Less overwhelm, more orientation. Less “everyone says I should use AI”,
+              more “I know exactly what to learn next and why”.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SERVICES -->
+      <section id="services">
+        <p class="section-label">SERVICES</p>
+        <h2 class="section-title">Work with me & Iftiin Flow</h2>
+        <p class="section-sub">
+          Below are core offerings that can be adapted for individuals, teams or organisations.
+          For specific requests, you can always reach out through the booking section.
+        </p>
+
+        <div class="services-grid">
+          <!-- SERVICE 1 -->
+          <div class="card">
+            <div class="service-meta">1:1 · Online · English or German</div>
+            <h3>AI & Automation Strategy Session (90 min)</h3>
+            <p>
+              We map your current work, identify realistic automation and AI use cases,
+              and design a concrete action plan for the next 4–6 weeks.
+            </p>
+            <div class="service-price">Suggested format: single deep-dive session, including follow-up summary.</div>
+            <div class="tags">
+              <span class="tag">knowledge workers</span>
+              <span class="tag">business owners</span>
+              <span class="tag">tool strategy</span>
+            </div>
+            <!-- TODO: Replace href with your real booking link -->
+            <a href="#booking">
+              <button class="btn btn-primary" style="margin-top:8px;">Book this session ▸</button>
+            </a>
+          </div>
+
+          <!-- SERVICE 2 -->
+          <div class="card">
+            <div class="service-meta">Teams · Remote or on-site</div>
+            <h3>AI Literacy & Digital Empowerment Workshop</h3>
+            <p>
+              A workshop that connects concrete tools (text, video, automation) with critical reflection:
+              what AI can do, what it can’t, and how your team can use it responsibly.
+            </p>
+            <div class="service-price">Custom length (2–4 hours) · tailored to your sector and team size.</div>
+            <div class="tags">
+              <span class="tag">HR & L&D</span>
+              <span class="tag">NGOs · social businesses</span>
+              <span class="tag">corporate teams</span>
+            </div>
+            <a href="#booking">
+              <button class="btn btn-outline" style="margin-top:8px;">Request a workshop ▸</button>
+            </a>
+          </div>
+
+          <!-- SERVICE 3 -->
+          <div class="card">
+            <div class="service-meta">Limited spots · Application-based</div>
+            <h3>1:1 Navigation for BIPoC in tech & impact work</h3>
+            <p>
+              Ongoing support to design a career and learning path that combines financial stability,
+              tech skills and political awareness in a way that makes sense for your reality.
+            </p>
+            <div class="service-price">Monthly format · mix of sessions, check-ins and async support.</div>
+            <div class="tags">
+              <span class="tag">BIPoC professionals</span>
+              <span class="tag">career & skill strategy</span>
+            </div>
+            <a href="#booking">
+              <button class="btn btn-outline" style="margin-top:8px;">Apply for a spot ▸</button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- PORTFOLIO -->
+      <section id="portfolio">
+        <p class="section-label">PORTFOLIO</p>
+        <h2 class="section-title">Selected work, talks & collaborations</h2>
+        <p class="section-sub">
+          A few snapshots of the work that informs Iftiin Flow and my consulting practice.
+          Full portfolio and references are available on request.
+        </p>
+
+        <div class="card-grid">
+          <div class="card">
+            <span class="badge">Enterprise · Data & AI Enablement</span>
+            <h3>AI & analytics enablement for large organisations</h3>
+            <p>
+              Designing learning journeys, communities and formats that made AI and analytics
+              accessible for hundreds of employees in complex organisations.
+            </p>
+          </div>
+          <div class="card">
+            <span class="badge">Community & networks</span>
+            <h3>Women’s networks & BIPoC communities</h3>
+            <p>
+              Co-leading women’s networks and co-creating spaces like spoken word events and
+              AI literacy formats for Black women in tech and beyond.
+            </p>
+          </div>
+          <div class="card">
+            <span class="badge">Education</span>
+            <h3>Teaching on knowledge, power and technology</h3>
+            <p>
+              University-level seminars that unpack how knowledge is produced and who is centred
+              or excluded – now translated into digital and AI contexts.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOOKING -->
+      <section id="booking">
+        <p class="section-label">BOOKING</p>
+        <h2 class="section-title">Ready to work together?</h2>
+        <p class="section-sub">
+          You can either book a strategy session directly or send an enquiry with your context.
+          For organisations, please include a short note on your sector and team size.
+        </p>
+
+        <div class="two-col">
+          <div class="booking-box">
+            <div class="badge">Option 1 · Direct booking</div>
+            <p>
+              Use the button below to choose a time for an online strategy call.
+              The session is confirmed once you receive a calendar invite.
+            </p>
+            <!-- TODO: Replace href with your embedded Calendly / TidyCal link -->
+            <a href="https://calendly.com/YOUR-BOOKING-LINK" target="_blank" rel="noreferrer">
+              <button class="btn btn-primary" style="margin-top:8px;">
+                Open booking calendar ▸
+              </button>
+            </a>
+            <p style="font-size:11px; opacity:0.8; margin-top:6px;">
+              You’ll be redirected to an external booking page (Calendly or similar).
+            </p>
+          </div>
+
+          <div class="booking-box">
+            <div class="badge">Option 2 · Send an enquiry</div>
+            <p style="margin-bottom:6px;">
+              Prefer context first? Send an email with:
+            </p>
+            <ul class="list-clean">
+              <li>a few lines about you or your organisation,</li>
+              <li>what you’re looking for (session, workshop, ongoing support),</li>
+              <li>and any timelines or constraints.</li>
+            </ul>
+            <!-- TODO: Replace with your real email -->
+            <p style="margin-top:8px;">
+              Email: <a href="mailto:hello@iftiinflow.com"><strong>hello@iftiinflow.com</strong></a>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      © <span id="year"></span> Furat Abdulle · Iftiin Flow
+    </footer>
+  </div>
+
+  <script>
+    // Smooth scroll for internal links
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener("click", (e) => {
+        const targetId = link.getAttribute("href").substring(1);
+        const target = document.getElementById(targetId);
+        if (target) {
+          e.preventDefault();
+          window.scrollTo({
+            top: target.offsetTop - 70,
+            behavior: "smooth",
+          });
+        }
+      });
+    });
+
+    // current year
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
