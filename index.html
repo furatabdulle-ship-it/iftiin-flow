@@ -7,24 +7,25 @@
 
   <style>
     :root {
-      --bg-page: #fdfcfb;
-      --bg-hero: linear-gradient(135deg, #fffaf0 0%, #fefce8 45%, #f9fafb 100%);
-      --bg-section: #ffffff;
-      --bg-soft: #f5f5f4;
+      --bg-page: #f5f1e9;
+      --bg-light: #f9f5ee;
+      --bg-card: #ffffff;
+      --bg-dark: #111111;
+      --bg-gradient: radial-gradient(circle at top left, #fef3c7 0, #f5f1e9 40%, #f5f1e9 100%);
 
-      --text-main: #0f172a;
+      --text-main: #111827;
       --text-soft: #4b5563;
       --text-muted: #9ca3af;
 
       --accent: #f6b81b;
       --accent-strong: #d97706;
-      --accent-soft: #fff7db;
 
       --border-subtle: #e5e7eb;
-      --radius-lg: 26px;
+      --radius-xl: 32px;
+      --radius-lg: 24px;
       --radius-md: 18px;
-      --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.06);
-      --shadow-card: 0 18px 40px rgba(15, 23, 42, 0.05);
+      --shadow-soft: 0 26px 70px rgba(15, 23, 42, 0.18);
+      --shadow-card: 0 18px 40px rgba(15, 23, 42, 0.12);
     }
 
     * {
@@ -51,21 +52,26 @@
       padding: 18px 18px 64px;
     }
 
-    /* HEADER / NAV – inspiriert von solrashidi.com */
+    /* TYPOGRAPHY */
+    .serif {
+      font-family: "Georgia", "Times New Roman", serif;
+    }
+
+    /* HEADER */
 
     header {
       position: sticky;
       top: 0;
-      z-index: 50;
-      background: rgba(253, 252, 251, 0.96);
+      z-index: 40;
+      background: rgba(245, 241, 233, 0.96);
       backdrop-filter: blur(18px);
-      border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+      border-bottom: 1px solid rgba(229, 231, 235, 0.7);
     }
 
     .nav-inner {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 10px 18px 8px;
+      padding: 12px 18px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -79,12 +85,12 @@
     }
 
     .brand-mark {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 999px;
       overflow: hidden;
       border: 2px solid #facc15;
-      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.3);
       background: #fefce8;
       display: flex;
       align-items: center;
@@ -100,14 +106,13 @@
       display: block;
     }
 
-    .brand-text-title {
-      font-weight: 650;
-      letter-spacing: 0.14em;
-      font-size: 11px;
-      text-transform: uppercase;
+    .brand-name {
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 20px;
+      letter-spacing: 0.03em;
     }
 
-    .brand-text-sub {
+    .brand-tagline {
       font-size: 11px;
       color: var(--text-soft);
     }
@@ -115,9 +120,8 @@
     nav {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       font-size: 13px;
-      justify-content: flex-end;
       align-items: center;
     }
 
@@ -125,7 +129,7 @@
       padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid transparent;
-      color: #6b7280;
+      color: #374151;
       cursor: pointer;
       background: transparent;
       transition: background 0.12s ease, border-color 0.12s ease,
@@ -133,23 +137,24 @@
     }
 
     .nav-link:hover {
-      background: #ffffff;
-      border-color: rgba(229, 231, 235, 1);
+      background: #fefdfb;
+      border-color: rgba(209, 213, 219, 1);
       color: #111827;
       transform: translateY(-1px);
     }
 
     .nav-link-primary {
-      background: #111827;
-      color: #f9fafb;
-      border-color: #111827;
+      background: #111111;
+      color: #fefdfb;
+      border-color: #111111;
+      border-radius: 999px;
+      padding: 8px 14px;
       font-weight: 500;
-      padding-inline: 14px;
     }
 
     .nav-link-primary:hover {
-      background: #020617;
-      border-color: #020617;
+      background: #000000;
+      border-color: #000000;
     }
 
     @media (max-width: 860px) {
@@ -158,68 +163,31 @@
         align-items: flex-start;
       }
       nav {
-        justify-content: flex-start;
         overflow-x: auto;
       }
     }
 
-    /* GENERISCHE STRUKTUR */
+    /* HERO */
 
-    main {
-      margin-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-    }
-
-    section {
-      scroll-margin-top: 88px;
-    }
-
-    .section-label {
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      text-align: center;
-    }
-
-    .section-title {
-      font-size: clamp(24px, 3.4vw, 30px);
-      font-weight: 650;
-      margin: 0 0 10px;
-      letter-spacing: -0.02em;
-      text-align: center;
-    }
-
-    .section-sub {
-      font-size: 14px;
-      color: var(--text-soft);
-      max-width: 720px;
-      line-height: 1.7;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .section-shell {
-      margin-top: 18px;
-    }
-
-    /* HERO – stärker zentriert, viel Luft */
-
-    .hero-wrap {
-      border-radius: 32px;
-      background: var(--bg-hero);
+    .hero {
+      margin-top: 28px;
+      border-radius: var(--radius-xl);
+      background: var(--bg-gradient);
       box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(229, 231, 235, 0.7);
-      padding: 28px 26px 28px;
+      padding: 30px 28px 32px;
     }
 
-    .hero-inner {
-      max-width: 840px;
-      margin: 0 auto;
-      text-align: center;
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 26px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .hero-kicker {
@@ -227,45 +195,50 @@
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin: 0 0 10px;
+      margin: 0 0 12px;
     }
 
     .hero-title {
-      font-size: clamp(28px, 4vw, 36px);
-      line-height: 1.15;
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: clamp(32px, 4.2vw, 40px);
+      line-height: 1.05;
       margin: 0 0 12px;
       letter-spacing: -0.03em;
+    }
+
+    .hero-highlight-italic {
+      font-style: italic;
+      font-weight: 500;
     }
 
     .hero-sub {
       font-size: 14px;
       color: var(--text-soft);
       line-height: 1.8;
-      max-width: 720px;
-      margin: 0 auto;
+      max-width: 520px;
+      margin: 0 0 16px;
     }
 
     .hero-actions {
-      margin-top: 18px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      justify-content: center;
+      margin-top: 8px;
     }
 
     .btn {
       border-radius: 999px;
       padding: 10px 18px;
       font-size: 13px;
-      border: 1px solid #111827;
-      background: #111827;
-      color: #f9fafb;
+      border: 1px solid #111111;
+      background: #111111;
+      color: #fefdfb;
       display: inline-flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
       transition: background 0.12s ease, transform 0.06s ease,
-        box-shadow 0.1s ease, border-color 0.1s ease;
+        box-shadow 0.12s ease, border-color 0.1s ease;
       white-space: nowrap;
     }
 
@@ -275,51 +248,118 @@
 
     .btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.3);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35);
     }
 
-    .btn-primary {
-      background: var(--accent-strong);
-      border-color: var(--accent-strong);
-      color: #111827;
+    .btn-secondary {
+      background: #fdf7ec;
+      color: #111111;
+      border-color: #e5e7eb;
     }
 
-    .btn-primary:hover {
-      background: #b45309;
-      border-color: #b45309;
-      color: #fefce8;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border-color: var(--border-subtle);
-      color: #111827;
-    }
-
-    .btn-ghost:hover {
+    .btn-secondary:hover {
       background: #ffffff;
     }
 
     .hero-note {
-      margin-top: 18px;
       font-size: 13px;
       color: var(--text-soft);
-      max-width: 640px;
-      margin-left: auto;
-      margin-right: auto;
+      margin-top: 14px;
+      max-width: 520px;
     }
 
     .hero-note strong {
       font-weight: 600;
     }
 
-    /* LAYOUTS */
+    .hero-image-wrap {
+      border-radius: 40px;
+      background: #111111;
+      padding: 4px;
+      display: flex;
+      align-items: stretch;
+    }
+
+    .hero-image-inner {
+      position: relative;
+      border-radius: 36px;
+      overflow: hidden;
+      background: #111827;
+      flex: 1;
+    }
+
+    .hero-image-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    .hero-tag {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      background: rgba(253, 250, 245, 0.96);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+    }
+
+    .hero-tag-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    /* GENERIC SECTION STYLES */
+
+    section {
+      scroll-margin-top: 96px;
+    }
+
+    .section-header {
+      text-align: left;
+      max-width: 640px;
+      margin: 0 auto 8px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: clamp(24px, 3.2vw, 30px);
+      font-weight: 500;
+      margin: 0 0 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .section-sub {
+      font-size: 14px;
+      color: var(--text-soft);
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .section-body {
+      margin-top: 18px;
+    }
 
     .two-col {
       display: grid;
       grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
       gap: 20px;
-      margin-top: 18px;
       align-items: flex-start;
     }
 
@@ -327,34 +367,6 @@
       .two-col {
         grid-template-columns: 1fr;
       }
-    }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-      margin-top: 18px;
-    }
-
-    .card {
-      background: var(--bg-section);
-      border-radius: var(--radius-md);
-      padding: 16px 16px 18px;
-      border: 1px solid rgba(229, 231, 235, 0.9);
-      box-shadow: var(--shadow-card);
-      font-size: 13px;
-    }
-
-    .card h3 {
-      margin: 0 0 6px;
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .card p {
-      margin: 0;
-      color: var(--text-soft);
-      line-height: 1.7;
     }
 
     .list-clean {
@@ -368,48 +380,117 @@
       margin-bottom: 4px;
     }
 
-    .pill-list {
-      font-size: 13px;
-      color: var(--text-soft);
-      margin-top: 6px;
-    }
-
-    /* WORK WITH / BOOKING */
-
-    .booking-grid {
-      margin-top: 18px;
+    .card-grid-2 {
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
     }
 
-    @media (max-width: 860px) {
-      .booking-grid {
+    @media (max-width: 900px) {
+      .card-grid-2 {
         grid-template-columns: 1fr;
       }
     }
 
-    .booking-box {
-      background: var(--bg-section);
-      border-radius: var(--radius-md);
+    /* SERVICE CARDS HALDEN-STYLE */
+
+    .service-card {
+      border-radius: 28px;
+      padding: 22px 20px 20px;
+      box-shadow: var(--shadow-card);
+      color: #fefdfb;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 220px;
+    }
+
+    .service-card h3 {
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 22px;
+      font-weight: 500;
+      margin: 0 0 8px;
+    }
+
+    .service-card p {
+      font-size: 14px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .service-footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .service-card.dark {
+      background: var(--bg-dark);
+    }
+
+    .service-card.dark p {
+      color: #e5e7eb;
+    }
+
+    .service-card.light {
+      background: radial-gradient(circle at top left, #f97316 0, #f59e0b 35%, #b45309 100%);
+    }
+
+    .service-btn {
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      border: 1px solid #fefdfb;
+      background: #fefdfb;
+      color: #111111;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .service-btn.dark-outline {
+      background: transparent;
+      color: #fefdfb;
+    }
+
+    .badge-icon {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+
+    /* SIMPLE CARD */
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
       padding: 16px 16px 18px;
       border: 1px solid rgba(229, 231, 235, 0.9);
-      box-shadow: var(--shadow-card);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
       font-size: 13px;
     }
 
-    .booking-label {
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-muted);
+    .card h3 {
+      font-family: "Georgia", "Times New Roman", serif;
+      margin-top: 0;
+      font-size: 18px;
       margin-bottom: 6px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--text-soft);
+      line-height: 1.7;
     }
 
     /* FOOTER */
 
     footer {
-      margin-top: 36px;
+      margin-top: 40px;
       font-size: 11px;
       color: var(--text-muted);
       text-align: center;
@@ -438,16 +519,15 @@
           <img src="furat_abdulle.png" alt="Portrait of Furat Abdulle" class="brand-photo" />
         </div>
         <div>
-          <div class="brand-text-title">IFTIIN FLOW</div>
-          <div class="brand-text-sub">Technology · Clarity · Access</div>
+          <div class="brand-name serif">Iftiin Flow</div>
+          <div class="brand-tagline">Technology · Clarity · Access</div>
         </div>
       </div>
       <nav>
-        <a class="nav-link" href="#what-we-do">What we do</a>
-        <a class="nav-link" href="#why">Why this matters</a>
+        <a class="nav-link" href="#what-we-do">Overview</a>
+        <a class="nav-link" href="#why">Why it matters</a>
         <a class="nav-link" href="#approach">Approach</a>
         <a class="nav-link" href="#services">Services</a>
-        <a class="nav-link" href="#contributions">Past contributions</a>
         <a class="nav-link" href="#founder">Founder</a>
         <a class="nav-link nav-link-primary" href="#work-with">Work with Iftiin Flow</a>
       </nav>
@@ -458,53 +538,64 @@
   <div class="shell">
     <main>
       <!-- HERO -->
-      <section id="top">
-        <div class="hero-wrap">
-          <div class="hero-inner">
-            <p class="hero-kicker">IFTIIN FLOW</p>
-            <h1 class="hero-title">
-              Digital & AI for social innovations.
+      <section id="top" class="hero">
+        <div class="hero-grid">
+          <div>
+            <p class="hero-kicker">DIGITAL · AI · SOCIAL INNOVATION</p>
+            <h1 class="hero-title serif">
+              We help rethink<br />
+              <span class="hero-highlight-italic">how people use technology for access.</span>
             </h1>
             <p class="hero-sub">
-              Iftiin Flow empowers BIPoC professionals and social entrepreneurs to understand and
-              use digital and AI technologies — for social innovation that builds
-              awareness and transforms structures so that access becomes possible for all.
+              Iftiin Flow empowers BIPoC professionals and social entrepreneurs to understand
+              and strategically use digital and AI technologies — for social innovation that
+              builds awareness and transforms structures so that access becomes possible for all.
             </p>
             <div class="hero-actions">
               <a href="#work-with">
-                <button class="btn btn-primary">
+                <button class="btn">
                   <span class="icon">⚡</span>
                   <span>Work With Iftiin Flow</span>
                 </button>
               </a>
               <a href="#founder">
-                <button class="btn btn-ghost">
+                <button class="btn btn-secondary">
                   <span class="icon">▸</span>
                   <span>About the Founder</span>
                 </button>
               </a>
             </div>
-            <div class="hero-note">
-              <strong>Iftiin</strong> means “light” in Somali — clarity in complex spaces.
-              <br />
+            <p class="hero-note">
+              <strong>Iftiin</strong> means “light” in Somali — clarity in complex spaces.<br />
               <strong>Flow</strong> represents movement — the shift from understanding to action.
+            </p>
+          </div>
+
+          <div class="hero-image-wrap">
+            <div class="hero-image-inner">
+              <!-- Du kannst hier später ein anderes Portrait einbauen -->
+              <img src="furat_abdulle.png" alt="Furat Abdulle working with clients" />
+              <div class="hero-tag">
+                <span class="hero-tag-dot"></span>
+                <span>AI, justice & social innovation</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- WHAT WE DO -->
-      <section id="what-we-do">
-        <p class="section-label">WHAT WE DO</p>
-        <h2 class="section-title">
-          We help people understand technology so they can shape meaningful change.
-        </h2>
-        <p class="section-sub">
-          Iftiin Flow supports professionals, creatives, and social innovators who want to use digital and AI
-          technologies with intention — not overwhelm, pressure, or hype.
-        </p>
+      <section id="what-we-do" style="margin-top:34px;">
+        <div class="section-header">
+          <p class="section-label">WHAT WE DO</p>
+          <h2 class="section-title">We help people understand technology so they can shape meaningful change.</h2>
+          <p class="section-sub">
+            Iftiin Flow supports professionals, creatives, and social innovators who want to use digital and AI
+            technologies with intention — not overwhelm, pressure, or hype.
+          </p>
+        </div>
 
-        <div class="section-shell">
+        <div class="section-body">
           <div class="two-col">
             <div>
               <p class="pill-list">We focus on:</p>
@@ -517,33 +608,30 @@
               </ul>
             </div>
             <div class="card">
+              <h3>Digital clarity as a starting point</h3>
               <p>
-                We focus on people.<br />
-                On guidance.<br />
-                On access.
+                We focus on people. On guidance. On access.<br /><br />
+                Our mission is simple: to make digital knowledge accessible, so more
+                people can participate, create, and lead.
               </p>
-            <button class="btn btn-primary">
-                  <span class="icon">⚡</span>
-                  <span>Work With Iftiin Flow</span>
-                </button>
             </div>
           </div>
         </div>
       </section>
 
       <!-- WHY THIS MATTERS -->
-      <section id="why">
-        <p class="section-label">WHY THIS MATTERS</p>
-        <h2 class="section-title">
-          Technology shapes access.
-        </h2>
-        <p class="section-sub">
-          AI determines who gets seen, supported, or overlooked. Digital tools decide whose ideas move forward —
-          and who is made invisible. These structures aren’t neutral. And they don’t change on their own. They are
-          changed by people who understand them.
-        </p>
+      <section id="why" style="margin-top:40px;">
+        <div class="section-header">
+          <p class="section-label">WHY THIS MATTERS</p>
+          <h2 class="section-title">Technology shapes access. Access shapes opportunity. Opportunity shapes futures.</h2>
+          <p class="section-sub">
+            AI determines who gets seen, supported, or overlooked. Digital tools decide whose ideas move forward —
+            and who is made invisible. These structures aren’t neutral. And they don’t change on their own. They are
+            changed by people who understand them.
+          </p>
+        </div>
 
-        <div class="section-shell">
+        <div class="section-body">
           <div class="two-col">
             <div>
               <p class="pill-list">
@@ -557,79 +645,162 @@
               </ul>
             </div>
             <div class="card">
+              <h3>Technology with people at the center</h3>
               <p>
-                We believe: technology becomes powerful when people understand it.
+                We believe: technology becomes powerful when people understand it — and when those most affected by
+                digital decisions are equipped to shape them.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-  
-      </section>
+      <!-- APPROACH -->
+      <section id="approach" style="margin-top:40px;">
+        <div class="section-header">
+          <p class="section-label">OUR APPROACH</p>
+          <h2 class="section-title">Clarity. Context. Awareness. Social innovation.</h2>
+          <p class="section-sub">
+            Our approach is human, reflective, accessible — and rooted in justice.
+          </p>
+        </div>
 
-      <!-- SERVICES -->
-      <section id="services">
-        <p class="section-label">SERVICES</p>
-        <h2 class="section-title">How you can work with Iftiin Flow</h2>
-        <p class="section-sub">
-          All services are designed to support people and initiatives using technology for social innovation and
-          access.
-        </p>
-
-        <div class="section-shell">
-          <div class="card-grid">
-            <!-- Service 1 -->
+        <div class="section-body">
+          <div class="card-grid-2">
             <div class="card">
-              <h3>1. AI & Digital Clarity Sessions (1:1)</h3>
-              <p>
-                For professionals/social innovators who want to use technology easier and faster.
-              </p>
-              <p class="pill-list">You will:</p>
-              <ul class="list-clean">
-          
-                <li>explore digital and AI tools that actually support your goals,</li>
-                <li>build confidence navigating digital systems</li>
-                <li>reduce fear and confusion around new technologies</li>
-              </ul>
-         <button class="btn btn-primary">
-                  <span class="icon">⚡</span>
-                  <span>Book a Meeting</span>
-                </button>
+              <h3>1. Understand</h3>
+              <p>We break down digital and AI concepts into grounded, human language so any person can follow.</p>
             </div>
-
-            <!-- Service 2 -->
             <div class="card">
-              <h3>3. Talks & Speaking Engagements</h3>
-              <p>
-                Thoughtful talks that connect technology, justice, and social transformation.
-              </p>
-              <p class="pill-list">Signature topic:</p>
-              <ul class="list-clean">
-                <li>AI for Social Innovations</li>
-                 <li>AI & Intersectionality</li>
-                 <li>Digital & AI Enablement</li>
-              </ul>
-              <p style="margin-top:8px;">
-                For: conferences, NGOs, community events, educational institutions.
-              </p>
+              <h3>2. Contextualize</h3>
+              <p>We examine how technology intersects with identity, power, access, and society.</p>
             </div>
- <button class="btn btn-primary">
-                  <span class="icon">⚡</span>
-                  <span>Work With Iftiin Flow</span>
-                </button>
+            <div class="card">
+              <h3>3. Strategize</h3>
+              <p>We help purpose-driven people use digital tools in ways that align with their mission and community impact.</p>
+            </div>
+            <div class="card">
+              <h3>4. Act</h3>
+              <p>We provide frameworks and methods that turn insight into sustainable action.</p>
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- SERVICES – 2 KACHELN WIE IM TEMPLATE -->
+      <section id="services" style="margin-top:44px;">
+        <div class="section-header">
+          <p class="section-label">SERVICES</p>
+          <h2 class="section-title">Here’s how we begin working together.</h2>
+          <p class="section-sub">
+            Two entry points designed for people and organisations who want to use AI and digital tools with clarity,
+            ethics, and social impact in mind.
+          </p>
+        </div>
 
+        <div class="section-body">
+          <div class="card-grid-2">
+            <!-- SERVICE 1: AI & Digital Clarity Sessions -->
+            <div class="service-card dark">
+              <div>
+                <div class="badge-icon">🗓</div>
+                <h3>AI & Digital Clarity Sessions (1:1)</h3>
+                <p>
+                  For professionals who want to understand AI without being overwhelmed. We unpack your
+                  digital reality, map relevant tools, and design next steps that match your values and capacity.
+                </p>
+              </div>
+              <div class="service-footer">
+                <span>For individuals & professionals ready to think clearly about AI.</span>
+                <a href="#work-with">
+                  <button class="service-btn">Book a clarity session →</button>
+                </a>
+              </div>
+            </div>
 
-      <!-- ABOUT THE FOUNDER -->
-      <section id="founder">
-        <p class="section-label">ABOUT THE FOUNDER</p>
-        <h2 class="section-title">Furat Abdulle – Founder of Iftiin Flow</h2>
+            <!-- SERVICE 2: Talks & Speaking -->
+            <div class="service-card light">
+              <div>
+                <div class="badge-icon">🎤</div>
+                <h3>Talks & Speaking Engagements</h3>
+                <p>
+                  Thoughtful talks that connect technology, justice, and social transformation. Signature topic:
+                  <strong>AI for Social Innovations</strong>, tailored for conferences, NGOs, communities, and
+                  educational spaces.
+                </p>
+              </div>
+              <div class="service-footer">
+                <span>For events that want depth, clarity, and accessibility.</span>
+                <a href="#work-with">
+                  <button class="service-btn dark-outline">See speaking options →</button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <div class="section-shell">
+      <!-- PAST CONTRIBUTIONS -->
+      <section id="contributions" style="margin-top:44px;">
+        <div class="section-header">
+          <p class="section-label">PAST CONTRIBUTIONS</p>
+          <h2 class="section-title">Selected talks, workshops & community work.</h2>
+        </div>
+
+        <div class="section-body">
+          <div class="card-grid-2">
+            <div class="card">
+              <h3>Black Girls in Tech Summit 2025 — Speaker & Workshop Lead</h3>
+              <p>
+                Workshop: “AI & Automation for Beginners” — a community-centered, clarity-first introduction to AI,
+                empowering Black women to use digital tools confidently and intentionally.
+              </p>
+              <p style="margin-top:6px;">
+                <a href="#" style="text-decoration:underline;">Get guide here</a>
+              </p>
+            </div>
+
+            <div class="card">
+              <h3>Keynote — AI & Intersectionality</h3>
+              <p>
+                Explored how AI influences power, identity, and opportunity — and how intersectional thinking is
+                essential for digital justice.
+              </p>
+              <p style="margin-top:6px;">
+                <a href="#" style="text-decoration:underline;">See engagement here</a>
+              </p>
+            </div>
+
+            <div class="card">
+              <h3>Community Building</h3>
+              <p>
+                Designed and enabled communities of thousands — supporting BIPoC professionals, youth, and emerging
+                leaders with access to knowledge, networks, and opportunities.
+              </p>
+            </div>
+
+            <div class="card">
+              <h3>IT & AI Experience</h3>
+              <p>
+                Guided organizations in understanding AI, digital trends, and responsible technology — always with a
+                people-first perspective.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOUNDER -->
+      <section id="founder" style="margin-top:44px;">
+        <div class="section-header">
+          <p class="section-label">ABOUT THE FOUNDER</p>
+          <h2 class="section-title">Furat Abdulle — Founder of Iftiin Flow</h2>
+          <p class="section-sub">
+            Educator, advisor, community builder.
+          </p>
+        </div>
+
+        <div class="section-body">
           <div class="two-col">
             <div>
               <p>
@@ -638,44 +809,59 @@
                 BIPoC-centered spaces.
               </p>
               <p style="margin-top:8px;">
-                My academic background in digital humanities, philosophy, and educational sciences gives me a grounding
+                My academic background in philosophy, educational sciences, and digital humanities gives me a grounding
                 in critical thinking, while my lived experience as a Black Muslim woman in tech shapes my approach to
-                shape and build spaces to combine access and innovation with technology.
+                justice, clarity, and access.
               </p>
               <p style="margin-top:8px;">
-                I created Iftiin Flow because I believe: technology can enablem people and communities.
+                I created Iftiin Flow because I believe: technology should support people — not obscure them,
+                overwhelm them, or exclude them.
               </p>
               <p style="margin-top:8px;">
                 Through advisory work, workshops, and public education, I help individuals and communities approach
                 technology with confidence, understanding, and intention.
               </p>
             </div>
-          
+            <div class="card">
+              <h3>Our values</h3>
+              <ul class="list-clean">
+                <li>Clarity over confusion.</li>
+                <li>Access over gatekeeping.</li>
+                <li>Awareness over hype.</li>
+                <li>Intention over speed.</li>
+                <li>Technology as a tool for social change.</li>
+              </ul>
+              <p style="margin-top:8px;">
+                We believe in technology that lifts people.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- WORK WITH IFTIIN FLOW -->
-      <section id="work-with">
-        <p class="section-label">WORK WITH IFTIIN FLOW</p>
-        <h2 class="section-title">Guidance rooted in clarity, justice, and social innovation.</h2>
-        <p class="section-sub">
-          If you are navigating AI, starting a purpose-driven project, or exploring digital tools with intention —
-          Iftiin Flow offers support through advisory work, workshops, and speaking.
-        </p>
+      <!-- WORK WITH -->
+      <section id="work-with" style="margin-top:44px;">
+        <div class="section-header">
+          <p class="section-label">WORK WITH IFTIIN FLOW</p>
+          <h2 class="section-title">Guidance rooted in clarity, justice, and social innovation.</h2>
+          <p class="section-sub">
+            If you are navigating AI, starting a purpose-driven project, or exploring digital tools with intention —
+            Iftiin Flow offers support through advisory work, workshops, and speaking.
+          </p>
+        </div>
 
-        <div class="section-shell">
+        <div class="section-body">
           <div class="booking-grid">
             <div class="booking-box">
               <div class="booking-label">BOOK AN ADVISORY SESSION</div>
               <p>
                 For 1:1 AI & digital clarity sessions or social innovation strategy support.
               </p>
-              <!-- TODO: replace href with real link -->
-              <a href="https://calendly.com/furat-abdulle-iftiin-flow/30min" target="_blank" rel="noreferrer">
-                <button class="btn btn-primary" style="margin-top:8px;">
+              <!-- TODO: deinen echten Calendly-Link einsetzen -->
+              <a href="https://calendly.com/YOUR-BOOKING-LINK" target="_blank" rel="noreferrer">
+                <button class="btn" style="margin-top:8px;">
                   <span class="icon">🗓</span>
-                  <span>Book a Session</span>
+                  <span>Book an Advisory Session</span>
                 </button>
               </a>
             </div>
@@ -687,14 +873,14 @@
                 your event or initiative.
               </p>
               <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
-                <a href="mailto:furat-abdulle@iftiin-flow.com">
-                  <button class="btn btn-ghost">
-                    <span class="icon">✉</span>
+                <a href="mailto:hello@iftiinflow.com">
+                  <button class="btn btn-secondary">
+                    <span class="icon">🎤</span>
                     <span>Request Speaking</span>
                   </button>
                 </a>
-                <a href="mailto:furat-abdulle@iftiin-flow.com">
-                  <button class="btn btn-ghost">
+                <a href="mailto:hello@iftiinflow.com">
+                  <button class="btn btn-secondary">
                     <span class="icon">✎</span>
                     <span>Contact</span>
                   </button>
@@ -711,7 +897,7 @@
         <a href="#founder">About</a>
         <a href="#services">Services</a>
         <a href="#contributions">Speaking</a>
-        <a href="#services">Resources</a>
+        <a href="#what-we-do">Resources</a>
         <a href="#work-with">Contact</a>
         <a href="#">Privacy &amp; Legal</a>
       </div>
@@ -729,7 +915,7 @@
         if (!target) return;
         e.preventDefault();
         window.scrollTo({
-          top: target.offsetTop - 80,
+          top: target.offsetTop - 90,
           behavior: "smooth",
         });
       });
@@ -740,5 +926,3 @@
   </script>
 </body>
 </html>
-
-
