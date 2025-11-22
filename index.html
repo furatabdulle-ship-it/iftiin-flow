@@ -4,25 +4,25 @@
   <meta charset="UTF-8" />
   <title>Furat Abdulle · Iftiin Flow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <style>
     :root {
-      --bg: #faf5e7;
-      --bg-accent: radial-gradient(circle at top left, #fef9c3, #fffbeb 45%, #ffffff 80%);
-      --text-main: #111827;
+      --bg-page: #f9fafb;
+      --bg-surface: #ffffff;
+      --bg-soft: #f3f4f6;
+
+      --text-main: #0f172a;
       --text-soft: #4b5563;
+      --text-muted: #9ca3af;
+
+      --accent: #f59e0b;          /* amber-500 */
+      --accent-strong: #d97706;   /* amber-600 */
+      --accent-soft: #fef3c7;     /* amber-100 */
+
       --border-subtle: #e5e7eb;
-      --card-bg: #ffffff;
-
-      /* Yellow / warm accent */
-      --accent: #fbbf24; /* amber-400 */
-      --accent-soft: rgba(251, 191, 36, 0.12);
-      --accent-strong: linear-gradient(135deg, #facc15, #f59e0b, #f97316);
-      --accent-pill: linear-gradient(135deg, #fef9c3, #fffbeb);
-
-      --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.08);
       --radius-lg: 24px;
       --radius-md: 16px;
+      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.06);
+      --shadow-card: 0 12px 30px rgba(15, 23, 42, 0.05);
     }
 
     * {
@@ -34,7 +34,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg-accent);
+      background: radial-gradient(circle at top, #fef9c3, #f9fafb 40%, #f9fafb 100%);
       color: var(--text-main);
     }
 
@@ -43,10 +43,10 @@
       text-decoration: none;
     }
 
-    .page {
-      max-width: 1120px;
+    .shell {
+      max-width: 1040px;
       margin: 0 auto;
-      padding: 18px 16px 60px;
+      padding: 16px 16px 56px;
     }
 
     /* HEADER / NAV */
@@ -55,22 +55,15 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      padding: 8px 0 10px;
-      margin-bottom: 8px;
-      backdrop-filter: blur(18px);
-      background: linear-gradient(
-        to bottom,
-        rgba(252, 250, 245, 0.95),
-        rgba(252, 250, 245, 0.78),
-        transparent
-      );
-      border-bottom: 1px solid rgba(229, 231, 235, 0.7);
+      background: rgba(249, 250, 251, 0.94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(229, 231, 235, 0.8);
     }
 
     .nav-inner {
-      max-width: 1120px;
+      max-width: 1040px;
       margin: 0 auto;
-      padding: 6px 16px 0;
+      padding: 10px 16px 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -83,35 +76,29 @@
       gap: 10px;
     }
 
-    .brand-logo {
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      background: conic-gradient(
-        from 180deg,
-        #facc15,
-        #f97316,
-        #fb923c,
-        #facc15
-      );
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid rgba(248, 250, 252, 1);
+      background: linear-gradient(135deg, #fbbf24, #f97316);
       position: relative;
       overflow: hidden;
-      box-shadow: 0 10px 24px rgba(248, 181, 56, 0.6);
+      box-shadow: 0 10px 24px rgba(248, 181, 56, 0.5);
     }
 
-    .brand-logo::after {
+    .brand-mark::after {
       content: "";
       position: absolute;
       inset: 4px;
-      border-radius: inherit;
-      background: radial-gradient(circle at 25% 20%, #f9fafb, #feeeb4);
-      opacity: 0.95;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #fefce8, #fffbeb);
     }
 
     .brand-text-title {
       font-weight: 650;
-      letter-spacing: 0.05em;
-      font-size: 14px;
+      letter-spacing: 0.06em;
+      font-size: 13px;
       text-transform: uppercase;
     }
 
@@ -122,68 +109,67 @@
 
     nav {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       font-size: 13px;
-      flex-wrap: wrap;
       justify-content: flex-end;
     }
 
     .nav-link {
-      padding: 7px 11px;
+      padding: 7px 10px;
       border-radius: 999px;
       border: 1px solid transparent;
       color: #6b7280;
       cursor: pointer;
-      transition: background 0.12s ease, border-color 0.12s ease,
-        color 0.12s ease, transform 0.07s ease;
       background: transparent;
+      transition: background 0.12s ease, border-color 0.12s ease,
+        color 0.12s ease, transform 0.06s ease;
     }
 
     .nav-link:hover {
-      background: rgba(255, 255, 255, 0.96);
-      border-color: rgba(209, 213, 219, 0.9);
+      background: #ffffff;
+      border-color: rgba(229, 231, 235, 1);
       color: #111827;
       transform: translateY(-1px);
     }
 
     .nav-link-primary {
-      background: var(--accent-strong);
-      color: #111827;
-      border-color: transparent;
+      background: #111827;
+      color: #f9fafb;
+      border-color: #111827;
       font-weight: 500;
-      box-shadow: 0 12px 28px rgba(251, 191, 36, 0.55);
     }
 
     .nav-link-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 18px 40px rgba(217, 119, 6, 0.55);
+      background: #020617;
+      border-color: #020617;
     }
 
     /* MAIN LAYOUT */
 
     main {
-      margin-top: 12px;
+      margin-top: 18px;
       display: flex;
       flex-direction: column;
       gap: 40px;
     }
 
     section {
-      scroll-margin-top: 90px;
+      scroll-margin-top: 80px;
     }
 
     .section-label {
       font-size: 11px;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: #9ca3af;
-      margin-bottom: 5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
     }
 
     .section-title {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 650;
-      margin: 0 0 10px;
+      margin: 0 0 8px;
       letter-spacing: -0.02em;
     }
 
@@ -199,61 +185,48 @@
 
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, 3.1fr) minmax(0, 2.4fr);
+      grid-template-columns: minmax(0, 3.1fr) minmax(0, 2.2fr);
       gap: 26px;
       align-items: center;
-      padding: 12px 14px 20px;
-      background: rgba(255, 255, 255, 0.96);
+      padding: 18px 20px 20px;
+      background: var(--bg-surface);
       border-radius: var(--radius-lg);
-      border: 1px solid rgba(229, 231, 235, 0.95);
+      border: 1px solid rgba(229, 231, 235, 0.9);
       box-shadow: var(--shadow-soft);
-      position: relative;
-      overflow: hidden;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: -35%;
-      background:
-        radial-gradient(circle at top right, #fef3c7, transparent 55%),
-        radial-gradient(circle at bottom left, #ffedd5, transparent 55%);
-      opacity: 0.7;
-      pointer-events: none;
-    }
-
-    .hero-content,
-    .hero-side {
-      position: relative;
-      z-index: 1;
-    }
-
-    @media (max-width: 880px) {
+    @media (max-width: 860px) {
       .hero {
         grid-template-columns: 1fr;
-        border-radius: 20px;
+        padding: 16px;
+        border-radius: 18px;
       }
     }
 
-    .hero-title {
-      font-size: clamp(28px, 5vw, 34px);
-      line-height: 1.12;
+    .hero-kicker {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
       margin: 0 0 8px;
+    }
+
+    .hero-title {
+      font-size: clamp(26px, 4.2vw, 32px);
+      line-height: 1.15;
+      margin: 0 0 10px;
       letter-spacing: -0.04em;
-      color: #0b1120;
     }
 
     .hero-highlight {
-      background: var(--accent-strong);
-      -webkit-background-clip: text;
-      color: transparent;
+      color: var(--accent-strong);
     }
 
     .hero-sub {
       font-size: 14px;
-      color: #4b5563;
-      max-width: 520px;
+      color: var(--text-soft);
       line-height: 1.7;
+      max-width: 520px;
     }
 
     .hero-actions {
@@ -264,19 +237,18 @@
     }
 
     .btn {
-      border: none;
       border-radius: 999px;
       padding: 9px 16px;
       font-size: 13px;
-      cursor: pointer;
+      border: 1px solid #111827;
+      background: #111827;
+      color: #f9fafb;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: #111827;
-      border: 1px solid rgba(17, 24, 39, 0.9);
-      color: #f9fafb;
-      transition: background 0.12s ease, transform 0.07s ease,
-        box-shadow 0.1s ease, border-color 0.12s ease;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.06s ease,
+        box-shadow 0.1s ease, border-color 0.1s ease;
       white-space: nowrap;
     }
 
@@ -286,100 +258,95 @@
 
     .btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.35);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.35);
     }
 
     .btn-primary {
       background: var(--accent-strong);
-      border-color: transparent;
-      color: #1f2937;
-      box-shadow: 0 14px 30px rgba(251, 191, 36, 0.6);
+      border-color: var(--accent-strong);
+      color: #111827;
     }
 
     .btn-primary:hover {
-      box-shadow: 0 18px 40px rgba(217, 119, 6, 0.65);
+      background: #b45309;
+      border-color: #b45309;
+      color: #f9fafb;
     }
 
-    .btn-outline {
-      background: #fffbeb;
-      color: #1f2937;
-      border-color: rgba(229, 231, 235, 1);
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border-subtle);
+      color: #111827;
     }
 
-    .pill-row {
+    .btn-ghost:hover {
+      background: #ffffff;
+    }
+
+    .hero-meta-row {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .pill {
       font-size: 11px;
+      padding: 4px 9px;
       border-radius: 999px;
-      padding: 5px 9px;
-      background: var(--accent-pill);
-      border: 1px solid rgba(254, 240, 138, 0.9);
-      color: #374151;
+      border: 1px solid rgba(229, 231, 235, 1);
+      background: #f9fafb;
+      color: #4b5563;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
     }
 
     .pill-dot {
       width: 6px;
       height: 6px;
       border-radius: 999px;
-      background: #22c55e;
+      background: var(--accent-strong);
     }
 
     .hero-side {
       display: flex;
       flex-direction: column;
       gap: 10px;
-    }
-
-    .hero-card {
-      background: rgba(255, 255, 255, 0.98);
-      border-radius: 18px;
-      padding: 12px 14px;
-      border: 1px solid rgba(229, 231, 235, 0.9);
-      box-shadow: 0 10px 24px rgba(148, 163, 184, 0.22);
       font-size: 13px;
     }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      padding: 3px 7px;
-      border-radius: 999px;
-      background: rgba(254, 249, 195, 0.95);
-      border: 1px solid rgba(250, 204, 21, 0.9);
-      color: #92400e;
+    .hero-note {
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-soft);
+    }
+
+    .hero-note-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-muted);
       margin-bottom: 4px;
     }
 
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: #f59e0b;
-    }
-
-    .hero-card h3 {
-      margin: 0 0 4px;
-      font-size: 14px;
+    .hero-note strong {
       font-weight: 600;
     }
 
-    .hero-card p {
+    .hero-note p {
       margin: 0;
       color: var(--text-soft);
       line-height: 1.6;
     }
 
-    /* GENERIC CARDS / GRIDS */
+    .hero-tagline {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* GENERIC LAYOUTS */
 
     .two-col {
       display: grid;
@@ -388,7 +355,7 @@
       margin-top: 14px;
     }
 
-    @media (max-width: 880px) {
+    @media (max-width: 860px) {
       .two-col {
         grid-template-columns: 1fr;
       }
@@ -401,24 +368,23 @@
       margin-top: 12px;
     }
 
-    .card,
-    .booking-box {
-      background: var(--card-bg);
+    .card {
+      background: var(--bg-surface);
       border-radius: var(--radius-md);
       padding: 14px 14px 16px;
       border: 1px solid var(--border-subtle);
-      box-shadow: var(--shadow-soft);
+      box-shadow: var(--shadow-card);
       font-size: 13px;
     }
 
     .card h3 {
-      margin: 0 0 6px;
+      margin: 0 0 5px;
       font-size: 15px;
       font-weight: 600;
     }
 
     .card p {
-      margin: 0 0 6px;
+      margin: 0;
       color: var(--text-soft);
       line-height: 1.6;
     }
@@ -436,13 +402,14 @@
 
     .service-meta {
       font-size: 11px;
-      color: #9ca3af;
+      color: var(--text-muted);
       margin-bottom: 4px;
     }
 
     .service-price {
       font-size: 12px;
-      color: #6b7280;
+      color: var(--text-soft);
+      margin-top: 4px;
       margin-bottom: 4px;
     }
 
@@ -457,28 +424,48 @@
       font-size: 10px;
       padding: 3px 7px;
       border-radius: 999px;
-      background: rgba(254, 249, 195, 0.95);
-      border: 1px solid rgba(250, 204, 21, 0.9);
-      color: #92400e;
+      background: var(--accent-soft);
+      color: #78350f;
     }
 
     /* BOOKING */
 
+    .booking-grid {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 860px) {
+      .booking-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .booking-box {
-      background: linear-gradient(
-          135deg,
-          rgba(255, 251, 235, 0.96),
-          rgba(255, 255, 255, 0.98)
-        ),
-        #ffffff;
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      padding: 14px 15px 16px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+      font-size: 13px;
+    }
+
+    .booking-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
     }
 
     /* FOOTER */
 
     footer {
-      margin-top: 28px;
+      margin-top: 32px;
       font-size: 11px;
-      color: #9ca3af;
+      color: var(--text-muted);
       text-align: center;
     }
   </style>
@@ -488,7 +475,7 @@
   <header>
     <div class="nav-inner">
       <div class="brand">
-        <div class="brand-logo"></div>
+        <div class="brand-mark"></div>
         <div>
           <div class="brand-text-title">FURAT ABDULLE</div>
           <div class="brand-text-sub">Consultant · Founder of Iftiin Flow</div>
@@ -504,12 +491,13 @@
     </div>
   </header>
 
-  <div class="page">
+  <!-- PAGE -->
+  <div class="shell">
     <main>
       <!-- HERO -->
       <section class="hero" id="top">
-        <div class="hero-content">
-          <p class="section-label">PORTFOLIO · IFTIIN FLOW</p>
+        <div>
+          <p class="hero-kicker">PORTFOLIO · IFTIIN FLOW</p>
           <h1 class="hero-title">
             AI, language & learning for people who want to
             <span class="hero-highlight">change structures – not just tools.</span>
@@ -528,51 +516,49 @@
               </button>
             </a>
             <a href="#services">
-              <button class="btn btn-outline">
+              <button class="btn btn-ghost">
                 <span class="icon">▸</span>
                 <span>Explore services</span>
               </button>
             </a>
           </div>
-          <div class="pill-row">
+          <div class="hero-meta-row">
             <div class="pill">
               <span class="pill-dot"></span>
               <span>AI enablement & literacy</span>
             </div>
             <div class="pill">
-              <span class="pill-dot" style="background:#f97316;"></span>
+              <span class="pill-dot" style="background:#15803d;"></span>
               <span>BIPoC-centered perspective</span>
             </div>
             <div class="pill">
-              <span class="pill-dot" style="background:#22c55e;"></span>
+              <span class="pill-dot" style="background:#0ea5e9;"></span>
               <span>Workshops · Strategy · Speaking</span>
             </div>
           </div>
         </div>
 
         <div class="hero-side">
-          <div class="hero-card">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>For professionals</span>
-            </div>
-            <h3>Strategic clarity in a noisy AI world</h3>
+          <div class="hero-note">
+            <div class="hero-note-label">FOR PROFESSIONALS</div>
             <p>
-              We cut through hype and fear, translate AI into your daily work
-              and design next steps that actually fit your life, sector and capacity.
+              <strong>Strategic clarity in a noisy AI world.</strong><br />
+              We translate AI into your actual workday and design next steps that
+              fit your capacity, sector and values – not someone else’s playbook.
             </p>
           </div>
-          <div class="hero-card">
-            <div class="badge" style="background:#fffbeb;border-color:#fbbf24;color:#92400e;">
-              <span class="badge-dot" style="background:#f97316;"></span>
-              <span>For teams & organisations</span>
-            </div>
-            <h3>AI literacy with political awareness</h3>
+          <div class="hero-note">
+            <div class="hero-note-label">FOR TEAMS & ORGANISATIONS</div>
             <p>
+              <strong>AI literacy with political awareness.</strong><br />
               Workshops that connect concrete tools (text, video, automation)
-              with critical questions: who builds technology, who benefits,
-              and how can we use it to open doors instead of closing them?
+              with critical questions: who builds technology, who benefits, and
+              how can you use it to expand access instead of reinforcing barriers.
             </p>
+          </div>
+          <div class="hero-tagline">
+            Currently working with enterprise clients, communities and
+            emerging social businesses across Europe.
           </div>
         </div>
       </section>
@@ -581,7 +567,7 @@
       <section id="about">
         <p class="section-label">ABOUT</p>
         <h2 class="section-title">Bringing consulting, education & language together</h2>
-       <p class="section-sub">
+        <p class="section-sub">
           I move between enterprise consulting, teaching and artistic work with language.
           My background spans philosophy, educational sciences and several years in Data & AI
           consulting – working with large organisations while building spaces that centre BIPoC experiences.
@@ -597,12 +583,9 @@
             </ul>
           </div>
           <div class="card">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>What this means for you</span>
-            </div>
+            <h3>What this means for you</h3>
             <p>
-              You don’t just get tool recommendations. You get someone who understands:
+              You don’t just get a list of tools. You get someone who understands:
             </p>
             <ul class="list-clean">
               <li>how organisations actually work, beyond slides and buzzwords,</li>
@@ -619,16 +602,13 @@
         <h2 class="section-title">Iftiin Flow – light and movement in the digital noise</h2>
         <p class="section-sub">
           <strong>Iftiin</strong> means “light” in Somali. Iftiin Flow is where clarity meets motion:
-          a space for people who want to understand AI and digital technologies deeply enough to use
-          them for liberation, not just efficiency.
+          a space for people who want to understand AI and digital technologies deeply enough to
+          use them for liberation, not just efficiency.
         </p>
 
         <div class="card-grid">
           <div class="card">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>Who it’s for</span>
-            </div>
+            <h3>Who it’s for</h3>
             <p>
               BIPoC professionals, social entrepreneurs and teams who:
             </p>
@@ -639,10 +619,7 @@
             </ul>
           </div>
           <div class="card">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>What we do together</span>
-            </div>
+            <h3>What we do together</h3>
             <ul class="list-clean">
               <li>Build digital and AI literacy step by step.</li>
               <li>Translate AI into your sector and daily work.</li>
@@ -650,10 +627,7 @@
             </ul>
           </div>
           <div class="card">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>How it feels</span>
-            </div>
+            <h3>How it feels</h3>
             <p>
               Less overwhelm, more orientation. Less “everyone says I should use AI”,
               more “I know exactly what to learn next and why”.
@@ -714,7 +688,7 @@
               <span class="tag">corporate teams</span>
             </div>
             <a href="#booking">
-              <button class="btn btn-outline" style="margin-top:8px;">
+              <button class="btn btn-ghost" style="margin-top:8px;">
                 <span class="icon">✉</span>
                 <span>Request a workshop</span>
               </button>
@@ -738,7 +712,7 @@
               <span class="tag">career & skill strategy</span>
             </div>
             <a href="#booking">
-              <button class="btn btn-outline" style="margin-top:8px;">
+              <button class="btn btn-ghost" style="margin-top:8px;">
                 <span class="icon">★</span>
                 <span>Apply for a spot</span>
               </button>
@@ -758,10 +732,6 @@
 
         <div class="card-grid">
           <div class="card">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>Enterprise · Data & AI Enablement</span>
-            </div>
             <h3>AI & analytics enablement for large organisations</h3>
             <p>
               Designing learning journeys, communities and formats that made AI and analytics
@@ -769,10 +739,6 @@
             </p>
           </div>
           <div class="card">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>Community & networks</span>
-            </div>
             <h3>Women’s networks & BIPoC communities</h3>
             <p>
               Co-leading women’s networks and co-creating spaces like spoken word events and
@@ -780,10 +746,6 @@
             </p>
           </div>
           <div class="card">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>Education</span>
-            </div>
             <h3>Teaching on knowledge, power and technology</h3>
             <p>
               University-level seminars that unpack how knowledge is produced and who is centred
@@ -802,12 +764,9 @@
           For organisations, please include a short note on your sector and team size.
         </p>
 
-        <div class="two-col">
+        <div class="booking-grid">
           <div class="booking-box">
-            <div class="badge">
-              <span class="badge-dot"></span>
-              <span>Option 1 · Direct booking</span>
-            </div>
+            <div class="booking-label">OPTION 1 · DIRECT BOOKING</div>
             <p>
               Use the button below to choose a time for an online strategy call.
               The session is confirmed once you receive a calendar invite.
@@ -825,18 +784,11 @@
           </div>
 
           <div class="booking-box">
-            <div class="badge" style="background:#fffbeb;border-color:#fbbf24;color:#92400e;">
-              <span class="badge-dot" style="background:#f97316;"></span>
-              <span>Option 2 · Send an enquiry</span>
-            </div>
-            <p style="margin-bottom:6px;">
-              Prefer context first? Send an email with:
+            <div class="booking-label">OPTION 2 · ENQUIRY</div>
+            <p>
+              Prefer context first? Send an email with a few lines about you or your organisation,
+              what you’re looking for, and any timelines or constraints.
             </p>
-            <ul class="list-clean">
-              <li>a few lines about you or your organisation,</li>
-              <li>what you’re looking for (session, workshop, ongoing support),</li>
-              <li>and any timelines or constraints.</li>
-            </ul>
             <!-- TODO: Replace with your real email -->
             <p style="margin-top:8px;">
               Email:
@@ -853,18 +805,17 @@
   </div>
 
   <script>
-    // Smooth scroll for internal links
+    // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(link => {
       link.addEventListener("click", (e) => {
-        const targetId = link.getAttribute("href").substring(1);
-        const target = document.getElementById(targetId);
-        if (target) {
-          e.preventDefault();
-          window.scrollTo({
-            top: target.offsetTop - 80,
-            behavior: "smooth",
-          });
-        }
+        const id = link.getAttribute("href").substring(1);
+        const target = document.getElementById(id);
+        if (!target) return;
+        e.preventDefault();
+        window.scrollTo({
+          top: target.offsetTop - 70,
+          behavior: "smooth",
+        });
       });
     });
 
