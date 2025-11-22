@@ -7,18 +7,21 @@
 
   <style>
     :root {
-      --bg: #f4f4fb;
-      --bg-accent: radial-gradient(circle at top left, #e0e7ff, #fdf2ff 45%, #ffffff 80%);
-      --text-main: #0f172a;
+      --bg: #faf5e7;
+      --bg-accent: radial-gradient(circle at top left, #fef9c3, #fffbeb 45%, #ffffff 80%);
+      --text-main: #111827;
       --text-soft: #4b5563;
       --border-subtle: #e5e7eb;
       --card-bg: #ffffff;
-      --accent: #6366f1;
-      --accent-soft: rgba(99, 102, 241, 0.08);
-      --accent-strong: linear-gradient(135deg, #6366f1, #ec4899);
-      --accent-pill: linear-gradient(135deg, #e0f2fe, #f5f3ff);
-      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.08);
-      --radius-lg: 22px;
+
+      /* Yellow / warm accent */
+      --accent: #fbbf24; /* amber-400 */
+      --accent-soft: rgba(251, 191, 36, 0.12);
+      --accent-strong: linear-gradient(135deg, #facc15, #f59e0b, #f97316);
+      --accent-pill: linear-gradient(135deg, #fef9c3, #fffbeb);
+
+      --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.08);
+      --radius-lg: 24px;
       --radius-md: 16px;
     }
 
@@ -54,14 +57,14 @@
       z-index: 20;
       padding: 8px 0 10px;
       margin-bottom: 8px;
-      backdrop-filter: blur(22px);
+      backdrop-filter: blur(18px);
       background: linear-gradient(
         to bottom,
-        rgba(244, 244, 251, 0.9),
-        rgba(244, 244, 251, 0.75),
+        rgba(252, 250, 245, 0.95),
+        rgba(252, 250, 245, 0.78),
         transparent
       );
-      border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+      border-bottom: 1px solid rgba(229, 231, 235, 0.7);
     }
 
     .nav-inner {
@@ -86,15 +89,14 @@
       border-radius: 999px;
       background: conic-gradient(
         from 180deg,
-        #6366f1,
-        #ec4899,
-        #f59e0b,
-        #22d3ee,
-        #6366f1
+        #facc15,
+        #f97316,
+        #fb923c,
+        #facc15
       );
       position: relative;
       overflow: hidden;
-      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 10px 24px rgba(248, 181, 56, 0.6);
     }
 
     .brand-logo::after {
@@ -102,8 +104,8 @@
       position: absolute;
       inset: 4px;
       border-radius: inherit;
-      background: radial-gradient(circle at 25% 20%, #f9fafb, #c7d2fe);
-      opacity: 0.9;
+      background: radial-gradient(circle at 25% 20%, #f9fafb, #feeeb4);
+      opacity: 0.95;
     }
 
     .brand-text-title {
@@ -127,10 +129,10 @@
     }
 
     .nav-link {
-      padding: 7px 10px;
+      padding: 7px 11px;
       border-radius: 999px;
       border: 1px solid transparent;
-      color: #4b5563;
+      color: #6b7280;
       cursor: pointer;
       transition: background 0.12s ease, border-color 0.12s ease,
         color 0.12s ease, transform 0.07s ease;
@@ -138,7 +140,7 @@
     }
 
     .nav-link:hover {
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.96);
       border-color: rgba(209, 213, 219, 0.9);
       color: #111827;
       transform: translateY(-1px);
@@ -146,15 +148,15 @@
 
     .nav-link-primary {
       background: var(--accent-strong);
-      color: #f9fafb;
+      color: #111827;
       border-color: transparent;
       font-weight: 500;
-      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.45);
+      box-shadow: 0 12px 28px rgba(251, 191, 36, 0.55);
     }
 
     .nav-link-primary:hover {
       transform: translateY(-1px);
-      box-shadow: 0 16px 36px rgba(79, 70, 229, 0.5);
+      box-shadow: 0 18px 40px rgba(217, 119, 6, 0.55);
     }
 
     /* MAIN LAYOUT */
@@ -200,10 +202,10 @@
       grid-template-columns: minmax(0, 3.1fr) minmax(0, 2.4fr);
       gap: 26px;
       align-items: center;
-      padding: 10px 12px 18px;
-      background: rgba(255, 255, 255, 0.85);
-      border-radius: 32px;
-      border: 1px solid rgba(226, 232, 240, 0.9);
+      padding: 12px 14px 20px;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(229, 231, 235, 0.95);
       box-shadow: var(--shadow-soft);
       position: relative;
       overflow: hidden;
@@ -212,9 +214,10 @@
     .hero::before {
       content: "";
       position: absolute;
-      inset: -40%;
-      background: radial-gradient(circle at top right, #dbeafe, transparent 55%),
-        radial-gradient(circle at bottom left, #fce7f3, transparent 55%);
+      inset: -35%;
+      background:
+        radial-gradient(circle at top right, #fef3c7, transparent 55%),
+        radial-gradient(circle at bottom left, #ffedd5, transparent 55%);
       opacity: 0.7;
       pointer-events: none;
     }
@@ -228,7 +231,7 @@
     @media (max-width: 880px) {
       .hero {
         grid-template-columns: 1fr;
-        border-radius: 24px;
+        border-radius: 20px;
       }
     }
 
@@ -237,7 +240,7 @@
       line-height: 1.12;
       margin: 0 0 8px;
       letter-spacing: -0.04em;
-      color: #020617;
+      color: #0b1120;
     }
 
     .hero-highlight {
@@ -289,17 +292,18 @@
     .btn-primary {
       background: var(--accent-strong);
       border-color: transparent;
-      box-shadow: 0 14px 30px rgba(99, 102, 241, 0.55);
+      color: #1f2937;
+      box-shadow: 0 14px 30px rgba(251, 191, 36, 0.6);
     }
 
     .btn-primary:hover {
-      box-shadow: 0 18px 40px rgba(79, 70, 229, 0.65);
+      box-shadow: 0 18px 40px rgba(217, 119, 6, 0.65);
     }
 
     .btn-outline {
-      background: #f9fafb;
-      color: #111827;
-      border-color: rgba(209, 213, 219, 0.9);
+      background: #fffbeb;
+      color: #1f2937;
+      border-color: rgba(229, 231, 235, 1);
     }
 
     .pill-row {
@@ -314,8 +318,8 @@
       border-radius: 999px;
       padding: 5px 9px;
       background: var(--accent-pill);
-      border: 1px solid rgba(199, 210, 254, 0.9);
-      color: #1f2937;
+      border: 1px solid rgba(254, 240, 138, 0.9);
+      color: #374151;
       display: inline-flex;
       align-items: center;
       gap: 5px;
@@ -335,11 +339,11 @@
     }
 
     .hero-card {
-      background: rgba(255, 255, 255, 0.96);
-      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 18px;
       padding: 12px 14px;
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      box-shadow: 0 12px 28px rgba(148, 163, 184, 0.25);
+      border: 1px solid rgba(229, 231, 235, 0.9);
+      box-shadow: 0 10px 24px rgba(148, 163, 184, 0.22);
       font-size: 13px;
     }
 
@@ -350,9 +354,9 @@
       font-size: 10px;
       padding: 3px 7px;
       border-radius: 999px;
-      background: rgba(239, 246, 255, 0.9);
-      border: 1px solid rgba(191, 219, 254, 1);
-      color: #1d4ed8;
+      background: rgba(254, 249, 195, 0.95);
+      border: 1px solid rgba(250, 204, 21, 0.9);
+      color: #92400e;
       margin-bottom: 4px;
     }
 
@@ -360,7 +364,7 @@
       width: 6px;
       height: 6px;
       border-radius: 999px;
-      background: #6366f1;
+      background: #f59e0b;
     }
 
     .hero-card h3 {
@@ -419,10 +423,6 @@
       line-height: 1.6;
     }
 
-    .card small {
-      color: #9ca3af;
-    }
-
     .list-clean {
       padding-left: 18px;
       margin: 6px 0 0;
@@ -457,9 +457,9 @@
       font-size: 10px;
       padding: 3px 7px;
       border-radius: 999px;
-      background: rgba(239, 246, 255, 0.9);
-      border: 1px solid rgba(191, 219, 254, 1);
-      color: #1d4ed8;
+      background: rgba(254, 249, 195, 0.95);
+      border: 1px solid rgba(250, 204, 21, 0.9);
+      color: #92400e;
     }
 
     /* BOOKING */
@@ -467,11 +467,10 @@
     .booking-box {
       background: linear-gradient(
           135deg,
-          rgba(239, 246, 255, 0.9),
-          rgba(255, 255, 255, 0.96)
+          rgba(255, 251, 235, 0.96),
+          rgba(255, 255, 255, 0.98)
         ),
         #ffffff;
-      border-style: solid;
     }
 
     /* FOOTER */
@@ -545,7 +544,7 @@
               <span>BIPoC-centered perspective</span>
             </div>
             <div class="pill">
-              <span class="pill-dot" style="background:#22d3ee;"></span>
+              <span class="pill-dot" style="background:#22c55e;"></span>
               <span>Workshops · Strategy · Speaking</span>
             </div>
           </div>
@@ -564,7 +563,7 @@
             </p>
           </div>
           <div class="hero-card">
-            <div class="badge" style="background:#fefce8;border-color:#facc15;color:#854d0e;">
+            <div class="badge" style="background:#fffbeb;border-color:#fbbf24;color:#92400e;">
               <span class="badge-dot" style="background:#f97316;"></span>
               <span>For teams & organisations</span>
             </div>
@@ -582,7 +581,7 @@
       <section id="about">
         <p class="section-label">ABOUT</p>
         <h2 class="section-title">Bringing consulting, education & language together</h2>
-        <p class="section-sub">
+       <p class="section-sub">
           I move between enterprise consulting, teaching and artistic work with language.
           My background spans philosophy, educational sciences and several years in Data & AI
           consulting – working with large organisations while building spaces that centre BIPoC experiences.
@@ -826,7 +825,7 @@
           </div>
 
           <div class="booking-box">
-            <div class="badge" style="background:#fefce8;border-color:#facc15;color:#854d0e;">
+            <div class="badge" style="background:#fffbeb;border-color:#fbbf24;color:#92400e;">
               <span class="badge-dot" style="background:#f97316;"></span>
               <span>Option 2 · Send an enquiry</span>
             </div>
