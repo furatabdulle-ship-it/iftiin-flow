@@ -8,7 +8,6 @@
   <style>
     :root {
       --bg-page: #f5f1e9;
-      --bg-light: #f9f5ee;
       --bg-card: #ffffff;
       --bg-dark: #111111;
       --bg-gradient: radial-gradient(circle at top left, #fef3c7 0, #f5f1e9 40%, #f5f1e9 100%);
@@ -17,13 +16,9 @@
       --text-soft: #4b5563;
       --text-muted: #9ca3af;
 
-      --accent: #f6b81b;
-      --accent-strong: #d97706;
-
       --border-subtle: #e5e7eb;
       --radius-xl: 32px;
       --radius-lg: 24px;
-      --radius-md: 18px;
       --shadow-soft: 0 26px 70px rgba(15, 23, 42, 0.18);
       --shadow-card: 0 18px 40px rgba(15, 23, 42, 0.12);
     }
@@ -52,7 +47,6 @@
       padding: 18px 18px 64px;
     }
 
-    /* TYPOGRAPHY */
     .serif {
       font-family: "Georgia", "Times New Roman", serif;
     }
@@ -317,7 +311,7 @@
       background: #22c55e;
     }
 
-    /* GENERIC SECTION STYLES */
+    /* GENERIC SECTION */
 
     section {
       scroll-margin-top: 96px;
@@ -398,7 +392,7 @@
       margin-top: 6px;
     }
 
-    /* SERVICE CARDS */
+    /* SERVICE CARDS & FLIP */
 
     .service-card {
       border-radius: 28px;
@@ -470,42 +464,6 @@
       margin-bottom: 10px;
     }
 
-    /* --- FLIP CARDS FOR SERVICES --- */
-/* FIX: Flip Card Height + Rounded Corners + Overflow */
-.flip-card {
-  perspective: 1400px;
-  cursor: pointer;
-  border-radius: 28px;        /* RUNDEN */
-  overflow: hidden;           /* VERHINDERT ÜBERLAPPUNG */
-  height: 100%;               /* GLEICHE HÖHE */
-  position: relative;
-}
-
-.flip-inner {
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform .6s cubic-bezier(0.22, 0.61, 0.36, 1);
-  border-radius: 28px;         /* RUNDEN */
-}
-
-.flip-face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  border-radius: 28px;         /* RUNDEN */
-  overflow: hidden;            /* KEINE ÜBERLAPPUNG */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;                /* WICHTIG */
-}
-
-.flip-card:hover .flip-inner,
-.flip-card.flipped .flip-inner {
-  transform: rotateY(180deg);
-}
-
     .flip-grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -521,14 +479,18 @@
     .flip-card {
       perspective: 1400px;
       cursor: pointer;
+      border-radius: 28px;
+      overflow: hidden;
+      height: 100%;
+      position: relative;
     }
 
     .flip-inner {
-      position: relative;
       width: 100%;
       height: 100%;
       transform-style: preserve-3d;
-      transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+      transition: transform .6s cubic-bezier(0.22, 0.61, 0.36, 1);
+      border-radius: 28px;
     }
 
     .flip-card:hover .flip-inner,
@@ -540,7 +502,12 @@
       position: absolute;
       inset: 0;
       backface-visibility: hidden;
-      border-radius: inherit;
+      border-radius: 28px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
     }
 
     .flip-front.service-card,
@@ -576,36 +543,32 @@
       line-height: 1.7;
     }
 
-    /* WORK WITH / BOOKING */
+    /* CTA STRIP */
 
-    .booking-grid {
-      margin-top: 18px;
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-      gap: 18px;
+    .cta-strip {
+      margin-top: 44px;
+      border-radius: var(--radius-xl);
+      background: #111111;
+      color: #fefdfb;
+      padding: 20px 22px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
     }
 
-    @media (max-width: 860px) {
-      .booking-grid {
-        grid-template-columns: 1fr;
-      }
+    .cta-strip-text {
+      max-width: 620px;
+      font-size: 14px;
+      line-height: 1.6;
     }
 
-    .booking-box {
-      background: var(--bg-card);
-      border-radius: var(--radius-lg);
-      padding: 16px 16px 18px;
-      border: 1px solid rgba(229, 231, 235, 0.9);
-      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
-      font-size: 13px;
-    }
-
-    .booking-label {
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 6px;
+    .cta-strip-title {
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 20px;
+      margin-bottom: 4px;
     }
 
     /* FOOTER */
@@ -647,10 +610,10 @@
       <nav>
         <a class="nav-link" href="#what-we-do">Overview</a>
         <a class="nav-link" href="#why">Why it matters</a>
-        <a class="nav-link" href="#approach">Approach</a>
         <a class="nav-link" href="#services">Services</a>
+        <a class="nav-link" href="#contributions">Speaking</a>
         <a class="nav-link" href="#founder">Founder</a>
-        <a class="nav-link nav-link-primary" href="#work-with">Work with Iftiin Flow</a>
+        <a class="nav-link nav-link-primary" href="#book-meeting">Book a meeting</a>
       </nav>
     </div>
   </header>
@@ -664,37 +627,37 @@
           <div>
             <p class="hero-kicker">DIGITAL · AI · SOCIAL INNOVATION</p>
             <h1 class="hero-title serif">
-              We help rethink<br />
-              <span class="hero-highlight-italic">how people use technology for access.</span>
+              Clarity in a digital world.<br />
+              <span class="hero-highlight-italic">So more people get access.</span>
             </h1>
             <p class="hero-sub">
-              Iftiin Flow empowers BIPoC professionals and social entrepreneurs to understand
-              and strategically use digital and AI technologies — for social innovation that
-              builds awareness and transforms structures so that access becomes possible for all.
+              Iftiin Flow supports BIPoC professionals and social entrepreneurs to understand and
+              use digital and AI technologies with intention — for social innovation that opens doors
+              instead of closing them.
             </p>
             <div class="hero-actions">
-              <a href="#work-with">
+              <a href="#book-meeting">
                 <button class="btn">
-                  <span class="icon">⚡</span>
-                  <span>Work With Iftiin Flow</span>
+                  <span class="icon">🗓</span>
+                  <span>Book a meeting</span>
                 </button>
               </a>
-              <a href="#founder">
+              <a href="#services">
                 <button class="btn btn-secondary">
                   <span class="icon">▸</span>
-                  <span>About the Founder</span>
+                  <span>See services</span>
                 </button>
               </a>
             </div>
             <p class="hero-note">
               <strong>Iftiin</strong> means “light” in Somali — clarity in complex spaces.<br />
-              <strong>Flow</strong> represents movement — the shift from understanding to action.
+              <strong>Flow</strong> is the movement from understanding to action.
             </p>
           </div>
 
           <div class="hero-image-wrap">
             <div class="hero-image-inner">
-              <img src="furat_abdulle.png" alt="Furat Abdulle working with clients" />
+              <img src="furat_abdulle.png" alt="Furat Abdulle" />
               <div class="hero-tag">
                 <span class="hero-tag-dot"></span>
                 <span>AI, justice & social innovation</span>
@@ -708,7 +671,7 @@
       <section id="what-we-do" style="margin-top:34px;">
         <div class="section-header">
           <p class="section-label">WHAT WE DO</p>
-          <h2 class="section-title">We help people understand technology so they can shape meaningful change.</h2>
+          <h2 class="section-title">We help people understand technology so they can shape change.</h2>
           <p class="section-sub">
             Iftiin Flow supports professionals, creatives, and social innovators who want to use digital and AI
             technologies with intention — not overwhelm, pressure, or hype.
@@ -722,7 +685,7 @@
               <ul class="list-clean">
                 <li>building digital clarity in a fast-changing landscape,</li>
                 <li>strengthening confidence around AI and automation,</li>
-                <li>developing strategic thinking for purpose-driven and community-driven work,</li>
+                <li>developing strategic thinking for purpose- and community-driven work,</li>
                 <li>connecting technology with access and awareness,</li>
                 <li>helping people use digital tools to open opportunities.</li>
               </ul>
@@ -730,9 +693,8 @@
             <div class="card">
               <h3>Digital clarity as a starting point</h3>
               <p>
-                We focus on people. On guidance. On access.<br /><br />
-                Our mission is simple: to make digital knowledge accessible, so more
-                people can participate, create, and lead.
+                We focus on people, guidance, and access.<br /><br />
+                The goal: make digital knowledge understandable, so more people can participate, create, and lead.
               </p>
             </div>
           </div>
@@ -747,9 +709,8 @@
             Technology shapes access. Access shapes opportunity. Opportunity shapes futures.
           </h2>
           <p class="section-sub">
-            AI determines who gets seen, supported, or overlooked. Digital tools decide whose ideas move forward —
-            and who is made invisible. These structures aren’t neutral. And they don’t change on their own. They are
-            changed by people who understand them.
+            AI decides who is seen, supported, or overlooked. Digital tools decide whose ideas move forward —
+            and who becomes invisible. These systems are not neutral. They change when people understand them.
           </p>
         </div>
 
@@ -757,7 +718,7 @@
           <div class="two-col">
             <div>
               <p class="pill-list">
-                Iftiin Flow equips individuals with the clarity, context, and direction to:
+                Iftiin Flow equips individuals with the clarity and context to:
               </p>
               <ul class="list-clean">
                 <li>navigate digital shifts,</li>
@@ -769,41 +730,9 @@
             <div class="card">
               <h3>Technology with people at the center</h3>
               <p>
-                We believe: technology becomes powerful when people understand it — and when those most affected by
-                digital decisions are equipped to shape them.
+                We believe technology becomes powerful when people understand it — and when those most affected
+                by digital decisions are able to shape them.
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- APPROACH -->
-      <section id="approach" style="margin-top:40px;">
-        <div class="section-header">
-          <p class="section-label">OUR APPROACH</p>
-          <h2 class="section-title">Clarity. Context. Awareness. Social innovation.</h2>
-          <p class="section-sub">
-            Our approach is human, reflective, accessible — and rooted in justice.
-          </p>
-        </div>
-
-        <div class="section-body">
-          <div class="card-grid-2">
-            <div class="card">
-              <h3>1. Understand</h3>
-              <p>We break down digital and AI concepts into grounded, human language so any person can follow.</p>
-            </div>
-            <div class="card">
-              <h3>2. Contextualize</h3>
-              <p>We examine how technology intersects with identity, power, access, and society.</p>
-            </div>
-            <div class="card">
-              <h3>3. Strategize</h3>
-              <p>We help purpose-driven people use digital tools in ways that align with their mission and community impact.</p>
-            </div>
-            <div class="card">
-              <h3>4. Act</h3>
-              <p>We provide frameworks and methods that turn insight into sustainable action.</p>
             </div>
           </div>
         </div>
@@ -813,10 +742,9 @@
       <section id="services" style="margin-top:44px;">
         <div class="section-header">
           <p class="section-label">SERVICES</p>
-          <h2 class="section-title">Here’s how we begin working together.</h2>
+          <h2 class="section-title">Two simple ways to work together.</h2>
           <p class="section-sub">
-            Two entry points designed for people and organisations who want to use AI and digital tools with clarity,
-            ethics, and social impact in mind.
+            Start with a 1:1 clarity session or bring Iftiin Flow to your event. Both begin with a conversation.
           </p>
         </div>
 
@@ -845,20 +773,20 @@
                 <div class="flip-face flip-back service-card dark">
                   <div>
                     <div class="badge-icon">🗓</div>
-                    <h3>What you get in a clarity session</h3>
-                    <p class="pill-list">In our 1:1 we:</p>
+                    <h3>What you get</h3>
+                    <p class="pill-list">In a 1:1 clarity session we:</p>
                     <ul class="list-clean">
                       <li>map how AI shows up in your work and sector,</li>
                       <li>identify tools that actually support your goals,</li>
                       <li>reduce fear and confusion around “black box” tech,</li>
                       <li>create a realistic learning and action roadmap,</li>
-                      <li>anchor every step in your values and direction.</li>
+                      <li>anchor each step in your values and boundaries.</li>
                     </ul>
                   </div>
                   <div class="service-footer">
-                    <span>For individuals & professionals ready to think clearly about AI.</span>
-                    <a href="#work-with">
-                      <button class="service-btn" type="button">Book a clarity session →</button>
+                    <span>Ideal for individuals ready to think clearly about AI.</span>
+                    <a href="#book-meeting">
+                      <button class="service-btn" type="button">Book a meeting →</button>
                     </a>
                   </div>
                 </div>
@@ -875,7 +803,7 @@
                     <h3>Talks & Speaking Engagements</h3>
                     <p>
                       Thoughtful talks that connect technology, justice, and social transformation —
-                      designed for audiences who care about depth and accessibility.
+                      for audiences who care about depth and accessibility.
                     </p>
                   </div>
                   <div class="service-footer">
@@ -888,7 +816,7 @@
                 <div class="flip-face flip-back service-card light">
                   <div>
                     <div class="badge-icon">🎤</div>
-                    <h3>Signature themes & formats</h3>
+                    <h3>Signature themes</h3>
                     <p class="pill-list">Examples of talks & keynotes:</p>
                     <ul class="list-clean">
                       <li><strong>AI for Social Innovations</strong> — how tech can open access instead of close it,</li>
@@ -899,8 +827,8 @@
                   </div>
                   <div class="service-footer">
                     <span>For events that want nuance, clarity, and lived experience.</span>
-                    <a href="#work-with">
-                      <button class="service-btn dark-outline" type="button">See speaking options →</button>
+                    <a href="#book-meeting">
+                      <button class="service-btn dark-outline" type="button">Book a speaking call →</button>
                     </a>
                   </div>
                 </div>
@@ -934,8 +862,8 @@
             <div class="card">
               <h3>Keynote — AI & Intersectionality</h3>
               <p>
-                Explored how AI influences power, identity, and opportunity — and how intersectional thinking is
-                essential for digital justice.
+                How AI influences power, identity, and opportunity — and why intersectional thinking is essential
+                for digital justice.
               </p>
               <p style="margin-top:6px;">
                 <a href="#" style="text-decoration:underline;">See engagement here</a>
@@ -953,8 +881,8 @@
             <div class="card">
               <h3>IT & AI Experience</h3>
               <p>
-                Guided organizations in understanding AI, digital trends, and responsible technology — always with a
-                people-first perspective.
+                Guided organisations in understanding AI, digital trends, and responsible technology — always with a
+                people-first lens.
               </p>
             </div>
           </div>
@@ -975,26 +903,26 @@
           <div class="two-col">
             <div>
               <p>
-                I am working as a Data & AI consultant with 5 years of experience in digital and AI enablement and
-                10 years of community-building experience across youth programs, professional networks, and
+                I am a Data & AI consultant with 5 years of experience in digital and AI enablement and
+                around 10 years of community-building across youth programmes, professional networks, and
                 BIPoC-centered spaces.
               </p>
               <p style="margin-top:8px;">
-                My academic background in philosophy, educational sciences, and digital humanities gives me a grounding
-                in critical thinking, while my lived experience as a Black Muslim woman in tech shapes my approach to
-                justice, clarity, and access.
+                My background in philosophy, educational sciences, and digital humanities gives me a grounding
+                in critical thinking, while my lived experience as a Black Muslim woman in tech shapes my
+                approach to justice, clarity, and access.
               </p>
               <p style="margin-top:8px;">
-                I created Iftiin Flow because I believe: technology should support people — not obscure them,
+                I created Iftiin Flow because I believe technology should support people — not obscure them,
                 overwhelm them, or exclude them.
               </p>
               <p style="margin-top:8px;">
-                Through advisory work, workshops, and public education, I help individuals and communities approach
-                technology with confidence, understanding, and intention.
+                Through advisory work, workshops, and public education, I help individuals and communities
+                approach technology with confidence, understanding, and intention.
               </p>
             </div>
             <div class="card">
-              <h3>Our values</h3>
+              <h3>Values</h3>
               <ul class="list-clean">
                 <li>Clarity over confusion.</li>
                 <li>Access over gatekeeping.</li>
@@ -1003,61 +931,31 @@
                 <li>Technology as a tool for social change.</li>
               </ul>
               <p style="margin-top:8px;">
-                We believe in technology that lifts people.
+                Iftiin Flow stands for technology that lifts people.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- WORK WITH -->
-      <section id="work-with" style="margin-top:44px;">
-        <div class="section-header">
-          <p class="section-label">WORK WITH IFTIIN FLOW</p>
-          <h2 class="section-title">Guidance rooted in clarity, justice, and social innovation.</h2>
-          <p class="section-sub">
-            If you are navigating AI, starting a purpose-driven project, or exploring digital tools with intention —
-            Iftiin Flow offers support through advisory work, workshops, and speaking.
-          </p>
-        </div>
-
-        <div class="section-body">
-          <div class="booking-grid">
-            <div class="booking-box">
-              <div class="booking-label">BOOK AN ADVISORY SESSION</div>
-              <p>
-                For 1:1 AI & digital clarity sessions or social innovation strategy support.
-              </p>
-              <!-- TODO: deinen echten Calendly-Link einsetzen -->
-              <a href="https://calendly.com/YOUR-BOOKING-LINK" target="_blank" rel="noreferrer">
-                <button class="btn" style="margin-top:8px;">
-                  <span class="icon">🗓</span>
-                  <span>Book an Advisory Session</span>
-                </button>
-              </a>
+      <!-- BOOK A MEETING CTA -->
+      <section id="book-meeting" style="margin-top:44px;">
+        <div class="cta-strip">
+          <div class="cta-strip-text">
+            <div class="cta-strip-title">Ready to talk about AI, access, and your work?</div>
+            <div>
+              Use this call to explore where you are, what you need, and how Iftiin Flow can support you —
+              no pressure, just clarity.
             </div>
-
-            <div class="booking-box">
-              <div class="booking-label">SPEAKING & CONTACT</div>
-              <p>
-                For speaking requests, community workshops, or collaborations, reach out with a short description of
-                your event or initiative.
-              </p>
-              <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
-                <a href="mailto:hello@iftiinflow.com">
-                  <button class="btn btn-secondary">
-                    <span class="icon">🎤</span>
-                    <span>Request Speaking</span>
-                  </button>
-                </a>
-                <a href="mailto:hello@iftiinflow.com">
-                  <button class="btn btn-secondary">
-                    <span class="icon">✎</span>
-                    <span>Contact</span>
-                  </button>
-                </a>
-              </div>
-            </div>
+          </div>
+          <div>
+            <!-- TODO: echten Calendly-Link eintragen -->
+            <a href="https://calendly.com/YOUR-BOOKING-LINK" target="_blank" rel="noreferrer">
+              <button class="btn">
+                <span class="icon">🗓</span>
+                <span>Book a meeting</span>
+              </button>
+            </a>
           </div>
         </div>
       </section>
@@ -1068,8 +966,8 @@
         <a href="#founder">About</a>
         <a href="#services">Services</a>
         <a href="#contributions">Speaking</a>
-        <a href="#what-we-do">Resources</a>
-        <a href="#work-with">Contact</a>
+        <a href="#what-we-do">Overview</a>
+        <a href="#book-meeting">Book a meeting</a>
         <a href="#">Privacy &amp; Legal</a>
       </div>
       <div>Iftiin Flow — Technology. Clarity. Access.</div>
@@ -1098,12 +996,10 @@
     // Flip cards (hover + click for mobile)
     document.querySelectorAll(".flip-card").forEach(card => {
       card.addEventListener("click", (e) => {
-        // Links normal funktionieren lassen
-        if (e.target.closest("a")) return;
+        if (e.target.closest("a")) return; // Links normal funktionieren lassen
         card.classList.toggle("flipped");
       });
     });
   </script>
 </body>
 </html>
-
