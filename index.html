@@ -392,7 +392,13 @@
       }
     }
 
-    /* SERVICE CARDS HALDEN-STYLE */
+    .pill-list {
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-top: 6px;
+    }
+
+    /* SERVICE CARDS */
 
     .service-card {
       border-radius: 28px;
@@ -461,6 +467,55 @@
     .badge-icon {
       font-size: 18px;
       opacity: 0.9;
+      margin-bottom: 10px;
+    }
+
+    /* --- FLIP CARDS FOR SERVICES --- */
+
+    .flip-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .flip-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .flip-card {
+      perspective: 1400px;
+      cursor: pointer;
+    }
+
+    .flip-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .flip-card:hover .flip-inner,
+    .flip-card.flipped .flip-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flip-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: inherit;
+    }
+
+    .flip-front.service-card,
+    .flip-back.service-card {
+      box-shadow: var(--shadow-card);
+    }
+
+    .flip-back {
+      transform: rotateY(180deg);
     }
 
     /* SIMPLE CARD */
@@ -485,6 +540,38 @@
       margin: 0;
       color: var(--text-soft);
       line-height: 1.7;
+    }
+
+    /* WORK WITH / BOOKING */
+
+    .booking-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 860px) {
+      .booking-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .booking-box {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 16px 16px 18px;
+      border: 1px solid rgba(229, 231, 235, 0.9);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+      font-size: 13px;
+    }
+
+    .booking-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
     }
 
     /* FOOTER */
@@ -573,7 +660,6 @@
 
           <div class="hero-image-wrap">
             <div class="hero-image-inner">
-              <!-- Du kannst hier später ein anderes Portrait einbauen -->
               <img src="furat_abdulle.png" alt="Furat Abdulle working with clients" />
               <div class="hero-tag">
                 <span class="hero-tag-dot"></span>
@@ -623,7 +709,9 @@
       <section id="why" style="margin-top:40px;">
         <div class="section-header">
           <p class="section-label">WHY THIS MATTERS</p>
-          <h2 class="section-title">Technology shapes access. Access shapes opportunity. Opportunity shapes futures.</h2>
+          <h2 class="section-title">
+            Technology shapes access. Access shapes opportunity. Opportunity shapes futures.
+          </h2>
           <p class="section-sub">
             AI determines who gets seen, supported, or overlooked. Digital tools decide whose ideas move forward —
             and who is made invisible. These structures aren’t neutral. And they don’t change on their own. They are
@@ -665,9 +753,29 @@
           </p>
         </div>
 
+        <div class="section-body">
+          <div class="card-grid-2">
+            <div class="card">
+              <h3>1. Understand</h3>
+              <p>We break down digital and AI concepts into grounded, human language so any person can follow.</p>
+            </div>
+            <div class="card">
+              <h3>2. Contextualize</h3>
+              <p>We examine how technology intersects with identity, power, access, and society.</p>
+            </div>
+            <div class="card">
+              <h3>3. Strategize</h3>
+              <p>We help purpose-driven people use digital tools in ways that align with their mission and community impact.</p>
+            </div>
+            <div class="card">
+              <h3>4. Act</h3>
+              <p>We provide frameworks and methods that turn insight into sustainable action.</p>
+            </div>
+          </div>
+        </div>
       </section>
 
-        <!-- SERVICES – 2 FLIP CARDS -->
+      <!-- SERVICES – FLIP CARDS -->
       <section id="services" style="margin-top:44px;">
         <div class="section-header">
           <p class="section-label">SERVICES</p>
@@ -769,7 +877,6 @@
         </div>
       </section>
 
-
       <!-- PAST CONTRIBUTIONS -->
       <section id="contributions" style="margin-top:44px;">
         <div class="section-header">
@@ -825,7 +932,9 @@
         <div class="section-header">
           <p class="section-label">ABOUT THE FOUNDER</p>
           <h2 class="section-title">Furat Abdulle — Founder of Iftiin Flow</h2>
-    
+          <p class="section-sub">
+            Educator, advisor, community builder.
+          </p>
         </div>
 
         <div class="section-body">
@@ -842,7 +951,8 @@
                 justice, clarity, and access.
               </p>
               <p style="margin-top:8px;">
-                I created Iftiin Flow because I believe: technology can enable people to change the world.
+                I created Iftiin Flow because I believe: technology should support people — not obscure them,
+                overwhelm them, or exclude them.
               </p>
               <p style="margin-top:8px;">
                 Through advisory work, workshops, and public education, I help individuals and communities approach
@@ -866,6 +976,16 @@
         </div>
       </section>
 
+      <!-- WORK WITH -->
+      <section id="work-with" style="margin-top:44px;">
+        <div class="section-header">
+          <p class="section-label">WORK WITH IFTIIN FLOW</p>
+          <h2 class="section-title">Guidance rooted in clarity, justice, and social innovation.</h2>
+          <p class="section-sub">
+            If you are navigating AI, starting a purpose-driven project, or exploring digital tools with intention —
+            Iftiin Flow offers support through advisory work, workshops, and speaking.
+          </p>
+        </div>
 
         <div class="section-body">
           <div class="booking-grid">
@@ -940,7 +1060,15 @@
 
     // current year
     document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Flip cards (hover + click for mobile)
+    document.querySelectorAll(".flip-card").forEach(card => {
+      card.addEventListener("click", (e) => {
+        // Links normal funktionieren lassen
+        if (e.target.closest("a")) return;
+        card.classList.toggle("flipped");
+      });
+    });
   </script>
 </body>
 </html>
-
