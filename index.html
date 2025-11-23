@@ -328,4 +328,509 @@
     }
 
     .hero-note-label {
-      fo
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .hero-note strong {
+      font-weight: 600;
+    }
+
+    .hero-note p {
+      margin: 0;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    .hero-tagline {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* GENERIC LAYOUTS */
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 20px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      padding: 14px 14px 16px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+      font-size: 13px;
+    }
+
+    .card h3 {
+      margin: 0 0 5px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    .list-clean {
+      padding-left: 18px;
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .list-clean li {
+      margin-bottom: 4px;
+    }
+
+    /* BOOKING / CONTACT */
+
+    .booking-grid {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 860px) {
+      .booking-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .booking-box {
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      padding: 14px 15px 16px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-card);
+      font-size: 13px;
+    }
+
+    .booking-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    /* FOOTER */
+
+    footer {
+      margin-top: 32px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="furat_abdulle.png" alt="Portrait of Furat Abdulle" class="brand-photo" />
+        </div>
+        <div>
+          <div class="brand-text-title">IFTIIN FLOW</div>
+          <div class="brand-text-sub">AI & Digital Empowerment by Furat Abdulle</div>
+        </div>
+      </div>
+      <nav>
+        <a class="nav-link" href="#who">Who it's for</a>
+        <a class="nav-link" href="#why">Why it matters</a>
+        <a class="nav-link" href="#how">How it works</a>
+        <a class="nav-link" href="#pricing">Pricing</a>
+        <a class="nav-link" href="#about">About</a>
+        <a class="nav-link nav-link-primary" href="#contact">Get in touch</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- PAGE -->
+  <div class="shell">
+    <main>
+      <!-- HERO -->
+      <section class="hero" id="top">
+        <div>
+          <p class="hero-kicker">AI · LEARNING · JUSTICE</p>
+          <h1 class="hero-title">
+            You’re here to use AI to
+            <span class="hero-highlight">shift structures – not just productivity.</span>
+          </h1>
+          <p class="hero-sub">
+            Iftiin Flow is a learning space for people who want to bring critical thinking,
+            political awareness and practical AI skills together. So that digital tools
+            become leverage for your work and community – not another hype wave to drown in.
+          </p>
+          <div class="hero-actions">
+            <a href="#how">
+              <button class="btn btn-primary">
+                <span class="icon">⚡</span>
+                <span>Explore the Iftiin Flow programme</span>
+              </button>
+            </a>
+            <a href="#who">
+              <button class="btn btn-ghost">
+                <span class="icon">▸</span>
+                <span>See who it’s for</span>
+              </button>
+            </a>
+          </div>
+          <div class="hero-meta-row">
+            <div class="pill">
+              <span class="pill-dot"></span>
+              <span>AI literacy with political depth</span>
+            </div>
+            <div class="pill">
+              <span class="pill-dot" style="background:#15803d;"></span>
+              <span>For BIPoC & social impact work</span>
+            </div>
+            <div class="pill">
+              <span class="pill-dot" style="background:#0ea5e9;"></span>
+              <span>Tools, practice & reflection</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-side">
+          <div class="hero-note">
+            <div class="hero-note-label">WHAT IS IFTIIN FLOW?</div>
+            <p>
+              <strong>Iftiin</strong> means “light” in Somali. Iftiin Flow is a facilitated,
+              online learning space for people who want to understand AI, automation and
+              digital tools deeply enough to use them for liberation – not just efficiency.
+            </p>
+          </div>
+          <div class="hero-note">
+            <div class="hero-note-label">CORE IDEA</div>
+            <p>
+              We combine critical analysis of technology with concrete, hands-on practice.
+              You’ll experiment with text, video and automation tools – and at the same time
+              name power structures, bias and exclusion in digital systems.
+            </p>
+          </div>
+          <div class="hero-tagline">
+            Designed and facilitated by Furat Abdulle – Data & AI consultant,
+            educator and community builder.
+          </div>
+        </div>
+      </section>
+
+      <!-- WHO IT'S FOR -->
+      <section id="who">
+        <p class="section-label">WHO IT'S FOR</p>
+        <h2 class="section-title">For people who want to use AI without losing their politics</h2>
+        <p class="section-sub">
+          Iftiin Flow is for people who sit zwischen Welten: you care about justice,
+          language and people – and you also see that you need tech skills to move
+          in today’s world.
+        </p>
+
+        <div class="card-grid">
+          <div class="card">
+            <h3>You work in or around organisations</h3>
+            <p>You might be in:</p>
+            <ul class="list-clean">
+              <li>NGOs, foundations, social businesses or community projects,</li>
+              <li>public sector, education, arts & culture, or tech/consulting,</li>
+              <li>or building your own impact-driven venture.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>You’re tired of shallow AI talk</h3>
+            <ul class="list-clean">
+              <li>“Just use ChatGPT” isn’t enough for the work you do.</li>
+              <li>You want to understand what’s behind the tools, not just prompts.</li>
+              <li>You’re done with buzzwords that ignore power and inequality.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>You want clarity, not overwhelm</h3>
+            <ul class="list-clean">
+              <li>You have limited capacity and real constraints.</li>
+              <li>You want to build a realistic learning path for the next 6–12 months.</li>
+              <li>You’d like to learn with others who care about similar things.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- WHY IT MATTERS -->
+      <section id="why">
+        <p class="section-label">WHY IT MATTERS</p>
+        <h2 class="section-title">AI is reshaping work. Power decides who benefits.</h2>
+        <p class="section-sub">
+          AI and automation are already shifting how knowledge is produced, how organisations make
+          decisions, and who is seen as “skilled”. If communities who experience racism, classism or
+          other forms of oppression are left out of this knowledge, existing gaps deepen.
+        </p>
+
+        <div class="card-grid">
+          <div class="card">
+            <h3>Beyond productivity hype</h3>
+            <p>
+              Most AI narratives are about “faster” and “more efficient”. Iftiin Flow asks:
+              efficient for whom, and at whose expense? We explore how to use AI so it expands
+              access, not just margins.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Language, bias & data</h3>
+            <p>
+              Large language models don’t just “predict text” – sie reproduzieren Narrative,
+              Machtverhältnisse und blinde Flecken. We make that visible and work out how to
+              respond in your context.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Skills as protection & leverage</h3>
+            <p>
+              Knowing how AI works (and doesn’t) is a form of protection against bullshit,
+              exploitation and false promises – and a way to build leverage in your career,
+              organisation or business.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section id="how">
+        <p class="section-label">HOW IT WORKS</p>
+        <h2 class="section-title">A structured learning journey, not a random tool playlist</h2>
+        <p class="section-sub">
+          Iftiin Flow blends three layers: personal clarity, practical skills and structural
+          awareness. You can join as an individual or bring Iftiin Flow into your team.
+        </p>
+
+        <div class="card-grid">
+          <div class="card">
+            <h3>1 · Foundations & reframing</h3>
+            <p>
+              We start with your context: work, boundaries, goals, existing tools. Together we
+              unpack what “AI literacy” actually means for you and where hype meets reality.
+            </p>
+            <ul class="list-clean">
+              <li>Map your current workflows and time drains.</li>
+              <li>Clarify what you want AI <em>not</em> to do for you.</li>
+              <li>Understand key concepts in plain language.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>2 · Practice with real tasks</h3>
+            <p>
+              We work on your real tasks: content, research, communication, planning, reporting,
+              small automations.
+            </p>
+            <ul class="list-clean">
+              <li>Hands-on with text, video and automation tools.</li>
+              <li>Templates, prompt patterns and quality checks.</li>
+              <li>Ethical red lines & data protection basics.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>3 · Integration & strategy</h3>
+            <p>
+              You leave with a realistic roadmap – not just ideas.
+            </p>
+            <ul class="list-clean">
+              <li>Design sustainable routines and experiments.</li>
+              <li>Decide what to learn deeper (and what to ignore).</li>
+              <li>Document learnings for your team or community.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-top:18px;">
+          <div class="card">
+            <h3>Formats</h3>
+            <ul class="list-clean">
+              <li><strong>Cohort programme</strong> – small group over several sessions.</li>
+              <li><strong>Team workshop</strong> – tailored for your organisation.</li>
+              <li><strong>1:1 navigation</strong> – focused on your path & decisions.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What you can expect</h3>
+            <ul class="list-clean">
+              <li>Clarity on where AI actually fits into your work.</li>
+              <li>Concrete examples, not just theory or tool lists.</li>
+              <li>Space to talk about race, class, gender & power in tech.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRICING -->
+      <section id="pricing">
+        <p class="section-label">PRICING</p>
+        <h2 class="section-title">Sliding-scale pricing for real-world budgets</h2>
+        <p class="section-sub">
+          Iftiin Flow uses a sliding scale so that individuals, grassroots groups and
+          organisations with more resources can all take part. Exact prices are agreed
+          in conversation – these tiers are a guide.
+        </p>
+
+        <div class="card-grid">
+          <div class="card">
+            <h3>Individuals & grassroots</h3>
+            <p>
+              For individuals paying privately or small, volunteer-led groups with very
+              limited budgets.
+            </p>
+            <p class="service-price">
+              Guidance: lower tier · suitable for students, freelancers, grassroots organisers.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Small & mid-sized organisations</h3>
+            <p>
+              For NGOs, social businesses, educational or cultural institutions with some
+              training or innovation budget.
+            </p>
+            <p class="service-price">
+              Guidance: middle tier · priced per person or per workshop, depending on scope.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Larger organisations & corporates</h3>
+            <p>
+              For bigger institutions, companies or foundations who want a tailored
+              programme or workshop series.
+            </p>
+            <p class="service-price">
+              Guidance: upper tier · reflects scale, preparation and follow-up support.
+            </p>
+          </div>
+        </div>
+
+        <p class="section-sub" style="margin-top:10px;">
+          Cost should never be the only barrier. If you’re unsure where you fit, reach out and
+          share a bit about your situation – we can locate the right tier together.
+        </p>
+      </section>
+
+      <!-- ABOUT FURAT -->
+      <section id="about">
+        <p class="section-label">ABOUT</p>
+        <h2 class="section-title">Who is behind Iftiin Flow?</h2>
+        <p class="section-sub">
+          Iftiin Flow is created and led by <strong>Furat Abdulle</strong> – a Data & AI consultant,
+          educator and community organiser with a background in philosophy and educational sciences.
+        </p>
+
+        <div class="two-col">
+          <div>
+            <ul class="list-clean">
+              <li>Several years of experience in Data & AI consulting for large organisations.</li>
+              <li>Work at the intersection of analytics, AI enablement and digital literacy.</li>
+              <li>Long-term community building in Black and migrant contexts in Germany.</li>
+              <li>Spoken word artist using language to question power and create connection.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What this means for Iftiin Flow</h3>
+            <p>
+              You’re not just getting “tech training”. You’re working with someone who:
+            </p>
+            <ul class="list-clean">
+              <li>understands corporate realities and grassroots constraints,</li>
+              <li>speaks both the language of strategy decks and lived experience,</li>
+              <li>and cares about making complex ideas usable for people under pressure.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT / GET IN TOUCH -->
+      <section id="contact">
+        <p class="section-label">GET IN TOUCH</p>
+        <h2 class="section-title">Ready to explore if Iftiin Flow is for you?</h2>
+        <p class="section-sub">
+          You don’t have to know exactly what you need yet. Share a bit about your context,
+          and we’ll figure out together what a good next step could be.
+        </p>
+
+        <div class="booking-grid">
+          <div class="booking-box">
+            <div class="booking-label">OPTION 1 · INTRO CALL</div>
+            <p>
+              Book a 30-minute online intro call to talk through your situation, goals
+              and constraints. We’ll see if a cohort, team workshop or 1:1 format fits best.
+            </p>
+            <!-- TODO: Replace with your real booking link -->
+            <a href="https://calendly.com/YOUR-BOOKING-LINK" target="_blank" rel="noreferrer">
+              <button class="btn btn-primary" style="margin-top:8px;">
+                <span class="icon">🗓</span>
+                <span>Open booking calendar</span>
+              </button>
+            </a>
+          </div>
+
+          <div class="booking-box">
+            <div class="booking-label">OPTION 2 · EMAIL</div>
+            <p>
+              Prefer writing first? Send an email with a short description of:
+            </p>
+            <ul class="list-clean">
+              <li>who you are and where you’re based,</li>
+              <li>your work or organisational context,</li>
+              <li>what you’d like to shift with AI & digital tools.</li>
+            </ul>
+            <p style="margin-top:8px;">
+              Email:
+              <a href="mailto:hello@iftiinflow.com"><strong>hello@iftiinflow.com</strong></a>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      © <span id="year"></span> Iftiin Flow · Created by Furat Abdulle
+    </footer>
+  </div>
+
+  <script>
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener("click", (e) => {
+        const id = link.getAttribute("href").substring(1);
+        const target = document.getElementById(id);
+        if (!target) return;
+        e.preventDefault();
+        window.scrollTo({
+          top: target.offsetTop - 70,
+          behavior: "smooth",
+        });
+      });
+    });
+
+    // current year
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
