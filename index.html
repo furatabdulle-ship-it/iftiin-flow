@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Iftiin Flow – AI-Driven Enablement</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Iftiin Flow – AI-driven enablement for ambitious professionals and creators. Turning AI and digital technology into intuitive, empowering tools for future-forward work and creativity." />
+  <meta name="description" content="Iftiin Flow – AI-driven enablement for ambitious professionals and creators." />
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -26,15 +26,10 @@
       --radius-pill: 999px;
       --shadow-soft: 0 18px 40px rgba(73, 49, 102, 0.12);
       --transition-fast: 160ms ease-out;
-      --transition-med: 220ms ease-out;
       --max-width: 980px;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
       height: 100%;
@@ -48,15 +43,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    main {
-      width: 100%;
-      min-height: 100vh;
-    }
+    main { width: 100%; min-height: 100vh; }
 
     .page {
       max-width: var(--max-width);
@@ -65,9 +52,7 @@
     }
 
     @media (min-width: 900px) {
-      .page {
-        padding: 30px 0 80px;
-      }
+      .page { padding: 30px 0 80px; }
     }
 
     /* NAV */
@@ -153,9 +138,7 @@
     }
 
     @media (min-width: 768px) {
-      .nav-link {
-        display: inline-flex;
-      }
+      .nav-link { display: inline-flex; }
     }
 
     .btn-pill {
@@ -181,9 +164,7 @@
       box-shadow: 0 0 8px rgba(255, 200, 87, 0.8);
     }
 
-    .btn-pill strong {
-      font-weight: 500;
-    }
+    .btn-pill strong { font-weight: 500; }
 
     .btn-pill:hover {
       transform: translateY(-1px);
@@ -195,14 +176,14 @@
     .hero {
       display: grid;
       grid-template-columns: minmax(0, 1.15fr);
-      gap: 20px;
-      margin: 10px 0 32px;
+      gap: 18px;
+      margin: 10px 0 30px;
     }
 
     @media (min-width: 880px) {
       .hero {
         grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
-        gap: 26px;
+        gap: 24px;
         align-items: center;
       }
     }
@@ -212,13 +193,13 @@
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--accent-coral);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .hero-title {
-      font-size: clamp(2.1rem, 4vw, 2.8rem);
+      font-size: clamp(2rem, 3.4vw, 2.6rem);
       line-height: 1.12;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .hero-title span.highlight {
@@ -228,27 +209,22 @@
     }
 
     .hero-subtitle {
-      font-size: 0.98rem;
+      font-size: 0.95rem;
       color: var(--text-soft);
-      line-height: 1.6;
-      max-width: 32rem;
-      margin-bottom: 18px;
-    }
-
-    .hero-subtitle strong {
-      color: var(--text-main);
-      font-weight: 500;
+      line-height: 1.5;
+      max-width: 29rem;
+      margin-bottom: 14px;
     }
 
     .hero-cta-row {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .btn-primary {
-      padding: 10px 18px;
+      padding: 9px 18px;
       border-radius: var(--radius-pill);
       border: none;
       background: linear-gradient(120deg, #FFC857, #FF9F1C);
@@ -267,16 +243,16 @@
 
     .btn-primary:hover {
       transform: translateY(-1px);
-      box-shadow: 0 16px 36px rgba(255, 159, 28, 0.4);
+      box-shadow: 0 16px 34px rgba(255, 159, 28, 0.4);
       filter: brightness(1.04);
     }
 
     .btn-secondary {
-      padding: 9px 16px;
+      padding: 8px 15px;
       border-radius: var(--radius-pill);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       border: 1px solid var(--border-soft);
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.9);
       color: var(--text-soft);
       display: inline-flex;
       align-items: center;
@@ -293,13 +269,13 @@
     }
 
     .hero-meta {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--text-soft);
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .hero-meta span.dot {
@@ -307,28 +283,23 @@
       height: 4px;
       border-radius: 999px;
       background: rgba(108, 84, 145, 0.6);
-      margin-right: 6px;
+      margin-right: 5px;
     }
 
     .hero-card {
       border-radius: var(--radius-lg);
       background: var(--card);
       border: 1px solid var(--border-soft);
-      padding: 16px 16px 16px;
+      padding: 14px 14px;
       box-shadow: var(--shadow-soft);
+      font-size: 0.86rem;
     }
 
     .hero-card-title {
       font-size: 0.95rem;
       font-weight: 500;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: var(--text-main);
-    }
-
-    .hero-card-sub {
-      font-size: 0.85rem;
-      color: var(--text-soft);
-      margin-bottom: 10px;
     }
 
     .hero-card-list {
@@ -336,15 +307,14 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      font-size: 0.85rem;
-      color: var(--text-main);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .hero-card-list li {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
+      color: var(--text-soft);
     }
 
     .hero-card-list span.bullet {
@@ -358,7 +328,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px;
+      padding: 4px 9px;
       border-radius: var(--radius-pill);
       background: #FBF2FF;
       color: var(--accent-teal);
@@ -367,9 +337,7 @@
     }
 
     /* Sections */
-    section {
-      margin-bottom: 40px;
-    }
+    section { margin-bottom: 34px; }
 
     .section-kicker {
       font-size: 0.78rem;
@@ -380,35 +348,33 @@
     }
 
     .section-title {
-      font-size: 1.4rem;
-      margin-bottom: 8px;
+      font-size: 1.3rem;
+      margin-bottom: 6px;
     }
 
     .section-subtitle {
-      font-size: 0.94rem;
+      font-size: 0.9rem;
       color: var(--text-soft);
-      max-width: 32rem;
-      line-height: 1.6;
+      max-width: 30rem;
+      line-height: 1.5;
     }
 
     .grid-2 {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
-      gap: 14px;
-      margin-top: 18px;
+      gap: 12px;
+      margin-top: 14px;
     }
 
     @media (min-width: 800px) {
-      .grid-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+      .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     .card {
       border-radius: var(--radius-lg);
       background: var(--card);
       border: 1px solid var(--border-soft);
-      padding: 16px 16px 16px;
+      padding: 14px 14px;
       box-shadow: var(--shadow-soft);
     }
 
@@ -417,62 +383,60 @@
       text-transform: uppercase;
       letter-spacing: 0.16em;
       color: var(--accent-coral);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .card-title {
-      font-size: 1rem;
+      font-size: 0.96rem;
       margin-bottom: 6px;
     }
 
     .card-body {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--text-soft);
-      line-height: 1.7;
+      line-height: 1.55;
     }
 
     .pillars {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       gap: 10px;
-      margin-top: 16px;
+      margin-top: 14px;
     }
 
     @media (min-width: 860px) {
-      .pillars {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
+      .pillars { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
 
     .pillar-item {
       border-radius: 16px;
-      padding: 10px 11px;
+      padding: 9px 10px;
       background: var(--card-soft);
       border: 1px solid var(--border-soft);
-      font-size: 0.85rem;
+      font-size: 0.84rem;
     }
 
     .pillar-title {
       font-weight: 500;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       color: var(--text-main);
     }
 
     .pillar-body {
       color: var(--text-soft);
-      line-height: 1.6;
+      line-height: 1.45;
     }
 
     .audience-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 14px;
+      margin-top: 12px;
     }
 
     .audience-tag {
-      font-size: 0.82rem;
-      padding: 6px 11px;
+      font-size: 0.8rem;
+      padding: 6px 10px;
       border-radius: var(--radius-pill);
       background: #FFFFFF;
       border: 1px solid var(--border-soft);
@@ -481,19 +445,19 @@
 
     /* Signup */
     .signup-section {
-      border-radius: 24px;
+      border-radius: 22px;
       background: linear-gradient(135deg, #FFF5E5, #FBE9FF);
       border: 1px solid #F2DDF7;
       box-shadow: var(--shadow-soft);
-      padding: 18px 16px 18px;
+      padding: 16px 14px 16px;
     }
 
     @media (min-width: 860px) {
       .signup-section {
-        padding: 22px 22px 22px;
+        padding: 20px 20px 20px;
         display: grid;
         grid-template-columns: 1.1fr 1fr;
-        gap: 24px;
+        gap: 22px;
         align-items: center;
       }
     }
@@ -507,7 +471,7 @@
       border: 1px solid rgba(0, 0, 0, 0.06);
       background: rgba(255, 255, 255, 0.9);
       font-size: 0.78rem;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: var(--text-soft);
     }
 
@@ -520,29 +484,23 @@
     }
 
     .signup-title {
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       margin-bottom: 6px;
     }
 
     .signup-subtitle {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: var(--text-soft);
-      max-width: 30rem;
-      line-height: 1.6;
-      margin-bottom: 10px;
-    }
-
-    .signup-highlight {
-      font-size: 0.82rem;
-      color: var(--text-main);
-      margin-bottom: 10px;
+      max-width: 27rem;
+      line-height: 1.5;
+      margin-bottom: 8px;
     }
 
     .signup-badges {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       font-size: 0.78rem;
     }
 
@@ -564,9 +522,9 @@
 
     .signup-form {
       background: #FFFFFF;
-      border-radius: 20px;
+      border-radius: 18px;
       border: 1px solid #F0E0FF;
-      padding: 12px 12px 12px;
+      padding: 11px 11px 11px;
     }
 
     .signup-form-row {
@@ -590,7 +548,7 @@
       border: 1px solid #E0D2F5;
       background: #FFFFFF;
       color: var(--text-main);
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       outline: none;
       transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
     }
@@ -610,7 +568,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .product-pill {
@@ -635,13 +593,13 @@
 
     .btn-submit {
       width: 100%;
-      margin-top: 6px;
+      margin-top: 4px;
       padding: 9px 16px;
       border-radius: var(--radius-pill);
       border: none;
       background: linear-gradient(120deg, #FFC857, #FF9F1C);
       color: #2C1A0C;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -663,7 +621,7 @@
     }
 
     .form-message {
-      margin-top: 8px;
+      margin-top: 6px;
       font-size: 0.8rem;
       color: var(--accent-teal);
       display: none;
@@ -671,8 +629,8 @@
 
     /* Footer */
     footer {
-      margin-top: 30px;
-      padding-top: 14px;
+      margin-top: 26px;
+      padding-top: 12px;
       border-top: 1px solid #EADCF7;
       font-size: 0.8rem;
       color: var(--text-soft);
@@ -719,13 +677,14 @@
           <button class="nav-link" onclick="scrollToSection('signup')">Early access</button>
           <button class="btn-pill" onclick="scrollToSection('signup')">
             <span class="dot"></span>
-            <span>Early access for <strong>1–2 tracks</strong></span>
+            <span>Join early access</span>
           </button>
         </div>
       </header>
 
       <!-- HERO -->
       <section class="hero">
+        <!-- Problem / Promise / CTA -->
         <div>
           <div class="hero-kicker">AI · Enablement · Future of Work</div>
           <h1 class="hero-title">
@@ -733,8 +692,7 @@
             through <span class="highlight">AI-driven enablement</span>.
           </h1>
           <p class="hero-subtitle">
-            Iftiin Flow equips ambitious thinkers, creators, and professionals with intuitive, empowering AI and digital capabilities —
-            turning complex technology into clear pathways for <strong>action</strong>, <strong>innovation</strong>, and <strong>meaningful impact</strong>.
+            Less AI overwhelm. More calm, clear, creative action.
           </p>
 
           <div class="hero-cta-row">
@@ -743,153 +701,147 @@
               <span>→</span>
             </button>
             <button class="btn-secondary" onclick="scrollToSection('mission')">
-              How we enable you
+              See what Iftiin Flow is
             </button>
           </div>
 
           <div class="hero-meta">
-            <span><span class="dot"></span> Enablement over traditional learning</span>
+            <span><span class="dot"></span> Enablement, not endless learning</span>
             <span><span class="dot"></span> Built for multi-hyphenate, future-facing talent</span>
           </div>
         </div>
 
+        <!-- Simple visual card = Result snapshot -->
         <aside class="hero-card">
-          <div class="hero-card-title">A calmer way into AI.</div>
-          <p class="hero-card-sub">
-            We don’t start with tools. We start with your context, your work, your creative energy.
-          </p>
+          <div class="hero-card-title">In one session, you can:</div>
           <ul class="hero-card-list">
-            <li><span class="bullet"></span> Turn AI from noise into a clear, supportive partner.</li>
-            <li><span class="bullet"></span> Design 1–2 workflows that actually fit your life and work.</li>
-            <li><span class="bullet"></span> Leave with more clarity, not more overwhelm.</li>
+            <li><span class="bullet"></span> Choose 1–2 areas where AI should support you.</li>
+            <li><span class="bullet"></span> Shape a simple, repeatable workflow.</li>
+            <li><span class="bullet"></span> Leave with clear next steps and prompts.</li>
           </ul>
           <div class="hero-card-pill">
-            ✨ Soft power, strong enablement.
+            ✨ Less theory. More “this actually helps me”.
           </div>
         </aside>
       </section>
 
-      <!-- MISSION & VISION -->
+      <!-- MISSION & VISION: WHAT / WHY -->
       <section id="mission">
         <div class="section-kicker">Brand foundation</div>
-        <h2 class="section-title">Mission & Vision</h2>
+        <h2 class="section-title">What Iftiin Flow is.</h2>
         <p class="section-subtitle">
-          Iftiin means “light”. Flow is the state where clarity, creativity, and confidence meet.
-          Together they express what this brand stands for: tech as an enabler for bold, self-determined futures.
+          Iftiin = “light”. Flow = clarity in motion. Together: tech as a gentle amplifier for your work and ideas.
         </p>
 
         <div class="grid-2">
           <div class="card">
             <div class="card-label">Mission</div>
-            <div class="card-title">What Iftiin Flow does in the world</div>
+            <div class="card-title">What we do</div>
             <p class="card-body">
               Iftiin Flow expands the creative, strategic, and leadership capacity of ambitious individuals
-              by making AI and digital technology intuitive, empowering, and easy to apply — enabling them
-              to activate new ideas, create opportunities, and generate meaningful impact.
+              by making AI and digital technology intuitive, empowering, and easy to apply.
             </p>
           </div>
           <div class="card">
             <div class="card-label">Vision</div>
-            <div class="card-title">The future we’re working towards</div>
+            <div class="card-title">Why we exist</div>
             <p class="card-body">
-              A world where diverse creators and professionals confidently shape bold futures, drive innovation,
-              and influence global progress — powered by accessible, intuitive, and empowering AI.
+              A world where diverse creators and professionals shape bold futures and drive innovation —
+              supported by accessible, intuitive, and empowering AI.
             </p>
           </div>
         </div>
       </section>
 
-      <!-- HOW WE ENABLE -->
+      <!-- HOW WE ENABLE: MECE PILLARS -->
       <section>
         <div class="section-kicker">How we enable</div>
-        <h2 class="section-title">From AI noise to calm, confident action.</h2>
+        <h2 class="section-title">Four angles. One outcome: confident use of AI.</h2>
         <p class="section-subtitle">
-          We don’t try to teach you everything about AI. We enable you to do the right things with it —
-          in a way that feels grounded, creative, and sustainable.
+          Everything we do falls into four clear buckets.
         </p>
 
         <div class="pillars">
+          <!-- 1. Clarity -->
           <div class="pillar-item">
-            <div class="pillar-title">Clarity over complexity</div>
+            <div class="pillar-title">Clarity</div>
             <div class="pillar-body">
-              Turn AI from something abstract into something tangible and aligned with your real goals.
+              Understand where AI fits into your work, what it should do for you, and what it can’t.
             </div>
           </div>
+          <!-- 2. Capability -->
           <div class="pillar-item">
-            <div class="pillar-title">Creativity as strategy</div>
+            <div class="pillar-title">Capability</div>
             <div class="pillar-body">
-              Use AI not only to optimise, but to imagine and build new formats, ideas, and possibilities.
+              Turn ideas into simple workflows, prompts, and routines you can reuse without overthinking.
             </div>
           </div>
+          <!-- 3. Creativity -->
           <div class="pillar-item">
-            <div class="pillar-title">Confidence through capability</div>
+            <div class="pillar-title">Creativity</div>
             <div class="pillar-body">
-              Build 1–2 practical, repeatable workflows that you can actually keep using.
+              Use AI to explore formats, concepts, and content you wouldn’t create on autopilot.
             </div>
           </div>
+          <!-- 4. Community -->
           <div class="pillar-item">
-            <div class="pillar-title">Technology as a gentle catalyst</div>
+            <div class="pillar-title">Community</div>
             <div class="pillar-body">
-              Let AI create space for focus, deep work, and the projects that really matter to you.
+              Learn from others who also test, question, and build — without hype pressure.
             </div>
           </div>
+          <!-- 5. Calm -->
           <div class="pillar-item">
-            <div class="pillar-title">Future-facing, grounded in reality</div>
+            <div class="pillar-title">Calm</div>
             <div class="pillar-body">
-              Stay close to what’s coming without losing your footing in the present.
+              Replace FOMO with a small, curated set of tools and habits that actually stick.
             </div>
           </div>
+          <!-- 6. Future-readiness -->
           <div class="pillar-item">
-            <div class="pillar-title">Community elevation</div>
+            <div class="pillar-title">Future-readiness</div>
             <div class="pillar-body">
-              Grow with others who are also building, questioning, experimenting, and shaping what comes next.
+              Stay close to what’s coming, while still grounded in your current life and priorities.
             </div>
           </div>
         </div>
       </section>
 
-      <!-- WHO IT'S FOR -->
+      <!-- WHO IT'S FOR: 3 MECE TARGET GROUPS -->
       <section>
         <div class="section-kicker">Who this is for</div>
-        <h2 class="section-title">You feel the future moving – and you want to move with it, on your own terms.</h2>
+        <h2 class="section-title">Three groups. One shared mindset.</h2>
         <p class="section-subtitle">
-          Iftiin Flow is designed for people who don’t fit into one box:
-          ambitious professionals, creators, multi-hyphenates, and social innovators navigating complex worlds.
+          Iftiin Flow is not for “everyone”. It’s for people who move with intention.
         </p>
 
         <div class="audience-tags">
-          <div class="audience-tag">Professionals in transition</div>
-          <div class="audience-tag">Creators experimenting with AI</div>
-          <div class="audience-tag">People building at the intersection of tech & society</div>
-          <div class="audience-tag">Leaders bringing teams into the AI era</div>
-          <div class="audience-tag">Multi-passionate, future-oriented humans</div>
+          <div class="audience-tag">Professionals in transition · new roles, new expectations</div>
+          <div class="audience-tag">Creators & multi-hyphenates · content, ideas, side projects</div>
+          <div class="audience-tag">Leaders & builders · teams, communities, initiatives</div>
         </div>
       </section>
 
-      <!-- SIGNUP -->
+      <!-- SIGNUP: 1–2 TRACKS -->
       <section id="signup" class="signup-section">
         <div>
           <div class="signup-pill">
             <span></span>
             Early access · Small, intentional group
           </div>
-          <h2 class="signup-title">Be part of the first Iftiin Flow experiments.</h2>
+          <h2 class="signup-title">Join the first Iftiin Flow cohort.</h2>
           <p class="signup-subtitle">
-            We’re shaping the first Iftiin Flow experiences with a small group of early collaborators.
-            Share who you are and what you want AI to enable for you — and we’ll invite you into 1–2 matching tracks.
-          </p>
-          <p class="signup-highlight">
-            You can express interest in one or both: a work-focused AI enablement lab, and a creator & content track.
+            Tell us who you are and where AI should support you. We’ll invite you into one or two matching tracks.
           </p>
 
           <div class="signup-badges">
-            <div class="signup-badge"><i>⚡</i><span>AI enablement for work</span></div>
-            <div class="signup-badge"><i>🎨</i><span>Creator & content workflows</span></div>
+            <div class="signup-badge"><i>⚡</i><span>AI for work & strategy</span></div>
+            <div class="signup-badge"><i>🎨</i><span>AI for creation & content</span></div>
           </div>
         </div>
 
         <div>
-          <!-- Replace action with a real endpoint (Formspree, Getform, etc.) -->
+          <!-- Replace action with your real endpoint -->
           <form class="signup-form" id="earlyAccessForm" action="#" method="post" onsubmit="handleForm(event)">
             <div class="signup-form-row">
               <div>
@@ -902,36 +854,36 @@
               </div>
             </div>
 
-            <div class="field-label">Which track speaks to you most?</div>
+            <div class="field-label">Which track fits you best?</div>
             <div class="product-toggle">
               <button type="button" class="product-pill active" data-track="AI Enablement Lab" onclick="setTrack(this)">
-                AI Enablement Lab (for work & strategy)
+                AI Enablement Lab
               </button>
               <button type="button" class="product-pill" data-track="Creator & Content Track" onclick="setTrack(this)">
-                Creator & Content Track (creative workflows)
+                Creator & Content Track
               </button>
             </div>
             <input type="hidden" name="track" id="trackInput" value="AI Enablement Lab" />
 
             <div class="signup-form-row">
               <div>
-                <label for="role" class="field-label">What best describes you right now?</label>
+                <label for="role" class="field-label">How would you describe yourself?</label>
                 <select id="role" name="role" class="field-select">
-                  <option value="">Select an option</option>
-                  <option value="professional">Professional navigating change</option>
+                  <option value="">Select</option>
+                  <option value="professional">Professional</option>
                   <option value="creator">Creator / multi-hyphenate</option>
                   <option value="founder">Founder / builder</option>
-                  <option value="leader">Team lead / manager</option>
-                  <option value="other">Something else, beautifully specific</option>
+                  <option value="leader">Leader / manager</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
             </div>
 
             <div class="signup-form-row">
               <div>
-                <label for="note" class="field-label">What would you like AI to enable for you?</label>
+                <label for="note" class="field-label">What should AI enable for you?</label>
                 <input id="note" name="note" class="field-input" type="text"
-                       placeholder="E.g. more ease, new formats, clarity, time, experiments…" />
+                       placeholder="E.g. time, clarity, formats, focus…" />
               </div>
             </div>
 
@@ -939,10 +891,10 @@
               Join early access
             </button>
             <div id="formMessage" class="form-message">
-              Thank you — you’re on the early access list. We’ll reach out as the first sessions open.
+              Thank you — you’re on the list. We’ll reach out as the first sessions open.
             </div>
             <p class="form-footnote">
-              Your information stays with us. No noise, no pressure. Only relevant invitations and updates.
+              No spam. Only relevant invitations and updates.
             </p>
           </form>
         </div>
@@ -952,7 +904,7 @@
       <footer>
         <div>© <span id="year"></span> Iftiin Flow.</div>
         <div class="footer-links">
-          <span class="footer-link">Brand & Story</span>
+          <span class="footer-link">Brand</span>
           <span class="footer-link">Future-of-Work & AI</span>
         </div>
       </footer>
@@ -980,7 +932,7 @@
       e.preventDefault();
       const message = document.getElementById("formMessage");
       message.style.display = "block";
-      // Hier kannst du später eine echte Integration ergänzen (Formspree, Backend, etc.)
+      // integrate real backend / form service here later
     }
   </script>
 </body>
