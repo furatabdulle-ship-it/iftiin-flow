@@ -14,11 +14,11 @@ const translations = {
     hero: {
       title: "Digitale & KI-Kompetenzen für eine inklusivere Zukunft.",
       subtitle:
-        "Iftiin Flow unterstützt Menschen, Organisationen und Communities dabei, Technologie bewusst, selbstbestimmt und strategisch zu nutzen – für soziale Innovation und inklusivere Strukturen.",
+        "Iftiin Flow unterstützt Organisationen und Communities dabei, Technologie bewusst, selbstbestimmt und strategisch zu nutzen – für soziale Innovation und inklusivere Strukturen.",
       primaryCta: "Termin buchen",
       secondaryCta: "Digitale Produkte ansehen",
       highlight:
-        "„Iftiin“ bedeutet Licht. Iftiin Flow verbindet Digital- und AI Literacy mit Empowerment, damit Technologien nicht nur effizient, sondern auch gerecht und verantwortungsvoll eingesetzt werden."
+        "„Iftiin“ bedeutet Licht auf somalisch. Iftiin Flow verbindet Digital- und AI Literacy mit Empowerment, damit Technologien nicht nur effizient, sondern auch gerecht und verantwortungsvoll eingesetzt werden."
     },
     about: {
       title: "Was ist Iftiin Flow?",
@@ -29,7 +29,7 @@ const translations = {
         text: "Verstehen, wie KI funktioniert, welche Chancen und Risiken sie mitbringt und wie sie verantwortungsvoll eingesetzt werden kann."
       },
       feature2: {
-        title: "Empowerment statt Überforderung",
+        title: "Enablement & Empowerment",
         text: "Komplexe Themen werden greifbar gemacht – mit praxisnahen Beispielen, klarer Sprache und Formaten, die zum Mitgestalten einladen."
       },
       feature3: {
@@ -42,11 +42,11 @@ const translations = {
       }
     },
     founder: {
-      name: "Khadija Abdulle",
-      role: "Gründerin von Iftiin Flow & Digital-/AI-Literacy-Consultant",
+      name: "Furat Abdulle",
+      role: "Gründerin von Iftiin Flow",
       tag: "Fokus: Digital & AI Literacy",
       short:
-        "Khadija verbindet Hintergründe in Bildungswissenschaften, Philosophie und IT-Beratung. Sie arbeitet seit mehreren Jahren an der Schnittstelle von Technologie, Lernen und sozialer Gerechtigkeit – mit dem Ziel, dass Menschen Technologien verstehen und für ihre eigene Agenda nutzen können.",
+        "Furat verbindet Hintergründe in Bildungswissenschaften, Philosophie und IT-Beratung. Sie arbeitet seit mehreren Jahren an der Schnittstelle von Technologie, Lernen und sozialer Gerechtigkeit – mit dem Ziel, dass Menschen Technologien verstehen und für ihre eigene Agenda nutzen können.",
       moreCta: "Mehr über mich",
       more:
         "In ihrer Arbeit kombiniert Khadija strategische Beratung, Enablement-Programme und Community-Formate. Sie hat u. a. mit Unternehmen und Communities an Themen wie KI-Einführung, digitaler Zusammenarbeit, Power-BI-Einführung und Empowerment in tech-nahen Räumen gearbeitet. Iftiin Flow ist für sie ein Raum, in dem technologische Entwicklung, Kritik an Machtverhältnissen und praktische Werkzeuge zusammenkommen."
@@ -71,7 +71,7 @@ const translations = {
           "Die digitalen Produkte helfen, Wissen Schritt für Schritt aufzubauen – z. B. zu KI-Basics, guten Prompting-Praktiken, Tool-Übersichten oder Fragen der digitalen Selbstbestimmung. Ideal für Menschen, die selbstgesteuert lernen wollen oder Materialien für ihre Community oder ihr Team suchen."
       },
       consulting: {
-        title: "Begleitende Beratung & Enablement",
+        title: "Begleitung & Enablement",
         short:
           "Strategische Begleitung beim Aufbau von digitalen & KI-Kompetenzen in Teams und Organisationen.",
         more:
@@ -138,7 +138,7 @@ const translations = {
       primaryCta: "Book a session",
       secondaryCta: "Explore digital products",
       highlight:
-        "“Iftiin” means light. Iftiin Flow connects digital & AI literacy with empowerment, so technologies are used not only efficiently – but also justly, responsibly and with awareness of power structures."
+        "“Iftiin” means light in Somali. Iftiin Flow connects digital & AI literacy with empowerment, so technologies are used not only efficiently – but also justly, responsibly and with awareness of power structures."
     },
     about: {
       title: "What is Iftiin Flow?",
@@ -150,7 +150,7 @@ const translations = {
           "Understand how AI works, which opportunities and risks it brings, and how to use it responsibly in everyday contexts."
       },
       feature2: {
-        title: "Empowerment, not overwhelm",
+        title: "Enablement & Empowerment",
         text:
           "Complex topics are translated into clear language, practical examples and formats that invite people to participate instead of feeling left behind."
       },
@@ -166,26 +166,26 @@ const translations = {
       }
     },
     founder: {
-      name: "Khadija Abdulle",
-      role: "Founder of Iftiin Flow & Digital / AI Literacy Consultant",
+      name: "Furat Abdulle",
+      role: "Founder of Iftiin Flow",
       tag: "Focus: Digital & AI Literacy",
       short:
-        "Khadija brings together backgrounds in educational sciences, philosophy and IT consulting. She has worked for several years at the intersection of technology, learning and social justice – with the goal that people can understand technologies and use them for their own agenda.",
+        "Furat brings together backgrounds in educational sciences, philosophy and IT consulting. She has worked for several years at the intersection of technology, learning and social justice – with the goal that people can understand technologies and use them for their own agenda.",
       moreCta: "More about me",
       more:
-        "In her work, Khadija combines strategic advisory, enablement programmes and community formats. She has worked with organisations and communities on topics like AI roll-out, digital collaboration, Power BI enablement and creating empowering tech spaces. Iftiin Flow is a space where technological development, critique of power structures and practical tools come together."
+        "In her work, Furat combines strategic advisory, enablement programmes and community formats. She has worked with organisations and communities on topics like AI roll-out, digital collaboration, Power BI enablement and creating empowering tech spaces. Iftiin Flow is a space where technological development, critique of power structures and practical tools come together."
     },
     offerings: {
       title: "Offerings",
       intro:
-        "Iftiin Flow works with individuals, teams and organisations – from first steps with AI to strategic enablement formats.",
+        "Iftiin Flow works with organisations – from first steps with AI to strategic enablement formats.",
       moreCta: "Learn more",
       workshops: {
         title: "Workshops & Trainings",
         short:
           "Interactive workshops on digital and AI literacy – from fundamentals to concrete use cases.",
         more:
-          "Ideal for teams, organisations and communities that want to build a shared understanding of topics like AI basics, automation, digital collaboration or responsible use of new tools. Formats can be delivered online or on site and are adapted to audience, prior knowledge and context."
+          "Ideal for organisations and communities that want to build a shared understanding of topics like AI basics, automation, digital collaboration or responsible use of new tools. Formats can be delivered online or on site and are adapted to audience, prior knowledge and context."
       },
       guides: {
         title: "Digital Guides & Toolkits",
@@ -195,7 +195,7 @@ const translations = {
           "These digital products help you build knowledge step by step – for example on AI basics, good prompting practices, overviews of tools or questions of digital self-determination. Perfect for people who like to learn at their own pace or share resources with their community or team."
       },
       consulting: {
-        title: "Advisory & Enablement Support",
+        title: "Advisory & Enablement",
         short:
           "Strategic support for building digital & AI capabilities in teams and organisations.",
         more:
