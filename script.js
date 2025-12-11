@@ -41,6 +41,16 @@ const translations = {
         text: "Konkrete Leitfäden, Checklisten und Formate, die direkt im Alltag, in Teams oder Organisationen angewendet werden können."
       }
     },
+    founder: {
+      name: "Khadija Abdulle",
+      role: "Gründerin von Iftiin Flow & Digital-/AI-Literacy-Consultant",
+      tag: "Fokus: Digital & AI Literacy",
+      short:
+        "Khadija verbindet Hintergründe in Bildungswissenschaften, Philosophie und IT-Beratung. Sie arbeitet seit mehreren Jahren an der Schnittstelle von Technologie, Lernen und sozialer Gerechtigkeit – mit dem Ziel, dass Menschen Technologien verstehen und für ihre eigene Agenda nutzen können.",
+      moreCta: "Mehr über mich",
+      more:
+        "In ihrer Arbeit kombiniert Khadija strategische Beratung, Enablement-Programme und Community-Formate. Sie hat u. a. mit Unternehmen und Communities an Themen wie KI-Einführung, digitaler Zusammenarbeit, Power-BI-Einführung und Empowerment in tech-nahen Räumen gearbeitet. Iftiin Flow ist für sie ein Raum, in dem technologische Entwicklung, Kritik an Machtverhältnissen und praktische Werkzeuge zusammenkommen."
+    },
     offerings: {
       title: "Angebote",
       intro:
@@ -154,6 +164,16 @@ const translations = {
         text:
           "Concrete guides, checklists and learning formats that can be applied directly in daily work, teams or community spaces."
       }
+    },
+    founder: {
+      name: "Khadija Abdulle",
+      role: "Founder of Iftiin Flow & Digital / AI Literacy Consultant",
+      tag: "Focus: Digital & AI Literacy",
+      short:
+        "Khadija brings together backgrounds in educational sciences, philosophy and IT consulting. She has worked for several years at the intersection of technology, learning and social justice – with the goal that people can understand technologies and use them for their own agenda.",
+      moreCta: "More about me",
+      more:
+        "In her work, Khadija combines strategic advisory, enablement programmes and community formats. She has worked with organisations and communities on topics like AI roll-out, digital collaboration, Power BI enablement and creating empowering tech spaces. Iftiin Flow is a space where technological development, critique of power structures and practical tools come together."
     },
     offerings: {
       title: "Offerings",
@@ -293,7 +313,6 @@ function setupNavToggle() {
     toggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
   });
 
-  // Close nav after click on mobile
   navLinks.forEach((link) => {
     link.addEventListener("click", () => {
       if (window.innerWidth < 900) {
@@ -335,15 +354,13 @@ function setupScrollSpy() {
 }
 
 // --------------------
-// Offerings accordion
+// Generic toggle for "more" sections
 // --------------------
 
-function setupOfferingsToggle() {
-  const buttons = document.querySelectorAll(
-    ".offering-card [data-toggle='details']"
-  );
+function setupDetailsToggles() {
+  const toggles = document.querySelectorAll("[data-toggle]");
 
-  buttons.forEach((button) => {
+  toggles.forEach((button) => {
     button.addEventListener("click", () => {
       const targetId = button.getAttribute("aria-controls");
       const content = document.getElementById(targetId);
@@ -380,14 +397,10 @@ function setupNewsletterForm() {
       return;
     }
 
-    // Here you would normally send the data to a backend or service.
-    // For now, we just show a success message.
     messageEl.textContent =
       translations[currentLang].newsletter.success || "";
     messageEl.classList.remove("error");
     messageEl.classList.add("success");
-
-    // Keep the email so user can see what they entered
   });
 }
 
@@ -418,7 +431,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupLanguageToggle();
   setupNavToggle();
   setupScrollSpy();
-  setupOfferingsToggle();
+  setupDetailsToggles();
   setupNewsletterForm();
 });
-
