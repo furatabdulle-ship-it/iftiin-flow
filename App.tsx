@@ -4,11 +4,10 @@ import { LegalPage } from './components/LegalPage';
 import { GeometricHome } from './components/GeometricHome';
 import { ManifestoPage } from './components/ManifestoPage';
 import { ServicesPage } from './components/ServicesPage';
-import { UIElements } from './components/UIElements';
 import { Menu, Search, User, X } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
-type View = 'HOME' | 'ABOUT' | 'CONTACT' | 'PRIVACY' | 'TERMS' | 'MANIFESTO' | 'SERVICES' | 'IMPRESSUM' | 'REVOCATION' | 'UI_ELEMENTS';
+type View = 'HOME' | 'ABOUT' | 'CONTACT' | 'PRIVACY' | 'TERMS' | 'MANIFESTO' | 'SERVICES' | 'IMPRESSUM' | 'REVOCATION';
 
 const AppContent: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('HOME');
@@ -121,7 +120,7 @@ const AppContent: React.FC = () => {
            {currentView === 'REVOCATION' && <LegalPage type="REVOCATION" />}
            {currentView === 'MANIFESTO' && <ManifestoPage />}
            {currentView === 'SERVICES' && <ServicesPage onNavigateContact={() => navigate('CONTACT')} />}
-           {currentView === 'UI_ELEMENTS' && <UIElements />}
+          
            
            {currentView === 'ABOUT' && (
               <div className="flex flex-col items-center justify-center min-h-[40vh] text-center animate-in fade-in duration-500 border-t border-b border-gray-100 py-20">
@@ -157,7 +156,7 @@ const AppContent: React.FC = () => {
             <div className="flex flex-col gap-4">
               <span className="text-iftiin-gold mb-2">{t.footer.platform}</span>
               <button onClick={() => navigate('SERVICES')} className="text-left hover:underline">{t.nav.services}</button>
-              <button onClick={() => navigate('UI_ELEMENTS')} className="text-left hover:underline">UI Elements</button>
+            
             </div>
             <div className="flex flex-col gap-4">
               <span className="text-iftiin-gold mb-2">{t.footer.company}</span>
