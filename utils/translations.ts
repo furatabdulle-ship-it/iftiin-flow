@@ -19,7 +19,7 @@ export const translations = {
       terms: "Terms of Service",
       impressum: "Imprint",
       revocation: "Revocation",
-      rights: "© 2025 Iftiin Flow"
+      rights: "© 2026 Iftiin Flow"
     },
     about: {
       title: "Iftiin Flow",
@@ -177,7 +177,7 @@ export const translations = {
       label: "Legal Documentation",
       privacyTitle: "Privacy Policy – Iftiin Flow",
       termsTitle: "Terms and Conditions (GTC)",
-      termsSubtitle: "for Workshops, Consulting, Cooperations & Speaker Engagements",
+      termsSubtitle: "for Workshops, Cooperations & Speaker Engagements",
       impressumTitle: "Legal Notice (Impressum)",
       revocationTitle: "Revocation Instruction",
       updated: "Status: December 2025",
@@ -267,10 +267,7 @@ export const translations = {
           title: "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)",
           content: "Iftiin Flow\nEinzelunternehmen\n\nGärtnerweg 62\n60322 Frankfurt am Main\nDeutschland\n\nInhaberin: Furat Abdulle\n\nE-Mail: contact@iftiin-flow.com\nWebsite: www.iftiin-flow.com"
         },
-        {
-          title: "Umsatzsteuer",
-          content: "Steuernummer: 014083661332"
-        },
+  
         {
           title: "Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV",
           content: "Furat Abdulle"
@@ -467,7 +464,7 @@ export const translations = {
       label: "Rechtliche Dokumentation",
       privacyTitle: "Datenschutzerklärung – Iftiin Flow",
       termsTitle: "Allgemeine Geschäftsbedingungen (AGB)",
-      termsSubtitle: "für Workshops, Beratung, Kooperationen & Speaker Engagements",
+      termsSubtitle: "für Workshops, Kooperationen & Speaker Engagements",
       impressumTitle: "Impressum",
       revocationTitle: "Widerrufsbelehrung",
       updated: "Stand: Dezember 2025",
@@ -556,10 +553,6 @@ export const translations = {
         {
           title: "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)",
           content: "Iftiin Flow\nEinzelunternehmen\n\nGärtnerweg 62\n60322 Frankfurt am Main\nDeutschland\n\nInhaberin: Furat Abdulle\n\nE-Mail: contact@iftiin-flow.com\nWebsite: www.iftiin-flow.com"
-        },
-        {
-          title: "Umsatzsteuer",
-          content: "Steuernummer: 014083661332"
         },
         {
           title: "Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV",
