@@ -186,6 +186,26 @@ export const LegalPage: React.FC<LegalPageProps> = ({ type }) => {
               {(!sections || sections.length === 0) && (
                 <p className="text-gray-500 italic">Content is currently being updated.</p>
               )}
+
+              {type === 'PRIVACY' && (
+                <div className="scroll-mt-32 mb-16 border-b border-gray-100 pb-12">
+                  <h3 className="text-2xl text-black mb-6">Google Fonts</h3>
+                  <div className="text-base text-gray-700 leading-relaxed space-y-4">
+                    <p>
+                      Diese Website verwendet Google Fonts. Beim Laden der Seite wird eine Verbindung zu Servern der Google LLC hergestellt, wodurch Ihre IP-Adresse übermittelt werden kann. Google LLC hat seinen Sitz in den USA. Weitere Informationen finden Sie unter:{' '}
+                      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-black font-bold underline decoration-gray-300 underline-offset-4 hover:text-gold-500">
+                        policies.google.com/privacy
+                      </a>
+                    </p>
+                    <p>
+                      This website uses Google Fonts. When the page loads, a connection is established to servers of Google LLC, which may transmit your IP address. Google LLC is based in the USA. For more information, visit:{' '}
+                      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-black font-bold underline decoration-gray-300 underline-offset-4 hover:text-gold-500">
+                        policies.google.com/privacy
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Footer Note */}

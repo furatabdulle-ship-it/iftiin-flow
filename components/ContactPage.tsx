@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Send, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/library/d/1u5IRXHJXNFio0QQ1V0OVxI5kbWWPIo5p5KRb9S2MSxzw41bPSq8k1HVy/4";
-
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5ap2MxYZps2rTPsQAro6dBm4fkW38p3W851WpYqWJ80zHUq_5WsKhaDPmRqQLqlrO/exec"
 export const ContactPage: React.FC = () => {
   const { t, language } = useLanguage();
   const [formState, setFormState] = useState<'IDLE' | 'SUBMITTING' | 'SUCCESS' | 'ERROR'>('IDLE');
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +27,8 @@ export const ContactPage: React.FC = () => {
       lastName: (form.querySelectorAll('input[type="text"]')[1] as HTMLInputElement).value,
       email: emailVal,
       type: (form.querySelector('select') as HTMLSelectElement).value,
-      message: (form.querySelector('textarea') as HTMLTextAreaElement).value
+      message: (form.querySelector('textarea') as HTMLTextAreaElement).value,
+      website: honeypot // Honeypot: echte Nutzer lassen das leer
     };
 
     setFormState('SUBMITTING');
@@ -78,6 +79,17 @@ export const ContactPage: React.FC = () => {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Honeypot - unsichtbar für echte Nutzer, Bots füllen es aus */}
+              <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{t.contact.fName}</label>
