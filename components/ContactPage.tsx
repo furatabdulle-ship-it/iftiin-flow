@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Send, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5ap2MxYZps2rTPsQAro6dBm4fkW38p3W851WpYqWJ80zHUq_5WsKhaDPmRqQLqlrO/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/library/d/1u5IRXHJXNFio0QQ1V0OVxI5kbWWPIo5p5KRb9S2MSxzw41bPSq8k1HVy/4";
 
 export const ContactPage: React.FC = () => {
   const { t, language } = useLanguage();
