@@ -8,7 +8,7 @@ export const translations = {
       services: "Services",
       about: "About",
       contact: "Contact",
-      headerSubtitle: "Digital & AI Literacy",
+      headerSubtitle: "Society & AI Literacy",
       manifesto: "Manifesto"
     },
     footer: {
@@ -23,7 +23,7 @@ export const translations = {
     },
     about: {
       title: "Iftiin Flow",
-      mission: "Iftiin Flow is the first German-language educational platform that combines AI literacy with social justice – intersectional, critical, and solution-oriented.",
+      mission: "Iftiin Flow is the first Germany based educational platform that combines AI literacy with social justice – intersectional, critical, and solution-oriented.",
       subMission: "For people who don't just want to witness digital transformation, but want to actively co-author it.",
       returnBtn: "Return to Intelligence"
     },
@@ -295,7 +295,7 @@ export const translations = {
       services: "Services",
       about: "Über Uns",
       contact: "Kontakt",
-      headerSubtitle: "Digital- & AI Literacy",
+      headerSubtitle: "Society- & AI Literacy",
       manifesto: "Manifest"
     },
     footer: {
@@ -306,7 +306,7 @@ export const translations = {
       terms: "AGB",
       impressum: "Impressum",
       revocation: "Widerruf",
-      rights: "© 2025 Iftiin Flow"
+      rights: "© 2026 Iftiin Flow"
     },
     about: {
       title: "Iftiin Flow",
