@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Presentation, Compass, FileBox, Mic2, Handshake, ArrowRight } from 'lucide-react';
+import { Presentation, Compass, FileBox, Mic2, Handshake, ArrowRight, Download } from 'lucide-react';
 
 interface ServicesPageProps {
   onNavigateContact: () => void;
@@ -76,6 +76,26 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigateContact })
             <div className="absolute top-0 right-0 w-0 h-0 border-t-[20px] border-r-[20px] border-t-transparent border-r-transparent group-hover:border-r-iftiin-gold transition-all duration-300"></div>
           </div>
         ))}
+      </div>
+
+      {/* Download Section */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 border border-gray-100 rounded-[32px] p-8 mb-12 hover:border-black transition-all duration-300 group">
+        <div className="flex items-center gap-5">
+          <div className="w-12 h-12 rounded-full bg-iftiin-gold/10 flex items-center justify-center group-hover:bg-iftiin-gold/20 transition-colors duration-300">
+            <Download className="w-5 h-5 text-black" />
+          </div>
+          <div>
+            <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-gray-400 mb-1">Freie Ressource</p>
+            <p className="font-serif text-lg font-bold text-black">KI-Prompt-Techniken – Cheat Sheet</p>
+          </div>
+        </div>
+        <a
+          href="/downloads/KI_Prompt_Techniken.pdf"
+          download
+          className="inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.2em] border border-black text-black px-8 py-3 rounded-full hover:bg-black hover:text-white transition-all duration-300 active:scale-95 whitespace-nowrap"
+        >
+          PDF herunterladen <Download className="w-4 h-4" />
+        </a>
       </div>
 
       {/* CTA Section - Minimalist & High Contrast */}
