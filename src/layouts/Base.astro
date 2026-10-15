@@ -1,0 +1,48 @@
+---
+import { site } from '../config';
+import '../styles/global.css';
+const { title, description = site.shortDescription } = Astro.props;
+const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — Wissen. Urteilskraft. Handlungsfähigkeit.`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const prefix = import.meta.env.BASE_URL;
+const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
+---
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#141515" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={root('favicon.svg')} type="image/svg+xml" />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <a class="skip" href="#content">Zum Inhalt springen</a>
+    <div class="announcement">Wissen · Urteilskraft · Handlungsfähigkeit <span aria-hidden="true">↗</span></div>
+    <header class="site-header wrap">
+      <a class="wordmark" href={root('')} aria-label="iftiin flow. Startseite">iftiin<span> flow.</span></a>
+      <nav aria-label="Hauptnavigation">
+        <a href={root('explore/')}>Explore</a>
+        <a href={root('about/')}>About</a>
+        {site.showResearch && <a href={root('research/')}>Research</a>}
+        {site.showLearning && <a href={root('learning/')}>Learning</a>}
+        {site.showTools && <a href={root('tools/')}>Tools</a>}
+        {site.showShop && site.shopUrl && <a href={site.shopUrl} target="_blank" rel="noopener noreferrer">Shop ↗</a>}
+        {site.showBooking && site.bookingUrl && <a class="nav-cta" href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen ↗</a>}
+      </nav>
+    </header>
+    <main id="content"><slot /></main>
+    <footer class="footer">
+      <div class="wrap footer-grid">
+        <div><a class="wordmark" href={root('')}>iftiin<span> flow.</span></a><p>Understand complexity.<br/>Think with clarity. Act with agency.</p></div>
+        <div class="footer-links"><a href={root('explore/')}>Explore</a><a href={root('about/')}>About</a>{site.email && <a href={`mailto:${site.email}`}>Kontakt</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter ↗</a>}</div>
+        <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · Unabhängige Wissensplattform <span>Impressum / Datenschutz: vor öffentlichem Launch ergänzen</span></div>
+      </div>
+    </footer>
+  </body>
+</html>
