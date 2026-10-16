@@ -19,15 +19,10 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
-      - name: Set base path
-        run: |
-          echo "SITE_URL=https://${{ github.repository_owner }}.github.io" >> "$GITHUB_ENV"
-          REPO="${GITHUB_REPOSITORY#*/}"
-          if [ "$REPO" = "${{ github.repository_owner }}.github.io" ]; then
+      - name: Set production URL
+        run: 
+            echo "SITE_URL=https://iftiin-flow.com" >> "$GITHUB_ENV"
             echo "BASE_PATH=/" >> "$GITHUB_ENV"
-          else
-            echo "BASE_PATH=/$REPO/" >> "$GITHUB_ENV"
-          fi
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
