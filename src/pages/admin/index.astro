@@ -1,0 +1,275 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect('/login/', 302);
+if (account.role !== 'admin') return Astro.redirect('/account/', 302);
+---
+<Base title="Artikel verwalten">
+  <section class="section wrap admin-layout">
+    <div class="section-label">Admin / Redaktion</div>
+    <h1>Artikel <em>verwalten.</em></h1>
+    <p>Beiträge werden als Entwurf gespeichert und erst mit Status „Veröffentlicht“ öffentlich angezeigt.</p>
+    <button class="pill-link" type="button" id="new-article">Neuen Artikel anlegen <span>+</span></button>
+    <p class="admin-message" id="admin-message" role="status" aria-live="polite"></p>
+    <div class="admin-grid">
+      <section>
+        <h2>Beiträge</h2>
+        <div class="article-list" id="article-list" aria-live="polite"></div>
+      </section>
+      <section>
+        <h2 id="editor-heading">Neuer Beitrag</h2>
+        <form class="article-editor" id="article-editor">
+          <input type="hidden" name="id" />
+          <label>Titel<input name="title" maxlength="180" required /></label>
+          <label>URL-Slug<input name="slug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /></label>
+          <label>Teaser<textarea name="description" maxlength="500" rows="3" required></textarea></label>
+          <div class="editor-meta">
+            <label>Datum<input name="date" type="date" required /></label>
+            <label>Aktualisiert (optional)<input name="updated" type="date" /></label>
+          </div>
+          <div class="editor-meta">
+            <label>Themenfeld
+              <select name="pillar">
+                <option value="knowledge-agency">Knowledge &amp; Agency</option>
+                <option value="ai-domain">AI × Domain</option>
+                <option value="institutions-work-power">Institutions, Work &amp; Power</option>
+                <option value="human-capability">Human Capability</option>
+                <option value="culture-meaning">Culture &amp; Meaning</option>
+              </select>
+            </label>
+            <label>Format
+              <select name="format">
+                <option value="essay">Essay</option><option value="note">IFTIIN Note</option>
+                <option value="map">IFTIIN Map</option><option value="deconstruct">Deconstruct</option>
+                <option value="research">Research Note</option><option value="ai-domain">AI × Domain</option>
+                <option value="capability">Capability Note</option><option value="field-note">Field Note</option>
+                <option value="question">Questions Worth Asking</option><option value="video">Video</option>
+              </select>
+            </label>
+          </div>
+          <div id="video-fields" hidden>
+            <label>Video-Link (YouTube oder Vimeo)
+              <input name="videoUrl" type="url" placeholder="https://www.youtube.com/watch?v=…" />
+            </label>
+            <label class="video-access-option">
+              <input name="loginRequired" type="checkbox" />
+              <span>Nur für angemeldete Konten anzeigen</span>
+            </label>
+            <p class="form-hint">Der Login schützt die Videoseite, nicht den externen Link. Wer die Video-URL kennt, kann sie beim Anbieter möglicherweise direkt öffnen.</p>
+          </div>
+          <label>Status
+            <select name="status"><option value="draft">Entwurf</option><option value="published">Veröffentlicht</option></select>
+          </label>
+          <label><span>Beitragsinhalt (Markdown)</span><textarea name="body" rows="16"></textarea></label>
+          <label>Tags (durch Komma trennen)<input name="tags" /></label>
+          <label>Quellen (eine pro Zeile: Titel | https://…)
+            <textarea name="sources" rows="4"></textarea>
+          </label>
+          <label><span><input name="featured" type="checkbox" /> Auf der Startseite hervorheben</span></label>
+          <div class="editor-actions">
+            <button class="pill-link" type="submit">Speichern <span>↗</span></button>
+            <button class="editor-delete" type="button" id="delete-article" hidden>Artikel löschen</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </section>
+</Base>
+
+<script>
+  type Article = {
+    id: string;
+    slug: string;
+    body: string;
+    data: {
+      title: string;
+      description: string;
+      date: string;
+      updated: string | null;
+      pillar: string;
+      format: string;
+      status: 'draft' | 'published';
+      featured: boolean;
+      videoUrl: string | null;
+      loginRequired: boolean;
+      tags: string[];
+      sources: { label: string; url: string }[];
+    };
+  };
+  type ValidationIssue = { path: (string | number)[]; message: string };
+
+  const list = document.querySelector<HTMLElement>('#article-list');
+  const form = document.querySelector<HTMLFormElement>('#article-editor');
+  const message = document.querySelector<HTMLElement>('#admin-message');
+  const heading = document.querySelector<HTMLElement>('#editor-heading');
+  const deleteButton = document.querySelector<HTMLButtonElement>('#delete-article');
+  const newButton = document.querySelector<HTMLButtonElement>('#new-article');
+  const videoFields = document.querySelector<HTMLElement>('#video-fields');
+  let articles: Article[] = [];
+
+  function field(name: string): HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null {
+    return form?.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+  }
+
+  function resetEditor() {
+    form?.reset();
+    if (field('id')) field('id')!.value = '';
+    if (field('date')) field('date')!.value = new Date().toISOString().slice(0, 10);
+    if (heading) heading.textContent = 'Neuer Beitrag';
+    if (deleteButton) deleteButton.hidden = true;
+    updateVideoFields();
+  }
+
+  function updateVideoFields() {
+    const isVideo = field('format')?.value === 'video';
+    if (videoFields) videoFields.hidden = !isVideo;
+    const videoUrl = field('videoUrl') as HTMLInputElement | null;
+    if (videoUrl) videoUrl.required = Boolean(isVideo);
+    if (!isVideo) {
+      if (videoUrl) videoUrl.value = '';
+      const loginRequired = field('loginRequired') as HTMLInputElement | null;
+      if (loginRequired) loginRequired.checked = false;
+    }
+  }
+
+  async function loadArticles() {
+    if (!list || !message) return;
+    message.textContent = 'Beiträge werden geladen …';
+    try {
+      const response = await fetch('/api/admin/articles/');
+      const result = await response.json() as { articles?: Article[]; error?: string };
+      if (!response.ok || !result.articles) throw new Error(result.error ?? 'Beiträge konnten nicht geladen werden.');
+      articles = result.articles;
+      list.replaceChildren();
+      for (const article of articles) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'article-list-item';
+        button.dataset.id = article.id;
+        const title = document.createElement('strong');
+        title.textContent = article.data.title;
+        const status = document.createElement('small');
+        status.className = 'article-status';
+        status.textContent = article.data.status === 'published' ? 'Veröffentlicht' : 'Entwurf';
+        button.append(title, status);
+        button.addEventListener('click', () => editArticle(article));
+        list.append(button);
+      }
+      message.textContent = `${articles.length} Beitrag/Beiträge.`;
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : 'Beiträge konnten nicht geladen werden.';
+    }
+  }
+
+  function editArticle(article: Article) {
+    if (!form) return;
+    const source = (name: string) => field(name);
+    if (source('id')) source('id')!.value = article.id;
+    if (source('title')) source('title')!.value = article.data.title;
+    if (source('slug')) source('slug')!.value = article.slug;
+    if (source('description')) source('description')!.value = article.data.description;
+    if (source('date')) source('date')!.value = article.data.date.slice(0, 10);
+    if (source('updated')) source('updated')!.value = article.data.updated?.slice(0, 10) ?? '';
+    if (source('pillar')) source('pillar')!.value = article.data.pillar;
+    if (source('format')) source('format')!.value = article.data.format;
+    if (source('status')) source('status')!.value = article.data.status;
+    if (source('videoUrl')) source('videoUrl')!.value = article.data.videoUrl ?? '';
+    if (source('body')) source('body')!.value = article.body;
+    if (source('tags')) source('tags')!.value = article.data.tags.join(', ');
+    if (source('sources')) {
+      source('sources')!.value = article.data.sources.map((item) => `${item.label} | ${item.url}`).join('\n');
+    }
+    const featured = field('featured') as HTMLInputElement | null;
+    if (featured) featured.checked = article.data.featured;
+    const loginRequired = field('loginRequired') as HTMLInputElement | null;
+    if (loginRequired) loginRequired.checked = article.data.loginRequired;
+    if (heading) heading.textContent = 'Beitrag bearbeiten';
+    if (deleteButton) deleteButton.hidden = false;
+    updateVideoFields();
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function makePayload(): Record<string, unknown> {
+    const get = (name: string) => field(name)?.value.trim() ?? '';
+    const sources = get('sources').split('\n').map((line) => line.trim()).filter(Boolean).map((line) => {
+      const separator = line.indexOf('|');
+      if (separator < 1) throw new Error('Quellen müssen als „Titel | https://…“ eingegeben werden.');
+      return { label: line.slice(0, separator).trim(), url: line.slice(separator + 1).trim() };
+    });
+    return {
+      slug: get('slug'),
+      title: get('title'),
+      description: get('description'),
+      body: get('body'),
+      date: get('date'),
+      updated: get('updated') || null,
+      pillar: get('pillar'),
+      format: get('format'),
+      status: get('status'),
+      featured: (field('featured') as HTMLInputElement | null)?.checked ?? false,
+      videoUrl: get('videoUrl') || null,
+      loginRequired: (field('loginRequired') as HTMLInputElement | null)?.checked ?? false,
+      tags: get('tags').split(',').map((tag) => tag.trim()).filter(Boolean),
+      sources,
+    };
+  }
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form || !message) return;
+    try {
+      const id = field('id')?.value;
+      const response = await fetch(id ? `/api/admin/articles/${id}/` : '/api/admin/articles/', {
+        method: id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(makePayload()),
+      });
+      const result = await response.json() as { error?: string; details?: ValidationIssue[] };
+      if (!response.ok) {
+        const details = result.details?.map((issue) => {
+          const field = issue.path.map(String).join('.');
+          return `${field || 'Artikel'}: ${issue.message}`;
+        });
+        throw new Error([result.error ?? 'Artikel konnte nicht gespeichert werden.', ...(details ?? [])].join('\n'));
+      }
+      message.textContent = 'Artikel wurde gespeichert.';
+      resetEditor();
+      await loadArticles();
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : 'Artikel konnte nicht gespeichert werden.';
+    }
+  });
+
+  deleteButton?.addEventListener('click', async () => {
+    const id = field('id')?.value;
+    if (!id || !message || !window.confirm('Diesen Artikel wirklich endgültig löschen?')) return;
+    try {
+      const response = await fetch(`/api/admin/articles/${id}/`, { method: 'DELETE' });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? 'Artikel konnte nicht gelöscht werden.');
+      resetEditor();
+      await loadArticles();
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : 'Artikel konnte nicht gelöscht werden.';
+    }
+  });
+
+  newButton?.addEventListener('click', resetEditor);
+  field('format')?.addEventListener('change', updateVideoFields);
+  field('title')?.addEventListener('input', () => {
+    const slug = field('slug');
+    if (!slug || slug.dataset.edited === 'true') return;
+    slug.value = (field('title')?.value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  });
+  field('slug')?.addEventListener('input', (event) => {
+    (event.currentTarget as HTMLInputElement).dataset.edited = 'true';
+  });
+  resetEditor();
+  void loadArticles();
+</script>
+
+<style>
+  @import '../../styles/account.css';
+</style>

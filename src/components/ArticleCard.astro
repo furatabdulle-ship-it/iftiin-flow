@@ -5,7 +5,7 @@ const { article } = Astro.props;
 const pillar = pillars.find(p => p.slug === article.data.pillar);
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
 ---
-<a class="article-card" href={root(`articles/${article.id}/`)}>
+<a class="article-card" href={root(`articles/${article.slug}/`)}>
   <div class="article-card-top"><span>{formatNames[article.data.format] || 'Artikel'}</span><span class="arrow">↗</span></div>
   <h3>{article.data.title}</h3>
   <p>{article.data.description}</p>

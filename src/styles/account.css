@@ -1,0 +1,31 @@
+.account-hero{min-height:65vh;padding-bottom:100px}
+.account-hero>p{max-width:620px}
+.account-form{display:grid;gap:12px;max-width:480px;margin:38px 0 0}
+.account-form label,.article-editor label{font-size:13px;font-weight:700}
+.account-form input,.article-editor input,.article-editor select,.article-editor textarea{width:100%;border:1px solid var(--line);border-radius:0;background:#fff;color:var(--ink);padding:13px 14px;font:inherit}
+.account-form input:focus,.article-editor input:focus,.article-editor select:focus,.article-editor textarea:focus{outline:2px solid var(--violet);outline-offset:2px}
+.account-form .pill-link{justify-self:start;border:0;cursor:pointer}
+.form-hint,.form-message,.account-switch,.account-role{font-size:14px;color:var(--muted)}
+.form-message{min-height:1.4em}
+.account-switch{margin-top:25px}
+.account-switch a{font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.logout-button{margin-top:30px;background:none;border:0;cursor:pointer;padding:0}
+.admin-layout{padding-bottom:110px}
+.admin-grid{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:48px;margin-top:40px}
+.article-list{display:grid;align-content:start;gap:10px}
+.article-list-item{display:grid;gap:6px;text-align:left;background:var(--paper);border:1px solid var(--line);padding:16px;cursor:pointer}
+.article-list-item strong{font-size:16px}
+.article-list-item small,.article-status{color:var(--muted);font-size:12px}
+.article-editor{display:grid;gap:13px}
+.article-editor label{display:grid;gap:7px}
+.article-editor textarea{resize:vertical}
+.article-editor .editor-meta{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.article-editor #video-fields{display:grid;gap:13px}
+.article-editor #video-fields[hidden]{display:none}
+.article-editor .video-access-option{display:flex;align-items:center;gap:9px}
+.article-editor .video-access-option input{width:auto}
+.editor-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.editor-actions .pill-link{border:0;cursor:pointer}
+.editor-delete{background:none;border:0;color:#922;cursor:pointer;text-decoration:underline}
+.admin-message{min-height:1.4em;font-size:14px;white-space:pre-line}
+@media(max-width:760px){.admin-grid{grid-template-columns:1fr;gap:35px}.article-editor .editor-meta{grid-template-columns:1fr}}

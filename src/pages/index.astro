@@ -2,9 +2,10 @@
 import Base from '../layouts/Base.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import { site, pillars } from '../config';
-import { publishedArticles } from '../lib/content';
-const articles = await publishedArticles();
-const highlighted = [...articles].sort((a,b)=>Number(b.data.featured)-Number(a.data.featured)).slice(0,3);
+import { featuredArticles } from '../lib/content';
+import { getSessionAccount } from '../lib/auth';
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+const highlighted = await featuredArticles(3, Boolean(account));
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
 ---
 <Base>

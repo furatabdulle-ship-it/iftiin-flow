@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+import { getSessionAccount } from '../lib/auth';
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect('/login/', 302);
+---
+<Base title="Konto">
+  <section class="interior-hero wrap account-hero">
+    <div class="section-label">Konto / Übersicht</div>
+    <h1>Dein <em>Konto.</em></h1>
+    <p>Angemeldet als <strong>{account.email}</strong></p>
+    <p class="account-role">Rolle: {account.role === 'admin' ? 'Administrator' : 'Besucher'}</p>
+    {account.role === 'admin' && <a class="pill-link" href="/admin/">Artikel verwalten <span>↗</span></a>}
+    <form id="logout-form">
+      <button class="text-link logout-button" type="submit">Abmelden <span>↗</span></button>
+    </form>
+    <p class="form-message" id="logout-message" role="status" aria-live="polite"></p>
+  </section>
+</Base>
+
+<script>
+  const logoutForm = document.querySelector<HTMLFormElement>('#logout-form');
+  const logoutMessage = document.querySelector<HTMLElement>('#logout-message');
+
+  logoutForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!logoutMessage) return;
+    logoutMessage.textContent = 'Bitte warten …';
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('Abmeldung fehlgeschlagen.');
+      window.location.assign('/');
+    } catch {
+      logoutMessage.textContent = 'Die Abmeldung ist fehlgeschlagen. Bitte versuche es erneut.';
+    }
+  });
+</script>
+
+<style>
+  @import '../styles/account.css';
+</style>

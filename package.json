@@ -6,14 +6,23 @@
   "scripts": {
     "dev": "astro dev --host 0.0.0.0",
     "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
     "preview": "astro preview --host 0.0.0.0",
-    "check": "astro check"
+    "check": "astro check",
+    "db:migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
+    "admin:promote": "node --env-file-if-exists=.env scripts/promote-admin.mjs"
   },
   "dependencies": {
-    "astro": "^7.3.8"
+    "@astrojs/node": "^11.1.8",
+    "astro": "^7.3.8",
+    "marked": "^16.2.1",
+    "pg": "^8.16.3",
+    "sanitize-html": "^2.17.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@types/pg": "^8.15.5",
+    "@types/sanitize-html": "^2.16.0",
     "typescript": "^5.9.3"
   }
 }

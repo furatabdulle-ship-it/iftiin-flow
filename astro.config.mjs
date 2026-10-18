@@ -1,10 +1,14 @@
 import { defineConfig } from 'astro/config';
+import node from '@astrojs/node';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-// SITE_URL: production origin, e.g. https://iftiin-flow.com
-// BASE_PATH: needed only for GitHub project pages, e.g. /iftiin-flow
+const localEnvFile = fileURLToPath(new URL('./.env', import.meta.url));
+if (existsSync(localEnvFile)) process.loadEnvFile(localEnvFile);
+
 export default defineConfig({
   site: process.env.SITE_URL || 'https://iftiin-flow.com',
-  base: process.env.BASE_PATH || '/',
-  output: 'static',
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
   trailingSlash: 'always',
 });

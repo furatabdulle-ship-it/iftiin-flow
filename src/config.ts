@@ -26,5 +26,5 @@ export const pillars = [
 export const formatNames: Record<string, string> = {
   essay: 'Essay', note: 'IFTIIN Note', map: 'IFTIIN Map', deconstruct: 'Deconstruct',
   research: 'Research Note', 'ai-domain': 'AI × Domain', capability: 'Capability Note',
-  'field-note': 'Field Note', question: 'Questions Worth Asking',
+  'field-note': 'Field Note', question: 'Questions Worth Asking', video: 'Video',
 };

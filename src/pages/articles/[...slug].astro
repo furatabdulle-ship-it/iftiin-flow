@@ -1,12 +1,63 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { render } from 'astro:content';
-import { publishedArticles, formatDate } from '../../lib/content';
-import { pillars,formatNames } from '../../config';
-export async function getStaticPaths() { return (await publishedArticles()).map(article=>({params:{slug:article.id},props:{article}})); }
-const {article} = Astro.props;
-const {Content} = await render(article);
-const pillar = pillars.find(p=>p.slug===article.data.pillar);
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
+import { renderArticleMarkdown, getPublishedArticle } from '../../lib/articles';
+import { formatDate } from '../../lib/content';
+import { getSessionAccount } from '../../lib/auth';
+import { getVideoEmbedUrl } from '../../lib/validation';
+import { pillars, formatNames } from '../../config';
+
+const article = Astro.params.slug ? await getPublishedArticle(Astro.params.slug) : null;
+if (article?.data.loginRequired) {
+  const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+  if (!account) return Astro.redirect(`/login/?next=${encodeURIComponent(Astro.url.pathname)}`, 302);
+}
+if (!article) Astro.response.status = 404;
+const html = article ? await renderArticleMarkdown(article.body) : '';
+const pillar = article && pillars.find((item) => item.slug === article.data.pillar);
+const videoEmbedUrl = article?.data.videoUrl ? getVideoEmbedUrl(article.data.videoUrl) : null;
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
 ---
-<Base title={article.data.title} description={article.data.description}><article><header class="article-header wrap"><a class="breadcrumb" href={root(`topics/${pillar?.slug}/`)}>← {pillar?.name}</a><div class="section-label">{formatNames[article.data.format]} / {pillar?.name}</div><h1>{article.data.title}</h1><p>{article.data.description}</p><div class="article-meta"><span>{formatDate(article.data.date)}</span>{article.data.updated && <span>Aktualisiert: {formatDate(article.data.updated)}</span>}</div></header><div class="prose"><Content />{article.data.sources.length>0 && <section class="sources"><h2>Quellen</h2><ol>{article.data.sources.map(s=><li><a href={s.url} target="_blank" rel="noopener noreferrer">{s.label} ↗</a></li>)}</ol></section>}</div></article></Base>
+<Base title={article?.data.title ?? 'Beitrag nicht gefunden'} description={article?.data.description ?? 'Der gesuchte Beitrag ist nicht verfügbar.'}>
+  {article ? <>
+  <article>
+    <header class="article-header wrap">
+      <a class="breadcrumb" href={root(`topics/${pillar?.slug}/`)}>← {pillar?.name}</a>
+      <div class="section-label">{formatNames[article.data.format]} / {pillar?.name}</div>
+      <h1>{article.data.title}</h1>
+      <p>{article.data.description}</p>
+      <div class="article-meta">
+        <span>{formatDate(article.data.date)}</span>
+        {article.data.updated && <span>Aktualisiert: {formatDate(article.data.updated)}</span>}
+        {article.data.loginRequired && <span>Nur für angemeldete Konten</span>}
+      </div>
+    </header>
+    {videoEmbedUrl && <div class="video-player wrap">
+      <iframe
+        src={videoEmbedUrl}
+        title={article.data.title}
+        loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+      <p class="video-disclaimer">Das Video wird bei einem externen Anbieter abgespielt. Die Anmeldung schützt diese Seite, nicht den Video-Link beim Anbieter.</p>
+    </div>}
+    <div class="prose" set:html={html}></div>
+    {article.data.sources.length > 0 && <section class="sources wrap">
+      <h2>Quellen</h2>
+      <ol>{article.data.sources.map((source) => <li><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} ↗</a></li>)}</ol>
+    </section>}
+  </article>
+  </> : <section class="interior-hero wrap">
+    <div class="section-label">404 / Nicht gefunden</div>
+    <h1>Beitrag nicht <em>gefunden.</em></h1>
+    <p>Dieser Beitrag ist nicht verfügbar oder wurde noch nicht veröffentlicht.</p>
+    <a class="pill-link" href={root('explore/')}>Zur Explore-Seite <span>↗</span></a>
+  </section>}
+</Base>
+
+<style>
+  .video-player{max-width:900px;margin:0 auto 42px}
+  .video-player iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#141515}
+  .video-disclaimer{font-size:13px;color:var(--muted)}
+</style>

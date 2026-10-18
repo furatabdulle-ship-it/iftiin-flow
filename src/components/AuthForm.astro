@@ -1,0 +1,53 @@
+---
+const { mode, redirectTo = '/account/' } = Astro.props as { mode: 'login' | 'register'; redirectTo?: string };
+const register = mode === 'register';
+---
+<form class="account-form" id="auth-form" data-endpoint={mode} data-redirect-to={redirectTo}>
+  <label for="email">E-Mail-Adresse</label>
+  <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required />
+  <label for="password">Passwort</label>
+  <input
+    id="password"
+    name="password"
+    type="password"
+    autocomplete={register ? 'new-password' : 'current-password'}
+    minlength="12"
+    maxlength="128"
+    required
+  />
+  {register && <p class="form-hint">Mindestens 12 Zeichen. Verwende ein einzigartiges Passwort.</p>}
+  <p class="form-message" id="auth-message" role="status" aria-live="polite"></p>
+  <button class="pill-link" type="submit">{register ? 'Konto erstellen' : 'Anmelden'} <span>↗</span></button>
+</form>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#auth-form');
+  const message = document.querySelector<HTMLElement>('#auth-message');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form || !message) return;
+
+    const endpoint = form.dataset.endpoint;
+    const data = new FormData(form);
+    message.textContent = 'Bitte warten …';
+    try {
+      const response = await fetch(`/api/auth/${endpoint}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.get('email'),
+          password: data.get('password'),
+        }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) {
+        message.textContent = result.error ?? 'Die Anfrage ist fehlgeschlagen.';
+        return;
+      }
+      window.location.assign(form.dataset.redirectTo ?? '/account/');
+    } catch {
+      message.textContent = 'Der Server ist momentan nicht erreichbar. Bitte versuche es erneut.';
+    }
+  });
+</script>

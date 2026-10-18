@@ -29,6 +29,7 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
       <nav aria-label="Hauptnavigation">
         <a href={root('explore/')}>Explore</a>
         <a href={root('about/')}>About</a>
+        <a href={root('account/')}>Konto</a>
         {site.showResearch && <a href={root('research/')}>Research</a>}
         {site.showLearning && <a href={root('learning/')}>Learning</a>}
         {site.showTools && <a href={root('tools/')}>Tools</a>}

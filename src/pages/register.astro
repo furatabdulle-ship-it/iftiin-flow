@@ -1,0 +1,21 @@
+---
+import AuthForm from '../components/AuthForm.astro';
+import Base from '../layouts/Base.astro';
+import { getSessionAccount } from '../lib/auth';
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (account) return Astro.redirect(account.role === 'admin' ? '/admin/' : '/account/', 302);
+---
+<Base title="Registrieren" description="Erstelle ein iftiin flow. Konto.">
+  <section class="interior-hero wrap account-hero">
+    <div class="section-label">Konto / Registrierung</div>
+    <h1>Ein Konto für <em>deinen Weg.</em></h1>
+    <p>Erstelle ein Konto. Die Registrierung gibt dir noch keine zusätzlichen Inhaltsrechte.</p>
+    <AuthForm mode="register" />
+    <p class="account-switch">Schon registriert? <a href="/login/">Anmelden ↗</a></p>
+  </section>
+</Base>
+
+<style>
+  @import '../styles/account.css';
+</style>

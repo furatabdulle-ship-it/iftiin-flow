@@ -3,7 +3,9 @@ import Base from '../layouts/Base.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import { pillars } from '../config';
 import { publishedArticles } from '../lib/content';
-const articles = await publishedArticles();
+import { getSessionAccount } from '../lib/auth';
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+const articles = await publishedArticles(Boolean(account));
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
 ---
 <Base title="Explore" description="Entdecke Ideen und Perspektiven auf Wissen, KI, Institutionen und Handlungsfähigkeit.">
