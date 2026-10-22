@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Weiterleitung zu Iftiin Flow</title>
+  </head>
+  <body>
+    <p>Du wirst zu Iftiin Flow weitergeleitet. Falls das nicht funktioniert, <a href="https://www.iftiin-flow.com/">klicke hier</a>.</p>
+    <script>
+      const destination = new URL(
+        window.location.pathname + window.location.search + window.location.hash,
+        'https://www.iftiin-flow.com',
+      );
+      window.location.replace(destination.href);
+    </script>
+  </body>
+</html>
