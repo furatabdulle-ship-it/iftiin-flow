@@ -39,13 +39,13 @@ export const POST: APIRoute = async (context) => {
     const result = await query(
       `INSERT INTO articles
         (slug, title, description, body, date, updated, pillar, format, status, featured,
-         video_url, login_required, tags, sources)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+         video_url, login_required, requires_purchase, tags, sources)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING id`,
       [
         article.slug, article.title, article.description, article.body, article.date,
         article.updated, article.pillar, article.format, article.status,
-        article.featured, article.videoUrl, article.loginRequired,
+        article.featured, article.videoUrl, article.loginRequired, article.requiresPurchase,
         article.tags, JSON.stringify(article.sources),
       ],
     );

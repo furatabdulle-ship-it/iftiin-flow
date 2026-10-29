@@ -20,6 +20,7 @@ export type ArticleRecord = {
     featured: boolean;
     videoUrl: string | null;
     loginRequired: boolean;
+    requiresPurchase: boolean;
     tags: string[];
     sources: ArticleSource[];
   };
@@ -38,13 +39,14 @@ type ArticleRow = QueryResultRow & {
   featured: boolean;
   video_url: string | null;
   login_required: boolean;
+  requires_purchase: boolean;
   tags: string[];
   sources: ArticleSource[];
   body: string;
 };
 
 const articleColumns = `id, slug, title, description, date, updated, pillar,
-  format, status, featured, video_url, login_required, tags, sources, body`;
+  format, status, featured, video_url, login_required, requires_purchase, tags, sources, body`;
 
 function fromRow(row: ArticleRow): ArticleRecord {
   const asDate = (value: Date | string | null) => {
@@ -67,6 +69,7 @@ function fromRow(row: ArticleRow): ArticleRecord {
       featured: row.featured,
       videoUrl: row.video_url,
       loginRequired: row.login_required,
+      requiresPurchase: row.requires_purchase,
       tags: row.tags,
       sources: row.sources,
     },

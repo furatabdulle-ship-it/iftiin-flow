@@ -1,34 +1,103 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
+import { listAccountEntitlements, listAccountOrders } from '../lib/commerce';
 
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 if (!account) return Astro.redirect('/login/', 302);
+const entitlements = await listAccountEntitlements(account.id);
+const orders = await listAccountOrders(account.id);
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const formatPrice = (amount: number | string, currency: string) => new Intl.NumberFormat('de-DE', {
+  style: 'currency',
+  currency: currency.toUpperCase(),
+}).format(Number(amount) / 100);
 ---
 <Base title="Konto">
   <section class="interior-hero wrap account-hero">
     <div class="section-label">Konto / Übersicht</div>
-    <h1>Dein <em>Konto.</em></h1>
+    <h1><em>{account.displayName || 'Dein Name'}</em></h1>
     <p>Angemeldet als <strong>{account.email}</strong></p>
     <p class="account-role">Rolle: {account.role === 'admin' ? 'Administrator' : 'Besucher'}</p>
-    {account.role === 'admin' && <a class="pill-link" href="/admin/">Artikel verwalten <span>↗</span></a>}
+    {account.role === 'admin' && <a class="pill-link" href={root('admin/')}>Artikel verwalten <span>↗</span></a>}
+    <form class="account-form" id="profile-form">
+      <label for="profile-name">Anzeigename</label>
+      <input id="profile-name" name="displayName" type="text" autocomplete="name" maxlength="80" value={account.displayName} required />
+      <p class="form-message" id="profile-message" role="status" aria-live="polite"></p>
+      <button class="pill-link" type="submit">Namen speichern <span>↗</span></button>
+    </form>
     <form id="logout-form">
       <button class="text-link logout-button" type="submit">Abmelden <span>↗</span></button>
     </form>
     <p class="form-message" id="logout-message" role="status" aria-live="polite"></p>
+  </section>
+  <section class="section wrap account-library">
+    <div class="section-label">Dein Konto / Bibliothek</div>
+    <h2>Deine Inhalte</h2>
+    {entitlements.length ? <div class="library-list">
+      {entitlements.map((entitlement) => <article class="library-card">
+        <div class="library-heading">
+          <div><h3>{entitlement.productName}</h3><span class="library-meta">Freigeschaltet {new Date(entitlement.startsAt).toLocaleDateString('de-DE')}</span></div>
+          {entitlement.expiresAt && <span class="library-meta">Gültig bis {new Date(entitlement.expiresAt).toLocaleDateString('de-DE')}</span>}
+        </div>
+        {entitlement.content.length ? <ul>
+          {entitlement.content.map((item) => <li>
+            {item.contentType === 'download'
+              ? <a href={root(`api/content/${item.id}/file/`)}>{item.title} herunterladen ↗</a>
+              : item.contentType === 'lesson' || item.contentType === 'video'
+                ? <a href={root(`learn/${item.slug}/`)}>{item.title} ↗</a>
+                : <a href={root(`articles/${item.slug}/`)}>{item.title} ↗</a>}
+            {(item.contentType === 'lesson' || item.contentType === 'video') && <span class="library-progress">{item.progressPercent ?? 0}% abgeschlossen</span>}
+          </li>)}
+        </ul> : <p class="library-meta">Für dieses Produkt sind noch keine Inhalte zugeordnet.</p>}
+      </article>)}
+    </div> : <p class="library-meta">Deine freigeschalteten Inhalte erscheinen hier. <a href={root('store/')}>Zum Shop ↗</a></p>}
+  </section>
+  <section class="section wrap account-library">
+    <div class="section-label">Dein Konto / Bestellungen</div>
+    <h2>Bestellverlauf</h2>
+    {orders.length ? <div class="orders-table">
+      {orders.map((order) => <article class="order-row">
+        <div><strong>{order.items.map((item) => `${item.name}${item.quantity > 1 ? ` × ${item.quantity}` : ''}`).join(', ')}</strong><span class="library-meta">{new Date(order.createdAt).toLocaleDateString('de-DE')}</span></div>
+        <div class="order-total">{formatPrice(order.totalCents, order.currency)}<span class="library-meta">{order.status === 'paid' ? 'Bezahlt' : order.status}</span></div>
+      </article>)}
+    </div> : <p class="library-meta">Noch keine Bestellungen.</p>}
   </section>
 </Base>
 
 <script>
   const logoutForm = document.querySelector<HTMLFormElement>('#logout-form');
   const logoutMessage = document.querySelector<HTMLElement>('#logout-message');
+  const profileForm = document.querySelector<HTMLFormElement>('#profile-form');
+  const profileMessage = document.querySelector<HTMLElement>('#profile-message');
+
+  profileForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!profileForm || !profileMessage) return;
+    profileMessage.textContent = 'Bitte warten …';
+    try {
+      const response = await fetch('/api/auth/profile/', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: new FormData(profileForm).get('displayName') }),
+      });
+      const result = await response.json() as { account?: { displayName: string }; error?: string };
+      if (!response.ok || !result.account) {
+        throw new Error(result.error ?? 'Der Name konnte nicht gespeichert werden.');
+      }
+      profileMessage.textContent = 'Name gespeichert.';
+      window.location.reload();
+    } catch (error) {
+      profileMessage.textContent = error instanceof Error ? error.message : 'Der Name konnte nicht gespeichert werden.';
+    }
+  });
 
   logoutForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!logoutMessage) return;
     logoutMessage.textContent = 'Bitte warten …';
     try {
-      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      const response = await fetch('/api/auth/logout/', { method: 'POST' });
       if (!response.ok) throw new Error('Abmeldung fehlgeschlagen.');
       window.location.assign('/');
     } catch {
@@ -39,4 +108,15 @@ if (!account) return Astro.redirect('/login/', 302);
 
 <style>
   @import '../styles/account.css';
+  .account-library { padding-top: 2rem; padding-bottom: 2rem; }
+  .account-library h2 { margin: 0.6rem 0 1.5rem; }
+  .library-list, .orders-table { display: grid; gap: 1rem; }
+  .library-card, .order-row { border: 1px solid var(--line); border-radius: 16px; padding: 1.25rem 1.5rem; }
+  .library-heading, .order-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .library-heading h3 { margin: 0 0 0.35rem; }
+  .library-meta, .library-progress { display: block; color: var(--muted); font-size: 0.9rem; }
+  .library-card ul { margin-bottom: 0; padding-left: 1.25rem; line-height: 1.9; }
+  .library-progress { display: inline; margin-left: 0.5rem; }
+  .order-total { text-align: right; white-space: nowrap; }
+  @media (max-width: 600px) { .library-heading, .order-row { flex-direction: column; } .order-total { text-align: left; } }
 </style>

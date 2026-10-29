@@ -33,14 +33,15 @@ export const PUT: APIRoute = async (context) => {
       `UPDATE articles SET
         slug = $2, title = $3, description = $4, body = $5, date = $6, updated = $7,
         pillar = $8, format = $9, status = $10, featured = $11, tags = $12,
-        sources = $13, video_url = $14, login_required = $15, updated_at = NOW()
+        sources = $13, video_url = $14, login_required = $15,
+        requires_purchase = $16, updated_at = NOW()
        WHERE id = $1
        RETURNING id`,
       [
         id, article.slug, article.title, article.description, article.body, article.date,
         article.updated, article.pillar, article.format, article.status,
         article.featured, article.tags, JSON.stringify(article.sources),
-        article.videoUrl, article.loginRequired,
+        article.videoUrl, article.loginRequired, article.requiresPurchase,
       ],
     );
     if (!result.rowCount) return json({ error: 'Artikel nicht gefunden.' }, 404);

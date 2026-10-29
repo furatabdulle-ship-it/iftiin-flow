@@ -6,6 +6,42 @@ export const credentialsSchema = z.object({
   password: z.string().min(12).max(128),
 });
 
+export const registrationSchema = credentialsSchema.extend({
+  displayName: z.string().trim().min(1).max(80).transform((name) => name.replace(/\s+/g, ' ')),
+});
+
+export const productInputSchema = z.object({
+  slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+  productType: z.enum(['digital_download', 'premium_article', 'online_course', 'bundle', 'membership']),
+  name: z.string().trim().min(1).max(180),
+  description: z.string().trim().max(2000),
+  status: z.enum(['draft', 'active', 'archived']),
+  amountCents: z.number().int().min(50).max(100_000_000),
+  currency: z.literal('eur'),
+  billingInterval: z.enum(['one_time', 'month', 'year']),
+  contentIds: z.array(z.uuid()).max(100)
+    .refine((ids) => new Set(ids).size === ids.length, 'Inhalte dürfen nicht doppelt zugeordnet werden.'),
+}).refine((product) => product.productType === 'membership' || product.billingInterval === 'one_time', {
+  path: ['billingInterval'],
+  message: 'Wiederkehrende Preise sind nur für Membership-Produkte zulässig.',
+});
+
+export const contentItemInputSchema = z.object({
+  contentType: z.enum(['download', 'lesson', 'video']),
+  slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+  title: z.string().trim().min(1).max(180),
+  description: z.string().trim().max(1000),
+  body: z.string().max(100_000),
+  storageAssetId: z.uuid().nullable(),
+  status: z.enum(['draft', 'published', 'archived']),
+  position: z.number().int().min(0).max(10_000),
+});
+
+export const learningProgressSchema = z.object({
+  progressPercent: z.number().int().min(0).max(100),
+  lastPositionSeconds: z.number().int().min(0).max(604_800),
+});
+
 const pillarSlugs = pillars.map((pillar) => pillar.slug) as [string, ...string[]];
 const articleFormats = Object.keys(formatNames) as [string, ...string[]];
 
@@ -22,6 +58,7 @@ export const articleInputSchema = z.object({
   featured: z.boolean(),
   videoUrl: z.url({ protocol: /^https?$/ }).max(2048).nullable(),
   loginRequired: z.boolean(),
+  requiresPurchase: z.boolean(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20),
   sources: z.array(z.object({
     label: z.string().trim().min(1).max(180),

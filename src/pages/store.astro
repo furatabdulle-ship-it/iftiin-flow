@@ -1,0 +1,100 @@
+---
+import Base from '../layouts/Base.astro';
+import { getSessionAccount } from '../lib/auth';
+import { listPublicProducts } from '../lib/commerce';
+import { isCheckoutConfigured } from '../lib/stripe';
+
+const products = await listPublicProducts();
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+const lockedSlug = Astro.url.searchParams.get('locked');
+const cancelled = Astro.url.searchParams.get('checkout') === 'cancelled';
+const hasLockedProduct = lockedSlug
+  ? products.some((product) => product.content.some((item) => item.slug === lockedSlug))
+  : false;
+const checkoutReady = isCheckoutConfigured();
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const formatPrice = (amount: number, currency: string) => new Intl.NumberFormat('de-DE', {
+  style: 'currency',
+  currency: currency.toUpperCase(),
+}).format(amount / 100);
+const typeNames: Record<string, string> = {
+  digital_download: 'Digitaler Download',
+  premium_article: 'Premium-Artikel',
+  online_course: 'Online-Kurs',
+};
+---
+<Base title="Shop" description="Downloads, Premium-Analysen und Kurse von iftiin flow.">
+  <section class="interior-hero wrap store-hero">
+    <div class="section-label">Shop / Wissen vertiefen</div>
+    <h1>Ideas into <em>practice.</em></h1>
+    <p>Digitale Materialien, vertiefende Analysen und Lernformate. Käufe werden deinem Konto zugeordnet.</p>
+  </section>
+  <section class="section wrap store-content">
+    {lockedSlug && <aside class="store-notice" role="status">
+      {hasLockedProduct
+        ? 'Dieser Premium-Inhalt wird nach dem Kauf eines passenden Produkts freigeschaltet.'
+        : 'Für diesen Premium-Inhalt ist derzeit noch kein Produkt verfügbar. Bitte schau später wieder vorbei.'}
+    </aside>}
+    {cancelled && <aside class="store-notice" role="status">Der Checkout wurde abgebrochen. Es wurde keine Zahlung ausgelöst.</aside>}
+    {products.length ? <div class="store-grid">
+      {products.map((product) => <article class="store-card">
+        <div class="store-card-top">
+          <span class="section-label">{typeNames[product.productType]}</span>
+          <strong>{formatPrice(product.amountCents, product.currency)}{product.billingInterval !== 'one_time' ? ` / ${product.billingInterval === 'month' ? 'Monat' : 'Jahr'}` : ''}</strong>
+        </div>
+        <h2>{product.name}</h2>
+        <p>{product.description}</p>
+        {product.content.length > 0 && <ul>
+          {product.content.map((item) => <li>{item.title}</li>)}
+        </ul>}
+        {account
+          ? <button class="pill-link checkout-button" type="button" data-product-id={product.id} disabled={!checkoutReady}>
+              {checkoutReady ? 'Sicher kaufen' : 'Checkout noch nicht eingerichtet'} <span>↗</span>
+            </button>
+          : <a class="pill-link" href={root('login/?next=%2Fstore%2F')}>Anmelden zum Kaufen <span>↗</span></a>}
+      </article>)}
+    </div> : <div class="empty-state">
+      <span class="empty-symbol">✳</span>
+      <h2>Der Shop wird vorbereitet.</h2>
+      <p>Produkte und Lernmaterialien werden hier verfügbar, sobald sie veröffentlicht sind.</p>
+    </div>}
+    <p class="form-message" id="store-message" role="status" aria-live="polite"></p>
+  </section>
+</Base>
+
+<script>
+  const message = document.querySelector<HTMLElement>('#store-message');
+  document.querySelectorAll<HTMLButtonElement>('.checkout-button').forEach((button) => {
+    button.addEventListener('click', async () => {
+      if (!message || !button.dataset.productId) return;
+      message.textContent = 'Sicherer Checkout wird vorbereitet …';
+      button.disabled = true;
+      try {
+        const response = await fetch('/api/checkout/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: button.dataset.productId }),
+        });
+        const result = await response.json() as { checkoutUrl?: string; error?: string };
+        if (!response.ok || !result.checkoutUrl) throw new Error(result.error ?? 'Checkout konnte nicht gestartet werden.');
+        window.location.assign(result.checkoutUrl);
+      } catch (error) {
+        message.textContent = error instanceof Error ? error.message : 'Checkout konnte nicht gestartet werden.';
+        button.disabled = false;
+      }
+    });
+  });
+</script>
+
+<style>
+  .store-hero { padding-bottom: 2rem; }
+  .store-content { min-height: 40vh; padding-top: 1rem; padding-bottom: 6rem; }
+  .store-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.25rem; }
+  .store-card { border: 1px solid var(--line); border-radius: 20px; padding: 1.5rem; display: flex; flex-direction: column; align-items: flex-start; }
+  .store-card-top { width: 100%; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+  .store-card h2 { margin: 1.25rem 0 0.5rem; font-size: 1.5rem; }
+  .store-card p { color: var(--muted); line-height: 1.7; }
+  .store-card ul { padding-left: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem; }
+  .store-card .pill-link { margin-top: auto; }
+  .store-notice { margin-bottom: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 12px; }
+</style>

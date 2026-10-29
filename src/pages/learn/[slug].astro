@@ -1,0 +1,91 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { hasContentAccess } from '../../lib/commerce';
+import { query } from '../../lib/db';
+import { renderArticleMarkdown } from '../../lib/articles';
+
+const slug = Astro.params.slug;
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect(`/login/?next=${encodeURIComponent(Astro.url.pathname)}`, 302);
+const result = slug ? await query<{
+  id: string;
+  title: string;
+  description: string;
+  body: string;
+  contentType: 'lesson' | 'video';
+  storageAssetId: string | null;
+  progressPercent: number | null;
+  lastPositionSeconds: number | null;
+}>(`SELECT ci.id, ci.title, ci.description, ci.body, ci.content_type AS "contentType",
+           ci.storage_asset_id AS "storageAssetId",
+           lp.progress_percent AS "progressPercent",
+           lp.last_position_seconds AS "lastPositionSeconds"
+    FROM content_items ci
+    LEFT JOIN learning_progress lp ON lp.content_item_id = ci.id AND lp.user_id = $2
+    WHERE ci.slug = $1 AND ci.status = 'published' AND ci.content_type IN ('lesson', 'video')`,
+  [slug, account.id]) : null;
+const lesson = result?.rows[0];
+const allowed = lesson && (account.role === 'admin' || await hasContentAccess(account.id, lesson.id));
+if (lesson && !allowed) return Astro.redirect('/store/', 302);
+if (!lesson) Astro.response.status = 404;
+const lessonHtml = lesson ? await renderArticleMarkdown(lesson.body) : '';
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+---
+<Base title={lesson?.title ?? 'Lerneinheit nicht gefunden'} description={lesson?.description ?? 'Diese Lerneinheit ist nicht verfügbar.'}>
+  {lesson ? <article class="section wrap lesson-page">
+    <a class="breadcrumb" href={root('account/')}>← Zur Bibliothek</a>
+    <div class="section-label">Lernen / Lerneinheit</div>
+    <h1>{lesson.title}</h1>
+    <p>{lesson.description}</p>
+    {lesson.contentType === 'video' && lesson.storageAssetId && <video class="lesson-video" controls preload="metadata" src={root(`api/content/${lesson.id}/file/`)}></video>}
+    <div class="prose" set:html={lessonHtml}></div>
+    <form id="progress-form" data-content-id={lesson.id} data-progress={lesson.progressPercent ?? 0}>
+      <label for="progress-percent">Dein Fortschritt: <output id="progress-value">{lesson.progressPercent ?? 0}%</output></label>
+      <input id="progress-percent" type="range" min="0" max="100" step="10" value={lesson.progressPercent ?? 0} />
+      <button class="pill-link" type="submit">Fortschritt speichern <span>↗</span></button>
+      <p class="form-message" id="progress-message" role="status" aria-live="polite"></p>
+    </form>
+  </article> : <section class="interior-hero wrap">
+    <div class="section-label">404 / Nicht gefunden</div>
+    <h1>Lerneinheit nicht <em>gefunden.</em></h1>
+    <p>Diese Lerneinheit ist nicht verfügbar oder wurde noch nicht veröffentlicht.</p>
+    <a class="pill-link" href={root('account/')}>Zur Bibliothek <span>↗</span></a>
+  </section>}
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#progress-form');
+  const range = document.querySelector<HTMLInputElement>('#progress-percent');
+  const output = document.querySelector<HTMLOutputElement>('#progress-value');
+  const message = document.querySelector<HTMLElement>('#progress-message');
+  range?.addEventListener('input', () => {
+    if (output && range) output.value = `${range.value}%`;
+  });
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!range || !message || !form.dataset.contentId) return;
+    message.textContent = 'Fortschritt wird gespeichert …';
+    try {
+      const response = await fetch(`/api/learning/progress/${encodeURIComponent(form.dataset.contentId)}/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progressPercent: Number(range.value), lastPositionSeconds: 0 }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? 'Der Lernfortschritt konnte nicht gespeichert werden.');
+      message.textContent = 'Fortschritt gespeichert.';
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : 'Der Lernfortschritt konnte nicht gespeichert werden.';
+    }
+  });
+</script>
+
+<style>
+  .lesson-page { max-width: 860px; padding-top: 4rem; padding-bottom: 6rem; }
+  .lesson-page h1 { font-size: clamp(2.5rem, 7vw, 5rem); margin: 0.8rem 0 1rem; }
+  .lesson-page > p { color: var(--muted); line-height: 1.7; }
+  .lesson-video { width: 100%; max-height: 70vh; margin: 2rem 0; background: #111; border-radius: 12px; }
+  #progress-form { display: grid; gap: 1rem; margin-top: 3rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 16px; }
+  #progress-percent { width: 100%; }
+</style>

@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../config';
+---
+<Base title="Impressum" description="Impressum und Anbieterkennzeichnung von iftiin flow.">
+  <section class="interior-hero wrap legal-hero">
+    <div class="section-label">Rechtliches / Anbieterkennzeichnung</div>
+    <h1>Impressum</h1>
+    <p>Angaben gemäß § 5 DDG.</p>
+  </section>
+  <section class="section wrap legal-content">
+    <h2>Diensteanbieter</h2>
+    <p>
+      Furat Abdulle<br />
+      Gärtnerweg 62<br />
+      60322 Frankfurt am Main (Innenstadt II)<br />
+      Deutschland
+    </p>
+
+    <h2>Kontakt</h2>
+    <p>E-Mail: <a href={`mailto:${site.email}`}>{site.email}</a></p>
+
+    <h2>Verantwortlich für den Inhalt</h2>
+    <p>
+      Verantwortlich nach § 18 Abs. 2 MStV:<br />
+      Furat Abdulle<br />
+      Gärtnerweg 62<br />
+      60322 Frankfurt am Main (Innenstadt II)<br />
+      Deutschland
+    </p>
+  </section>
+</Base>
+
+<style>
+  .legal-hero { padding-bottom: 2rem; }
+  .legal-content { max-width: 800px; padding-top: 1rem; padding-bottom: 6rem; }
+  .legal-content h2 { margin: 2.5rem 0 0.75rem; font-size: 1.25rem; }
+  .legal-content p { margin: 0; line-height: 1.8; }
+  .legal-content a { color: inherit; text-underline-offset: 0.2em; }
+</style>

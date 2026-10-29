@@ -3,7 +3,7 @@ export const site = {
   name: 'iftiin flow.',
   shortDescription: 'Ideen, Analysen und Lernräume für eine Welt im Wandel.',
   mission: 'Wir erkunden, wie Wissen, Technologie und Institutionen unsere Fähigkeit prägen, zu verstehen, zu urteilen und zu handeln.',
-  email: '', // verified public contact address; enables Contact link when set
+  email: 'furat.abdulle@iftiin-flow.com',
   bookingUrl: '', // later: Calendly, Cal.com or your booking page
   shopUrl: '', // later: Stripe Payment Link, Lemon Squeezy, shop page etc.
   newsletterUrl: '', // later: newsletter signup URL

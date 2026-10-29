@@ -20,7 +20,7 @@ export const POST: APIRoute = async (context) => {
     const token = await createSession(account.id);
     clearRateLimit(context, 'login');
     sessionCookie(context, token);
-    return json({ account: { id: account.id, email: account.email, role: account.role } });
+    return json({ account });
   } catch (error) {
     if (error instanceof RequestInputError) return json({ error: error.message }, 400);
     console.error('Anmeldung fehlgeschlagen:', error);

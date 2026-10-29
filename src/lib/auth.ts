@@ -20,9 +20,16 @@ export type Account = {
   id: string;
   email: string;
   role: 'user' | 'admin';
+  displayName: string;
 };
 
-type PasswordRow = { id: string; email: string; role: Account['role']; password_hash: string };
+type PasswordRow = {
+  id: string;
+  email: string;
+  role: Account['role'];
+  display_name: string;
+  password_hash: string;
+};
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
@@ -47,20 +54,31 @@ async function verifyPassword(password: string, encoded: string): Promise<boolea
   return timingSafeEqual(key, expected);
 }
 
-export async function registerAccount(email: string, password: string): Promise<Account> {
+export async function registerAccount(email: string, password: string, displayName: string): Promise<Account> {
   const passwordHash = await hashPassword(password);
   const result = await query<Account>(
-    `INSERT INTO users (email, password_hash)
-     VALUES ($1, $2)
-     RETURNING id, email, role`,
-    [email.toLowerCase(), passwordHash],
+    `INSERT INTO users (email, password_hash, display_name)
+     VALUES ($1, $2, $3)
+     RETURNING id, email, role, display_name AS "displayName"`,
+    [email.toLowerCase(), passwordHash, displayName],
   );
   return result.rows[0];
 }
 
+export async function updateAccountDisplayName(accountId: string, displayName: string): Promise<Account | null> {
+  const result = await query<Account>(
+    `UPDATE users
+     SET display_name = $2
+     WHERE id = $1
+     RETURNING id, email, role, display_name AS "displayName"`,
+    [accountId, displayName],
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function authenticateAccount(email: string, password: string): Promise<Account | null> {
   const result = await query<PasswordRow>(
-    'SELECT id, email, role, password_hash FROM users WHERE email = $1',
+    'SELECT id, email, role, display_name, password_hash FROM users WHERE email = $1',
     [email.toLowerCase()],
   );
   const account = result.rows[0];
@@ -70,7 +88,12 @@ export async function authenticateAccount(email: string, password: string): Prom
   }
   if (!(await verifyPassword(password, account.password_hash))) return null;
 
-  return { id: account.id, email: account.email, role: account.role };
+  return {
+    id: account.id,
+    email: account.email,
+    role: account.role,
+    displayName: account.display_name,
+  };
 }
 
 export async function createSession(accountId: string): Promise<string> {
@@ -89,7 +112,7 @@ export async function getSessionAccount(token: string | undefined): Promise<Acco
   if (!token) return null;
   const tokenHash = createHash('sha256').update(token).digest('hex');
   const result = await query<Account>(
-    `SELECT users.id, users.email, users.role
+    `SELECT users.id, users.email, users.role, users.display_name AS "displayName"
      FROM sessions
      JOIN users ON users.id = sessions.user_id
      WHERE sessions.token_hash = $1 AND sessions.expires_at > NOW()`,

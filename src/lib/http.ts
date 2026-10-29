@@ -15,7 +15,15 @@ export function rejectCrossOriginWrite(context: APIContext): Response | null {
   const allowedOrigins = new Set([new URL(context.request.url).origin]);
   if (process.env.SITE_URL) allowedOrigins.add(new URL(process.env.SITE_URL).origin);
   if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    allowedOrigins.add(`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+    const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
+    allowedOrigins.add(new URL(
+      railwayDomain.startsWith('http://') || railwayDomain.startsWith('https://')
+        ? railwayDomain
+        : `https://${railwayDomain}`,
+    ).origin);
+  }
+  for (const configuredOrigin of process.env.ADDITIONAL_ALLOWED_ORIGINS?.split(',') ?? []) {
+    if (configuredOrigin.trim()) allowedOrigins.add(new URL(configuredOrigin.trim()).origin);
   }
   if (!origin || !allowedOrigins.has(origin)) {
     return json({ error: 'Ungültige Anfragequelle.' }, 403);

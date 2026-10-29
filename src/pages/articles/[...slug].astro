@@ -3,13 +3,21 @@ import Base from '../../layouts/Base.astro';
 import { renderArticleMarkdown, getPublishedArticle } from '../../lib/articles';
 import { formatDate } from '../../lib/content';
 import { getSessionAccount } from '../../lib/auth';
+import { hasArticleAccess } from '../../lib/commerce';
 import { getVideoEmbedUrl } from '../../lib/validation';
 import { pillars, formatNames } from '../../config';
 
 const article = Astro.params.slug ? await getPublishedArticle(Astro.params.slug) : null;
-if (article?.data.loginRequired) {
+if (article?.data.loginRequired || article?.data.requiresPurchase) {
   const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
   if (!account) return Astro.redirect(`/login/?next=${encodeURIComponent(Astro.url.pathname)}`, 302);
+  if (
+    article.data.requiresPurchase &&
+    account.role !== 'admin' &&
+    !(await hasArticleAccess(account.id, article.id))
+  ) {
+    return Astro.redirect(`/store/?locked=${encodeURIComponent(article.slug)}`, 302);
+  }
 }
 if (!article) Astro.response.status = 404;
 const html = article ? await renderArticleMarkdown(article.body) : '';
@@ -28,7 +36,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       <div class="article-meta">
         <span>{formatDate(article.data.date)}</span>
         {article.data.updated && <span>Aktualisiert: {formatDate(article.data.updated)}</span>}
-        {article.data.loginRequired && <span>Nur für angemeldete Konten</span>}
+        {article.data.requiresPurchase && <span>Premium-Inhalt</span>}
+        {article.data.loginRequired && !article.data.requiresPurchase && <span>Nur für angemeldete Konten</span>}
       </div>
     </header>
     {videoEmbedUrl && <div class="video-player wrap">

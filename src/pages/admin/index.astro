@@ -11,6 +11,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
     <div class="section-label">Admin / Redaktion</div>
     <h1>Artikel <em>verwalten.</em></h1>
     <p>Beiträge werden als Entwurf gespeichert und erst mit Status „Veröffentlicht“ öffentlich angezeigt.</p>
+    <a class="pill-link" href="/admin/products/">Shop-Produkte &amp; Inhalte verwalten <span>↗</span></a>
     <button class="pill-link" type="button" id="new-article">Neuen Artikel anlegen <span>+</span></button>
     <p class="admin-message" id="admin-message" role="status" aria-live="polite"></p>
     <div class="admin-grid">
@@ -29,6 +30,10 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
             <label>Datum<input name="date" type="date" required /></label>
             <label>Aktualisiert (optional)<input name="updated" type="date" /></label>
           </div>
+          <label class="video-access-option">
+            <input name="requiresPurchase" type="checkbox" />
+            <span>Nur nach Kauf eines verknüpften Premium-Produkts anzeigen</span>
+          </label>
           <div class="editor-meta">
             <label>Themenfeld
               <select name="pillar">
@@ -94,6 +99,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
       featured: boolean;
       videoUrl: string | null;
       loginRequired: boolean;
+      requiresPurchase: boolean;
       tags: string[];
       sources: { label: string; url: string }[];
     };
@@ -185,6 +191,8 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
     if (featured) featured.checked = article.data.featured;
     const loginRequired = field('loginRequired') as HTMLInputElement | null;
     if (loginRequired) loginRequired.checked = article.data.loginRequired;
+    const requiresPurchase = field('requiresPurchase') as HTMLInputElement | null;
+    if (requiresPurchase) requiresPurchase.checked = article.data.requiresPurchase;
     if (heading) heading.textContent = 'Beitrag bearbeiten';
     if (deleteButton) deleteButton.hidden = false;
     updateVideoFields();
@@ -211,6 +219,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
       featured: (field('featured') as HTMLInputElement | null)?.checked ?? false,
       videoUrl: get('videoUrl') || null,
       loginRequired: (field('loginRequired') as HTMLInputElement | null)?.checked ?? false,
+      requiresPurchase: (field('requiresPurchase') as HTMLInputElement | null)?.checked ?? false,
       tags: get('tags').split(',').map((tag) => tag.trim()).filter(Boolean),
       sources,
     };

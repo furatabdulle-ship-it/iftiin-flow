@@ -30,10 +30,10 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
         <a href={root('explore/')}>Explore</a>
         <a href={root('about/')}>About</a>
         <a href={root('account/')}>Konto</a>
+        <a href={root('store/')}>Shop</a>
         {site.showResearch && <a href={root('research/')}>Research</a>}
         {site.showLearning && <a href={root('learning/')}>Learning</a>}
         {site.showTools && <a href={root('tools/')}>Tools</a>}
-        {site.showShop && site.shopUrl && <a href={site.shopUrl} target="_blank" rel="noopener noreferrer">Shop ↗</a>}
         {site.showBooking && site.bookingUrl && <a class="nav-cta" href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen ↗</a>}
       </nav>
     </header>
@@ -41,8 +41,8 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
     <footer class="footer">
       <div class="wrap footer-grid">
         <div><a class="wordmark" href={root('')}>iftiin<span> flow.</span></a><p>Understand complexity.<br/>Think with clarity. Act with agency.</p></div>
-        <div class="footer-links"><a href={root('explore/')}>Explore</a><a href={root('about/')}>About</a>{site.email && <a href={`mailto:${site.email}`}>Kontakt</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter ↗</a>}</div>
-        <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · Unabhängige Wissensplattform <span>Impressum / Datenschutz: vor öffentlichem Launch ergänzen</span></div>
+        <div class="footer-links"><a href={root('explore/')}>Explore</a><a href={root('store/')}>Shop</a><a href={root('about/')}>About</a><a href={root('impressum/')}>Impressum</a>{site.email && <a href={`mailto:${site.email}`}>Kontakt</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter ↗</a>}</div>
+        <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · Unabhängige Wissensplattform</div>
       </div>
     </footer>
   </body>
