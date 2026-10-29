@@ -98,7 +98,7 @@ export async function listPublicProducts(): Promise<ProductRecord[]> {
          JOIN content_items pending_ci ON pending_ci.id = pending_pc.content_item_id
          WHERE pending_pc.product_id = p.id AND pending_ci.status <> 'published'
        )
-     GROUP BY p.id, pr.id
+     GROUP BY p.id, pr.id, pr.amount_cents, pr.currency, pr.billing_interval
      ORDER BY p.created_at DESC`,
     [initialProductTypes],
   );
@@ -108,7 +108,7 @@ export async function listPublicProducts(): Promise<ProductRecord[]> {
 export async function listAdminProducts(): Promise<ProductRecord[]> {
   const result = await query<ProductRow>(
     `${productSelection}
-     GROUP BY p.id, pr.id
+     GROUP BY p.id, pr.id, pr.amount_cents, pr.currency, pr.billing_interval
      ORDER BY p.updated_at DESC`,
   );
   return result.rows.map(mapProduct);
@@ -124,7 +124,7 @@ export async function getCheckoutProduct(productId: string): Promise<ProductReco
          JOIN content_items pending_ci ON pending_ci.id = pending_pc.content_item_id
          WHERE pending_pc.product_id = p.id AND pending_ci.status <> 'published'
        )
-     GROUP BY p.id, pr.id`,
+     GROUP BY p.id, pr.id, pr.amount_cents, pr.currency, pr.billing_interval`,
     [productId, initialProductTypes],
   );
   return result.rows[0] ? mapProduct(result.rows[0]) : null;
