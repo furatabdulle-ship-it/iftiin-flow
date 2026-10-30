@@ -110,12 +110,13 @@ export async function createCheckoutSession(
   form.set('metadata[order_id]', orderId);
   form.set('metadata[user_id]', userId);
   form.set('metadata[product_id]', product.id);
-  form.set('payment_intent_data[metadata][order_id]', orderId);
   if (product.billingInterval !== 'one_time') {
     form.set('line_items[0][price_data][recurring][interval]', product.billingInterval);
     form.set('subscription_data[metadata][order_id]', orderId);
     form.set('subscription_data[metadata][user_id]', userId);
     form.set('subscription_data[metadata][product_id]', product.id);
+  } else {
+    form.set('payment_intent_data[metadata][order_id]', orderId);
   }
 
   try {

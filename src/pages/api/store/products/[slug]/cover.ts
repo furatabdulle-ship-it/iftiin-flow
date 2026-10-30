@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSessionAccount } from '../../../../../lib/auth';
-import { initialProductTypes } from '../../../../../lib/commerce';
+import { availableProductTypes } from '../../../../../lib/commerce';
 import { query } from '../../../../../lib/db';
 import { createPrivateDownloadUrl, isAllowedImageAssetType } from '../../../../../lib/storage';
 
@@ -37,7 +37,7 @@ export const GET: APIRoute = async (context) => {
            )
          )
        LIMIT 1`,
-      [slug, initialProductTypes, ['image/jpeg', 'image/png', 'image/webp'], isAdmin],
+      [slug, availableProductTypes, ['image/jpeg', 'image/png', 'image/webp'], isAdmin],
     );
     const asset = result.rows[0];
     if (!asset || !isAllowedImageAssetType(asset.content_type)) {

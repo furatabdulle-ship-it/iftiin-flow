@@ -1,7 +1,13 @@
 import type { QueryResultRow } from 'pg';
 import { query } from './db';
 
-export const initialProductTypes = ['digital_download', 'premium_article', 'online_course'] as const;
+export const availableProductTypes = [
+  'digital_download',
+  'premium_article',
+  'online_course',
+  'bundle',
+  'membership',
+] as const;
 export type ProductType = 'digital_download' | 'premium_article' | 'online_course' | 'bundle' | 'membership';
 export type BillingInterval = 'one_time' | 'month' | 'year';
 
@@ -104,7 +110,7 @@ export async function listPublicProducts(): Promise<ProductRecord[]> {
        )
      GROUP BY p.id, pr.id, pr.amount_cents, pr.currency, pr.billing_interval
      ORDER BY p.created_at DESC`,
-    [initialProductTypes],
+    [availableProductTypes],
   );
   return result.rows.map(mapProduct);
 }
@@ -129,7 +135,7 @@ export async function getCheckoutProduct(productId: string): Promise<ProductReco
          WHERE pending_pc.product_id = p.id AND pending_ci.status <> 'published'
        )
      GROUP BY p.id, pr.id, pr.amount_cents, pr.currency, pr.billing_interval`,
-    [productId, initialProductTypes],
+    [productId, availableProductTypes],
   );
   return result.rows[0] ? mapProduct(result.rows[0]) : null;
 }

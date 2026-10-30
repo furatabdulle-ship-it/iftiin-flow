@@ -40,11 +40,11 @@ docker compose exec app node scripts/promote-admin.mjs deine-adresse@example.com
 
 Danach erscheint im Konto der Zugang zur Artikelverwaltung. Öffentliche Registrierung erstellt immer nur die Rolle `user`; niemand kann sich selbst zum Admin machen. Das Admin-Konto sollte nur eine E-Mail-Adresse sein, auf die du Zugriff hast.
 
-Im Admin-Bereich führt „Shop-Produkte & Inhalte verwalten“ zur kompakten Verwaltung mit den Tabs „Inhalte“ und „Produkte“, Suche und Statusfiltern. Einträge werden in Listen dargestellt; Erstellen und Bearbeiten öffnen jeweils einen eigenen Editor. Dort lassen sich Entwürfe und veröffentlichte Downloads, Lektionen, Videos sowie Produkte für digitale Downloads, Premium-Artikel und Online-Kurse anlegen. Für aktive Produkte müssen veröffentlichte Inhalte zugeordnet sein. Jedes Produkt kann optional ein JPEG-, PNG- oder WebP-Cover bis 10 MB erhalten; das Bild wird im Shop über einen kurzlebigen signierten Link aus dem privaten Speicher geladen. Artikel können im Artikel-Editor als Premium markiert und anschließend als Produktinhalt zugeordnet werden. Bundle und Membership sind im Datenmodell vorgesehen, aber noch nicht zur Veröffentlichung freigegeben. Inhalte können nur gelöscht werden, wenn sie keinem Produkt zugeordnet sind und weder für frühere Käufe/Zugänge noch für Lernfortschritte benötigt werden; Produkte und historische Berechtigungen werden dabei nicht automatisch gelöscht.
+Im Admin-Bereich führt „Shop-Produkte & Inhalte verwalten“ zur kompakten Verwaltung mit den Tabs „Inhalte“ und „Produkte“, Suche und Statusfiltern. Einträge werden in Listen dargestellt; Erstellen und Bearbeiten öffnen jeweils einen eigenen Editor. Dort lassen sich digitale Downloads, Premium-Artikel, Online-Kurse, Bundles und Memberships anlegen. Einmalige Käufe funktionieren für alle Kategorien; Memberships können außerdem monatlich oder jährlich abgerechnet werden. Für aktive Produkte müssen veröffentlichte Inhalte zugeordnet sein. Jedes Produkt kann optional ein JPEG-, PNG- oder WebP-Cover bis 10 MB erhalten; das Bild wird im Shop über einen kurzlebigen signierten Link aus dem privaten Speicher geladen. Artikel können im Artikel-Editor als Premium markiert und anschließend als Produktinhalt zugeordnet werden. Inhalte können nur gelöscht werden, wenn sie keinem Produkt zugeordnet sind und weder für frühere Käufe/Zugänge noch für Lernfortschritte benötigt werden; Produkte und historische Berechtigungen werden dabei nicht automatisch gelöscht.
 
 ## Shop, Zahlungen und Lerninhalte
 
-Die Shopseite `/store/` zeigt aktive Produkte und Preise. Angemeldete Käufer werden an Stripe Checkout weitergeleitet; erfolgreiche Webhooks schalten die zum Bestellzeitpunkt gespeicherten Inhalte im Konto frei. Die Kontoseite `/account/` enthält die persönliche Bibliothek, Downloads, Kurslektionen, Lernfortschritt und die letzten Bestellungen. Private Dateien werden erst nach Anmeldung und Zugriffsprüfung über kurzlebige signierte URLs ausgeliefert.
+Die Shopseite `/store/` zeigt aktive Produkte aller fünf Kategorien und leitet angemeldete Käufer je nach Abrechnung zu Stripe Checkout für Einmalkäufe oder Membership-Abos weiter. Ein erfolgreicher Checkout-Webhook schaltet die zum Bestellzeitpunkt gespeicherten Inhalte im Konto frei; bei Abos steuern die Stripe-Subscription-Webhooks den laufenden Zugang. Die Kontoseite `/account/` enthält die persönliche Bibliothek, Downloads, Kurslektionen, Lernfortschritt und die letzten Bestellungen. Private Dateien werden erst nach Anmeldung und Zugriffsprüfung über kurzlebige signierte URLs ausgeliefert.
 
 Die Migration `004_commerce_learning.sql` wird zusammen mit den anderen nummerierten Migrationen beim App-Start ausgeführt. Vor dem Aktivieren von Zahlungen zuerst in Stripe einen **Testmodus** einrichten und für `https://<deine-domain>/api/webhooks/stripe/` mindestens diese Events abonnieren:
 
@@ -52,7 +52,7 @@ Die Migration `004_commerce_learning.sql` wird zusammen mit den anderen nummerie
 - `checkout.session.async_payment_succeeded`
 - `checkout.session.expired`
 - `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
-- `invoice.paid`
+- `invoice.paid`, `invoice.payment_failed`
 - `charge.refunded`
 
 In Railway beziehungsweise der lokalen `.env` sind folgende Werte erforderlich:

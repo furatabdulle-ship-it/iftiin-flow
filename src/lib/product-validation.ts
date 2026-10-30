@@ -1,4 +1,4 @@
-import { initialProductTypes } from './commerce';
+import { availableProductTypes } from './commerce';
 import { query } from './db';
 import { json } from './http';
 import { isAllowedImageAssetType } from './storage';
@@ -55,8 +55,8 @@ export async function validateProductContentLinks(
   productType: string,
   active: boolean,
 ): Promise<Response | null> {
-  if (active && !initialProductTypes.includes(productType as typeof initialProductTypes[number])) {
-    return json({ error: 'Dieser Produkttyp ist noch nicht zur Veröffentlichung freigegeben.' }, 400);
+  if (active && !availableProductTypes.includes(productType as typeof availableProductTypes[number])) {
+    return json({ error: 'Dieser Produkttyp ist nicht zur Veröffentlichung freigegeben.' }, 400);
   }
   if (active && contentIds.length === 0) {
     return json({ error: 'Ein aktives Produkt muss mindestens einen Inhalt freischalten.' }, 400);

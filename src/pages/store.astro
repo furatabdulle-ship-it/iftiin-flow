@@ -21,6 +21,8 @@ const typeNames: Record<string, string> = {
   digital_download: 'Digitaler Download',
   premium_article: 'Premium-Artikel',
   online_course: 'Online-Kurs',
+  bundle: 'Bundle',
+  membership: 'Membership',
 };
 ---
 <Base title="Shop" description="Downloads, Premium-Analysen und Kurse von iftiin flow.">
@@ -56,7 +58,7 @@ const typeNames: Record<string, string> = {
         </ul>}
         {account
           ? <button class="pill-link checkout-button" type="button" data-product-id={product.id} disabled={!checkoutReady}>
-              {checkoutReady ? 'Sicher kaufen' : 'Checkout noch nicht eingerichtet'} <span>↗</span>
+              {checkoutReady ? (product.billingInterval === 'one_time' ? 'Sicher kaufen' : 'Abo starten') : 'Checkout noch nicht eingerichtet'} <span>↗</span>
             </button>
           : <a class="pill-link" href={root('login/?next=%2Fstore%2F')}>Anmelden zum Kaufen <span>↗</span></a>}
       </article>)}

@@ -54,7 +54,9 @@ async function grantOrderEntitlements(client: PoolClient, orderId: string): Prom
      FROM orders o
      JOIN order_items oi ON oi.order_id = o.id
      JOIN products p ON p.id = oi.product_id
-     WHERE o.id = $1 AND o.status = 'paid' AND p.product_type <> 'membership'
+     JOIN prices pr ON pr.id = oi.price_id AND pr.product_id = oi.product_id
+     WHERE o.id = $1 AND o.status = 'paid'
+       AND (p.product_type <> 'membership' OR pr.billing_interval = 'one_time')
      ON CONFLICT (order_id, product_id) DO UPDATE
        SET status = 'active', starts_at = NOW(), expires_at = NULL, revoked_at = NULL
      RETURNING id, product_id`,
@@ -323,6 +325,18 @@ export async function processStripeWebhook(payload: string): Promise<'processed'
         if (subscriptionId) {
           await client.query(
             `UPDATE subscriptions SET status = 'active', updated_at = NOW()
+             WHERE stripe_subscription_id = $1`,
+            [subscriptionId],
+          );
+          await refreshSubscriptionEntitlement(client, subscriptionId);
+        }
+        break;
+      }
+      case 'invoice.payment_failed': {
+        const subscriptionId = idFrom(object.subscription);
+        if (subscriptionId) {
+          await client.query(
+            `UPDATE subscriptions SET status = 'past_due', updated_at = NOW()
              WHERE stripe_subscription_id = $1`,
             [subscriptionId],
           );

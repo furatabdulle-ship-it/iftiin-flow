@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getSessionAccount } from '../../lib/auth';
+import { isCheckoutConfigured } from '../../lib/stripe';
 
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 if (!account) return Astro.redirect('/login/', 302);
@@ -63,7 +64,11 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
           <h2>Produkte</h2>
           <button class="cms-button cms-button-primary" id="create-product" type="button">+ Produkt erstellen</button>
         </div>
-        <p class="cms-payment-note">Zahlungen sind deaktiviert, solange Stripe nicht ausdrücklich konfiguriert ist.</p>
+        <p class="cms-payment-note">
+          {isCheckoutConfigured()
+            ? 'Stripe Checkout ist konfiguriert. Einmalige Käufe und Membership-Abos werden über Stripe abgewickelt.'
+            : 'Stripe Checkout bleibt deaktiviert, bis die Stripe-Einstellungen im Website-Service vollständig und sicher hinterlegt sind.'}
+        </p>
         <div class="cms-filters">
           <label>Suche Produkte<input id="product-search" type="search" placeholder="Name oder URL-Slug" /></label>
           <label>Status filtern
@@ -160,6 +165,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
                   <option value="digital_download">Digitaler Download</option>
                   <option value="premium_article">Premium-Artikel</option>
                   <option value="online_course">Online-Kurs</option>
+                  <option value="bundle">Bundle</option>
+                  <option value="membership">Membership</option>
                 </select>
               </label>
               <label class="cms-field-wide">Beschreibung<textarea name="description" maxlength="2000" rows="3"></textarea></label>
@@ -176,6 +183,13 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
                 <button class="cms-button cms-button-secondary" id="cover-remove" type="button">Cover entfernen</button>
               </div>
               <label>Preis in Euro<input name="price" type="number" min="0.50" max="1000000" step="0.01" required /></label>
+              <label hidden>Abrechnung
+                <select name="billingInterval">
+                  <option value="one_time">Einmalig</option>
+                  <option value="month">Monatliches Abo</option>
+                  <option value="year">Jährliches Abo</option>
+                </select>
+              </label>
             </div>
             <p id="cover-upload-status" class="cms-upload-status" role="status" aria-live="polite"></p>
           </section>
@@ -222,7 +236,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   };
   type ProductRecord = {
     id: string; slug: string; name: string; description: string; productType: string;
-    status: string; amountCents: number; coverAssetId: string | null;
+    status: string; amountCents: number; billingInterval: 'one_time' | 'month' | 'year';
+    coverAssetId: string | null;
     content: Pick<ContentRecord, 'id' | 'title' | 'contentType' | 'status'>[];
   };
   type UploadResponse = { id: string; uploadUrl: string; headers: Record<string, string> };
@@ -483,6 +498,9 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       title.textContent = item.name;
       const price = document.createElement('td');
       price.textContent = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(item.amountCents / 100);
+      if (item.billingInterval !== 'one_time') {
+        price.textContent += ` / ${item.billingInterval === 'month' ? 'Monat' : 'Jahr'}`;
+      }
       const statusCell = document.createElement('td');
       const badge = document.createElement('span');
       setStatusBadge(badge, item.status);
@@ -604,6 +622,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       formField<HTMLSelectElement>(productForm, 'productType')!.value = item.productType;
       formField<HTMLTextAreaElement>(productForm, 'description')!.value = item.description;
       formField<HTMLInputElement>(productForm, 'price')!.value = (item.amountCents / 100).toFixed(2);
+      formField<HTMLSelectElement>(productForm, 'billingInterval')!.value = item.billingInterval;
       formField<HTMLSelectElement>(productForm, 'status')!.value = item.status;
       formField<HTMLInputElement>(productForm, 'coverAssetId')!.value = item.coverAssetId ?? '';
       selectedContentIds = new Set(item.content.map((entry) => entry.id));
@@ -613,7 +632,14 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
         : null);
       if (productEditorTitle) productEditorTitle.textContent = `Produkt bearbeiten: ${item.name}`;
     }
+    toggleMembershipBilling();
     openEditor(productDialog, productForm);
+  }
+  function toggleMembershipBilling() {
+    const type = formField<HTMLSelectElement>(productForm, 'productType')?.value;
+    const interval = formField<HTMLSelectElement>(productForm, 'billingInterval');
+    const label = interval?.closest('label');
+    if (label) label.hidden = type !== 'membership';
   }
   function showCoverPreview(url: string | null) {
     if (coverObjectUrl && coverObjectUrl !== url) URL.revokeObjectURL(coverObjectUrl);
@@ -722,6 +748,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       closeEditor(form === contentForm ? contentDialog! : productDialog!, form);
     });
   }
+  formField<HTMLSelectElement>(productForm, 'productType')?.addEventListener('change', toggleMembershipBilling);
   window.addEventListener('beforeunload', (event) => {
     if (!dirty) return;
     event.preventDefault();
@@ -805,7 +832,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
         status: data.get('status'),
         amountCents: Math.round(Number(data.get('price')) * 100),
         currency: 'eur',
-        billingInterval: 'one_time',
+        billingInterval: data.get('productType') === 'membership' ? data.get('billingInterval') : 'one_time',
         coverAssetId,
         contentIds,
       };
