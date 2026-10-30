@@ -4,16 +4,24 @@ import type { CheckoutProduct } from './commerce';
 
 type StripeCheckoutSession = { id: string; url: string | null };
 
+function isTestSecret(secret: string): boolean {
+  return secret.startsWith('sk_test_') || secret.startsWith('rk_test_');
+}
+
+function isLiveSecret(secret: string): boolean {
+  return secret.startsWith('sk_live_') || secret.startsWith('rk_live_');
+}
+
 function getStripeSecret(): string {
   if (process.env.STRIPE_CHECKOUT_ENABLED !== 'true') {
     throw new Error('Stripe-Checkout ist nicht aktiviert.');
   }
   const secret = process.env.STRIPE_SECRET_KEY;
   if (!secret) throw new Error('Stripe ist nicht konfiguriert.');
-  if (secret.startsWith('sk_live_') && process.env.STRIPE_LIVE_MODE_ENABLED !== 'true') {
+  if (isLiveSecret(secret) && process.env.STRIPE_LIVE_MODE_ENABLED !== 'true') {
     throw new Error('Live-Zahlungen sind nicht explizit freigegeben.');
   }
-  if (!secret.startsWith('sk_test_') && !secret.startsWith('sk_live_')) {
+  if (!isTestSecret(secret) && !isLiveSecret(secret)) {
     throw new Error('Der Stripe-Schlüssel hat ein ungültiges Format.');
   }
   return secret;
@@ -32,8 +40,8 @@ export function isCheckoutConfigured(): boolean {
   return process.env.STRIPE_CHECKOUT_ENABLED === 'true'
     && Boolean(process.env.STRIPE_WEBHOOK_SECRET)
     && typeof secret === 'string'
-    && (secret.startsWith('sk_test_') || (
-      secret.startsWith('sk_live_') && process.env.STRIPE_LIVE_MODE_ENABLED === 'true'
+    && (isTestSecret(secret) || (
+      isLiveSecret(secret) && process.env.STRIPE_LIVE_MODE_ENABLED === 'true'
     ));
 }
 

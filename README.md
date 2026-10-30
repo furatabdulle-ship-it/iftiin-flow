@@ -60,7 +60,7 @@ In Railway beziehungsweise der lokalen `.env` sind folgende Werte erforderlich:
 | Variable | Zweck |
 |---|---|
 | `STRIPE_CHECKOUT_ENABLED` | Checkout nur mit `true` einschalten; Standard `false` |
-| `STRIPE_SECRET_KEY` | Stripe-Secret-Key, zuerst `sk_test_…` |
+| `STRIPE_SECRET_KEY` | Stripe-Secret-Key oder eingeschränkter API-Key; zuerst Testmodus (`sk_test_…` oder `rk_test_…`) |
 | `STRIPE_WEBHOOK_SECRET` | Signaturgeheimnis des Stripe-Webhook-Endpunkts |
 | `STRIPE_LIVE_MODE_ENABLED` | Nur für bewusst freigegebene Livezahlungen auf `true` setzen |
 | `STORAGE_ENDPOINT` | HTTPS-Endpunkt des privaten S3-kompatiblen Buckets |
