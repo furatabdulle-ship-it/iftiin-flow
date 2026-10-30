@@ -1,6 +1,24 @@
 import { initialProductTypes } from './commerce';
 import { query } from './db';
 import { json } from './http';
+import { isAllowedImageAssetType } from './storage';
+
+export async function validateProductCoverAsset(
+  coverAssetId: string | null,
+  userId: string,
+): Promise<Response | null> {
+  if (!coverAssetId) return null;
+  const result = await query<{ content_type: string; status: string }>(
+    `SELECT content_type, status FROM storage_assets
+     WHERE id = $1 AND uploaded_by = $2`,
+    [coverAssetId, userId],
+  );
+  const asset = result.rows[0];
+  if (!asset || asset.status !== 'ready' || !isAllowedImageAssetType(asset.content_type)) {
+    return json({ error: 'Das Cover muss ein vollständig hochgeladenes Bild aus deinem Konto sein.' }, 400);
+  }
+  return null;
+}
 
 export async function validateProductContentLinks(
   contentIds: string[],

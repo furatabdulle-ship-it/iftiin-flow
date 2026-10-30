@@ -8,7 +8,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
 ---
 <Base title="Produkte verwalten">
-  <section class="section wrap commerce-admin" data-api-root={root('api/admin/')}>
+  <section class="section wrap commerce-admin" data-api-root={root('api/admin/')} data-site-root={root()}>
     <a class="breadcrumb" href={root('admin/')}>← Artikelverwaltung</a>
     <div class="section-label">Admin / Shop</div>
     <h1>Produkte &amp; Inhalte <em>verwalten.</em></h1>
@@ -43,6 +43,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
         <h2 id="product-heading">Produkt erstellen</h2>
         <form id="product-form" class="commerce-form">
           <input type="hidden" name="id" />
+          <input type="hidden" name="coverAssetId" />
           <label>Name<input name="name" maxlength="180" required /></label>
           <label>URL-Slug<input name="slug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /></label>
           <label>Produkttyp
@@ -53,6 +54,13 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
             </select>
           </label>
           <label>Beschreibung<textarea name="description" maxlength="2000" rows="3"></textarea></label>
+          <label>Coverbild (optional, JPEG, PNG oder WebP; max. 10 MB)
+            <input name="coverFile" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
+          </label>
+          <div class="cover-preview" id="cover-preview" hidden>
+            <img id="cover-preview-image" alt="Produktcover-Vorschau" />
+            <button class="text-link" id="cover-remove" type="button">Cover entfernen</button>
+          </div>
           <label>Preis in Euro<input name="price" type="number" min="0.50" max="1000000" step="0.01" required /></label>
           <label>Status
             <select name="status"><option value="draft">Entwurf</option><option value="active">Aktiv</option><option value="archived">Archiviert</option></select>
@@ -77,7 +85,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   };
   type ProductRecord = {
     id: string; slug: string; name: string; description: string; productType: string;
-    status: string; amountCents: number; content: Pick<ContentRecord, 'id'>[];
+    status: string; amountCents: number; coverAssetId: string | null; content: Pick<ContentRecord, 'id'>[];
   };
   type UploadResponse = { id: string; uploadUrl: string; headers: Record<string, string> };
   const root = document.querySelector<HTMLElement>('.commerce-admin')?.dataset.apiRoot ?? '/api/admin/';
@@ -88,6 +96,25 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   const productList = document.querySelector<HTMLUListElement>('#product-list');
   const contentOptions = document.querySelector<HTMLDivElement>('#content-options');
   const productHeading = document.querySelector<HTMLElement>('#product-heading');
+  const coverPreview = document.querySelector<HTMLDivElement>('#cover-preview');
+  const coverPreviewImage = document.querySelector<HTMLImageElement>('#cover-preview-image');
+  const siteRoot = document.querySelector<HTMLElement>('.commerce-admin')?.dataset.siteRoot ?? '/';
+  let coverPreviewObjectUrl: string | null = null;
+
+  function showCoverPreview(url: string | null) {
+    if (coverPreviewObjectUrl && coverPreviewObjectUrl !== url) {
+      URL.revokeObjectURL(coverPreviewObjectUrl);
+    }
+    coverPreviewObjectUrl = url?.startsWith('blob:') ? url : null;
+    if (!coverPreview || !coverPreviewImage) return;
+    if (!url) {
+      coverPreview.hidden = true;
+      coverPreviewImage.removeAttribute('src');
+      return;
+    }
+    coverPreviewImage.src = url;
+    coverPreview.hidden = false;
+  }
 
   function report(text: string) {
     if (message) message.textContent = text;
@@ -97,6 +124,23 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     const result = await response.json() as T & { error?: string };
     if (!response.ok) throw new Error(result.error ?? 'Die Anfrage konnte nicht verarbeitet werden.');
     return result;
+  }
+  async function uploadAsset(file: File): Promise<string> {
+    const extensionTypes: Record<string, string> = {
+      pdf: 'application/pdf', zip: 'application/zip', mp4: 'video/mp4',
+      webm: 'video/webm', mov: 'video/quicktime', jpg: 'image/jpeg',
+      jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
+    };
+    const contentType = file.type || extensionTypes[file.name.split('.').pop()?.toLowerCase() ?? ''] || '';
+    const prepared = await api<UploadResponse>(`${root}assets/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name, contentType, byteSize: file.size }),
+    });
+    const uploaded = await fetch(prepared.uploadUrl, { method: 'PUT', headers: prepared.headers, body: file });
+    if (!uploaded.ok) throw new Error('Die Datei konnte nicht in den privaten Speicher geladen werden.');
+    await api(`${root}assets/${encodeURIComponent(prepared.id)}/`, { method: 'PUT' });
+    return prepared.id;
   }
   function addListItem(
     parent: HTMLUListElement | null,
@@ -166,6 +210,10 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     (productForm.elements.namedItem('description') as HTMLTextAreaElement).value = product.description;
     (productForm.elements.namedItem('price') as HTMLInputElement).value = (product.amountCents / 100).toFixed(2);
     (productForm.elements.namedItem('status') as HTMLSelectElement).value = product.status;
+    (productForm.elements.namedItem('coverAssetId') as HTMLInputElement).value = product.coverAssetId ?? '';
+    showCoverPreview(product.coverAssetId
+      ? `${siteRoot}api/store/products/${encodeURIComponent(product.slug)}/cover/`
+      : null);
     const selected = new Set(product.content.map((item) => item.id));
     productForm.querySelectorAll<HTMLInputElement>('input[name="contentIds"]').forEach((input) => {
       input.checked = selected.has(input.value);
@@ -211,20 +259,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       report('Inhalt wird gespeichert …');
       storageAssetId = String(formData.get('storageAssetId') ?? '') || null;
       if (file instanceof File && file.size > 0) {
-        const extensionTypes: Record<string, string> = {
-          pdf: 'application/pdf', zip: 'application/zip', mp4: 'video/mp4',
-          webm: 'video/webm', mov: 'video/quicktime',
-        };
-        const contentType = file.type || extensionTypes[file.name.split('.').pop()?.toLowerCase() ?? ''] || '';
-        const prepared = await api<UploadResponse>(`${root}assets/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename: file.name, contentType, byteSize: file.size }),
-        });
-        const uploaded = await fetch(prepared.uploadUrl, { method: 'PUT', headers: prepared.headers, body: file });
-        if (!uploaded.ok) throw new Error('Die Datei konnte nicht in den privaten Speicher geladen werden.');
-        await api(`${root}assets/${encodeURIComponent(prepared.id)}/`, { method: 'PUT' });
-        storageAssetId = prepared.id;
+        storageAssetId = await uploadAsset(file);
       }
       const payload = {
         contentType: formData.get('contentType'),
@@ -256,20 +291,27 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     if (!productForm) return;
     const data = new FormData(productForm);
     const id = String(data.get('id') ?? '');
+    const coverFile = data.get('coverFile');
     const contentIds = Array.from(productForm.querySelectorAll<HTMLInputElement>('input[name="contentIds"]:checked'), (input) => input.value);
-    const payload = {
-      slug: data.get('slug'),
-      productType: data.get('productType'),
-      name: data.get('name'),
-      description: data.get('description'),
-      status: data.get('status'),
-      amountCents: Math.round(Number(data.get('price')) * 100),
-      currency: 'eur',
-      billingInterval: 'one_time',
-      contentIds,
-    };
     try {
       report('Produkt wird gespeichert …');
+      let coverAssetId = String(data.get('coverAssetId') ?? '') || null;
+      if (coverFile instanceof File && coverFile.size > 0) {
+        if (coverFile.size > 10 * 1024 * 1024) throw new Error('Coverbilder dürfen höchstens 10 MB groß sein.');
+        coverAssetId = await uploadAsset(coverFile);
+      }
+      const payload = {
+        slug: data.get('slug'),
+        productType: data.get('productType'),
+        name: data.get('name'),
+        description: data.get('description'),
+        status: data.get('status'),
+        amountCents: Math.round(Number(data.get('price')) * 100),
+        currency: 'eur',
+        billingInterval: 'one_time',
+        coverAssetId,
+        contentIds,
+      };
       await api(`${root}products/${id ? `${encodeURIComponent(id)}/` : ''}`, {
         method: id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -277,6 +319,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       });
       productForm.reset();
       (productForm.elements.namedItem('id') as HTMLInputElement).value = '';
+      (productForm.elements.namedItem('coverAssetId') as HTMLInputElement).value = '';
+      showCoverPreview(null);
       if (productHeading) productHeading.textContent = 'Produkt erstellen';
       report('Produkt gespeichert.');
       await loadData();
@@ -287,7 +331,27 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   document.querySelector<HTMLButtonElement>('#product-reset')?.addEventListener('click', () => {
     productForm?.reset();
     if (productForm) (productForm.elements.namedItem('id') as HTMLInputElement).value = '';
+    if (productForm) (productForm.elements.namedItem('coverAssetId') as HTMLInputElement).value = '';
+    showCoverPreview(null);
     if (productHeading) productHeading.textContent = 'Produkt erstellen';
+  });
+  document.querySelector<HTMLInputElement>('input[name="coverFile"]')?.addEventListener('change', (event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      input.value = '';
+      report('Coverbilder dürfen höchstens 10 MB groß sein.');
+      return;
+    }
+    coverPreviewObjectUrl = URL.createObjectURL(file);
+    showCoverPreview(coverPreviewObjectUrl);
+  });
+  document.querySelector<HTMLButtonElement>('#cover-remove')?.addEventListener('click', () => {
+    if (!productForm) return;
+    (productForm.elements.namedItem('coverAssetId') as HTMLInputElement).value = '';
+    (productForm.elements.namedItem('coverFile') as HTMLInputElement).value = '';
+    showCoverPreview(null);
   });
   loadData().catch((error: unknown) => report(error instanceof Error ? error.message : 'Shopdaten konnten nicht geladen werden.'));
 </script>
@@ -305,6 +369,9 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     width: 100%; padding: 0.75rem; border: 1px solid var(--line); border-radius: 8px; background: white; color: inherit; font: inherit;
   }
   .commerce-form input[type="file"] { max-width: 100%; }
+  .cover-preview { display: grid; justify-items: start; gap: 0.6rem; }
+  .cover-preview[hidden] { display: none; }
+  .cover-preview img { width: min(100%, 360px); aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; }
   .commerce-form fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 1rem; }
   .content-options { display: grid; gap: 0.5rem; max-height: 240px; overflow: auto; }
   .content-options label { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: 0.6rem; }

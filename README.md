@@ -40,7 +40,7 @@ docker compose exec app node scripts/promote-admin.mjs deine-adresse@example.com
 
 Danach erscheint im Konto der Zugang zur Artikelverwaltung. Öffentliche Registrierung erstellt immer nur die Rolle `user`; niemand kann sich selbst zum Admin machen. Das Admin-Konto sollte nur eine E-Mail-Adresse sein, auf die du Zugriff hast.
 
-Im Admin-Bereich führt „Shop-Produkte & Inhalte verwalten“ zur Produktverwaltung. Dort lassen sich Entwürfe und veröffentlichte Downloads, Lektionen, Videos sowie Produkte für digitale Downloads, Premium-Artikel und Online-Kurse anlegen. Für aktive Produkte müssen veröffentlichte Inhalte zugeordnet sein. Artikel können im Artikel-Editor als Premium markiert und anschließend als Produktinhalt zugeordnet werden. Bundle und Membership sind im Datenmodell vorgesehen, aber noch nicht zur Veröffentlichung freigegeben.
+Im Admin-Bereich führt „Shop-Produkte & Inhalte verwalten“ zur Produktverwaltung. Dort lassen sich Entwürfe und veröffentlichte Downloads, Lektionen, Videos sowie Produkte für digitale Downloads, Premium-Artikel und Online-Kurse anlegen. Für aktive Produkte müssen veröffentlichte Inhalte zugeordnet sein. Jedes Produkt kann optional ein JPEG-, PNG- oder WebP-Cover bis 10 MB erhalten; das Bild wird im Shop über einen kurzlebigen signierten Link aus dem privaten Speicher geladen. Artikel können im Artikel-Editor als Premium markiert und anschließend als Produktinhalt zugeordnet werden. Bundle und Membership sind im Datenmodell vorgesehen, aber noch nicht zur Veröffentlichung freigegeben.
 
 ## Shop, Zahlungen und Lerninhalte
 
@@ -86,7 +86,7 @@ Im Bucket unter **Credentials** die Werte abrufen. Im Website-Service in Railway
 
 Alternativ kann Railway die Variablen mit dem AWS-SDK-Preset automatisch als `AWS_ENDPOINT_URL`, `AWS_S3_BUCKET_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` und `AWS_DEFAULT_REGION` bereitstellen. Die Anwendung erkennt sowohl diese Railway-Namen als auch die oben gezeigten `STORAGE_*`-Namen. Neue Railway Buckets verwenden virtual-hosted-style URLs; dafür ist kein manueller Path-Style-Override erforderlich. Maßgeblich für Endpoint, Bucketname, Region und URL-Stil sind die Angaben im Bucket-Tab **Credentials**. Lege den Bucket in derselben Railway-Umgebung wie den Website-Service an, damit Test- und Produktionsdaten getrennt bleiben.
 
-Für Browser-Uploads im Bucket-CORS ausschließlich die Website-Origin `https://www.iftiin-flow.com`, die Methode `PUT` und den Header `Content-Type` erlauben. Den Bucket nicht öffentlich machen. Nach dem Speichern der Variablen den Service neu deployen. Uploads sind auf PDF, ZIP sowie MP4, WebM und MOV bis 500 MB begrenzt.
+Für Browser-Uploads im Bucket-CORS ausschließlich die Website-Origin `https://www.iftiin-flow.com`, die Methode `PUT` und den Header `Content-Type` erlauben. Den Bucket nicht öffentlich machen. Nach dem Speichern der Variablen den Service neu deployen. Inhalte akzeptieren PDF, ZIP sowie MP4, WebM und MOV bis 500 MB; Produkt-Cover akzeptieren JPEG, PNG und WebP bis 10 MB.
 
 Dateien werden beim Upload direkt mit einer kurzlebigen, auf ein Objekt begrenzten URL übertragen. Downloads laufen zuerst über die Website: Sie prüft Anmeldung, Veröffentlichung und Kaufberechtigung serverseitig und gibt erst danach einen signierten Download-Link frei, der nach 120 Sekunden abläuft. Ohne Speicher-Konfiguration bleiben Datei-Uploads gesperrt; bestehende Artikel und Konten werden dadurch nicht verändert. Live-Zahlungen erst nach Prüfung von Steuer-, Verbraucher-, Widerrufs- und Datenschutzpflichten aktivieren.
 

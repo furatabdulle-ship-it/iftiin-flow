@@ -38,6 +38,13 @@ const typeNames: Record<string, string> = {
     {cancelled && <aside class="store-notice" role="status">Der Checkout wurde abgebrochen. Es wurde keine Zahlung ausgelöst.</aside>}
     {products.length ? <div class="store-grid">
       {products.map((product) => <article class="store-card">
+        {product.coverAssetId && <img
+          class="store-card-cover"
+          src={root(`api/store/products/${encodeURIComponent(product.slug)}/cover/`)}
+          alt={`Cover: ${product.name}`}
+          loading="lazy"
+          decoding="async"
+        />}
         <div class="store-card-top">
           <span class="section-label">{typeNames[product.productType]}</span>
           <strong>{formatPrice(product.amountCents, product.currency)}{product.billingInterval !== 'one_time' ? ` / ${product.billingInterval === 'month' ? 'Monat' : 'Jahr'}` : ''}</strong>
@@ -91,6 +98,7 @@ const typeNames: Record<string, string> = {
   .store-content { min-height: 40vh; padding-top: 1rem; padding-bottom: 6rem; }
   .store-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.25rem; }
   .store-card { border: 1px solid var(--line); border-radius: 20px; padding: 1.5rem; display: flex; flex-direction: column; align-items: flex-start; }
+  .store-card-cover { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; margin-bottom: 1.25rem; background: var(--surface, #f3f0e8); }
   .store-card-top { width: 100%; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
   .store-card h2 { margin: 1.25rem 0 0.5rem; font-size: 1.5rem; }
   .store-card p { color: var(--muted); line-height: 1.7; }

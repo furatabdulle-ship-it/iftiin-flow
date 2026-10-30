@@ -1,13 +1,16 @@
 import type { APIRoute } from 'astro';
 import { isHttpResponse, requireAdmin } from '../../../../lib/admin';
 import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '../../../../lib/http';
-import { createUploadAsset, isAllowedAssetType } from '../../../../lib/storage';
+import { createUploadAsset, isAllowedAssetType, isAllowedImageAssetType } from '../../../../lib/storage';
 import { z } from 'astro/zod';
 
 const uploadSchema = z.object({
   filename: z.string().trim().min(1).max(180),
   contentType: z.string().trim().toLowerCase().refine(isAllowedAssetType),
   byteSize: z.number().int().min(1).max(500 * 1024 * 1024),
+}).refine((asset) => !isAllowedImageAssetType(asset.contentType) || asset.byteSize <= 10 * 1024 * 1024, {
+  path: ['byteSize'],
+  message: 'Coverbilder dürfen höchstens 10 MB groß sein.',
 });
 
 export const POST: APIRoute = async (context) => {

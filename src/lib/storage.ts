@@ -4,12 +4,15 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { query } from './db';
 
 const maximumUploadBytes = 500 * 1024 * 1024;
+const maximumImageUploadBytes = 10 * 1024 * 1024;
+const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const allowedContentTypes = new Set([
   'application/pdf',
   'application/zip',
   'video/mp4',
   'video/webm',
   'video/quicktime',
+  ...allowedImageTypes,
 ]);
 
 type StorageConfiguration = {
@@ -58,8 +61,11 @@ export async function createUploadAsset(
   byteSize: number,
 ): Promise<{ id: string; uploadUrl: string; headers: Record<string, string>; expiresIn: number }> {
   if (!allowedContentTypes.has(contentType)) throw new Error('Dieser Dateityp ist nicht zugelassen.');
-  if (!Number.isSafeInteger(byteSize) || byteSize < 1 || byteSize > maximumUploadBytes) {
-    throw new Error('Die Datei muss zwischen 1 Byte und 500 MB groß sein.');
+  const maximumBytes = allowedImageTypes.has(contentType) ? maximumImageUploadBytes : maximumUploadBytes;
+  if (!Number.isSafeInteger(byteSize) || byteSize < 1 || byteSize > maximumBytes) {
+    throw new Error(allowedImageTypes.has(contentType)
+      ? 'Coverbilder dürfen höchstens 10 MB groß sein.'
+      : 'Die Datei muss zwischen 1 Byte und 500 MB groß sein.');
   }
   const originalFilename = filename.trim().replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 180);
   if (!originalFilename) throw new Error('Der Dateiname ist ungültig.');
@@ -145,4 +151,8 @@ export async function createPrivateDownloadUrl(assetId: string, inline = false):
 
 export function isAllowedAssetType(contentType: string): boolean {
   return allowedContentTypes.has(contentType);
+}
+
+export function isAllowedImageAssetType(contentType: string): boolean {
+  return allowedImageTypes.has(contentType);
 }

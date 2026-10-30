@@ -3,7 +3,7 @@ import { listAdminProducts } from '../../../../lib/commerce';
 import { isHttpResponse, requireAdmin } from '../../../../lib/admin';
 import { withTransaction } from '../../../../lib/db';
 import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '../../../../lib/http';
-import { validateProductContentLinks } from '../../../../lib/product-validation';
+import { validateProductContentLinks, validateProductCoverAsset } from '../../../../lib/product-validation';
 import { productInputSchema } from '../../../../lib/validation';
 
 export const GET: APIRoute = async (context) => {
@@ -30,6 +30,8 @@ export const POST: APIRoute = async (context) => {
       details: parsed.error.issues.map(({ path, message }) => ({ path, message })),
     }, 400);
     const product = parsed.data;
+    const coverError = await validateProductCoverAsset(product.coverAssetId, admin.id);
+    if (coverError) return coverError;
     const contentError = await validateProductContentLinks(
       product.contentIds,
       product.productType,
@@ -39,10 +41,10 @@ export const POST: APIRoute = async (context) => {
 
     const id = await withTransaction(async (client) => {
       const created = await client.query<{ id: string }>(
-        `INSERT INTO products (slug, product_type, name, description, status, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO products (slug, product_type, name, description, status, cover_asset_id, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
-        [product.slug, product.productType, product.name, product.description, product.status, admin.id],
+        [product.slug, product.productType, product.name, product.description, product.status, product.coverAssetId, admin.id],
       );
       const productId = created.rows[0].id;
       await client.query(

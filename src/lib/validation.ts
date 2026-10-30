@@ -28,6 +28,7 @@ export const productInputSchema = z.object({
   amountCents: z.number().int().min(50).max(100_000_000),
   currency: z.literal('eur'),
   billingInterval: z.enum(['one_time', 'month', 'year']),
+  coverAssetId: z.uuid().nullable(),
   contentIds: z.array(z.uuid()).max(100)
     .refine((ids) => new Set(ids).size === ids.length, 'Inhalte dürfen nicht doppelt zugeordnet werden.'),
 }).refine((product) => product.productType === 'membership' || product.billingInterval === 'one_time', {

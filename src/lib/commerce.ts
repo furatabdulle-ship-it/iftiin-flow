@@ -12,6 +12,7 @@ export type ProductRecord = {
   name: string;
   description: string;
   status: 'draft' | 'active' | 'archived';
+  coverAssetId: string | null;
   priceId: string;
   amountCents: number;
   currency: string;
@@ -45,6 +46,7 @@ type ProductRow = QueryResultRow & {
   name: string;
   description: string;
   status: ProductRecord['status'];
+  cover_asset_id: string | null;
   price_id: string;
   amount_cents: string | number;
   currency: string;
@@ -54,6 +56,7 @@ type ProductRow = QueryResultRow & {
 
 const productSelection = `
   SELECT p.id, p.slug, p.product_type, p.name, p.description, p.status,
+         p.cover_asset_id,
          pr.id AS price_id, pr.amount_cents, pr.currency, pr.billing_interval,
          COALESCE(
            json_agg(json_build_object(
@@ -81,6 +84,7 @@ function mapProduct(row: ProductRow): ProductRecord {
     name: row.name,
     description: row.description,
     status: row.status,
+    coverAssetId: row.cover_asset_id,
     priceId: row.price_id,
     amountCents: Number(row.amount_cents),
     currency: row.currency,

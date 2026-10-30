@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { isHttpResponse, requireAdmin } from '../../../../lib/admin';
 import { withTransaction } from '../../../../lib/db';
 import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '../../../../lib/http';
-import { validateProductContentLinks } from '../../../../lib/product-validation';
+import { validateProductContentLinks, validateProductCoverAsset } from '../../../../lib/product-validation';
 import { productInputSchema } from '../../../../lib/validation';
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -22,6 +22,8 @@ export const PUT: APIRoute = async (context) => {
       details: parsed.error.issues.map(({ path, message }) => ({ path, message })),
     }, 400);
     const product = parsed.data;
+    const coverError = await validateProductCoverAsset(product.coverAssetId, admin.id);
+    if (coverError) return coverError;
     const contentError = await validateProductContentLinks(
       product.contentIds,
       product.productType,
@@ -37,9 +39,9 @@ export const PUT: APIRoute = async (context) => {
       if (!current.rowCount) return false;
       const productResult = await client.query(
         `UPDATE products SET slug = $2, product_type = $3, name = $4, description = $5,
-           status = $6, updated_at = NOW()
+           status = $6, cover_asset_id = $7, updated_at = NOW()
          WHERE id = $1`,
-        [id, product.slug, product.productType, product.name, product.description, product.status],
+        [id, product.slug, product.productType, product.name, product.description, product.status, product.coverAssetId],
       );
       if (!productResult.rowCount) return false;
 
