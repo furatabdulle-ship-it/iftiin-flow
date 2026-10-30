@@ -8,9 +8,18 @@ const uploadSchema = z.object({
   filename: z.string().trim().min(1).max(180),
   contentType: z.string().trim().toLowerCase().refine(isAllowedAssetType),
   byteSize: z.number().int().min(1).max(500 * 1024 * 1024),
-}).refine((asset) => !isAllowedImageAssetType(asset.contentType) || asset.byteSize <= 10 * 1024 * 1024, {
-  path: ['byteSize'],
-  message: 'Coverbilder dürfen höchstens 10 MB groß sein.',
+  purpose: z.enum(['content', 'cover']).default('content'),
+}).superRefine((asset, context) => {
+  const isImage = isAllowedImageAssetType(asset.contentType);
+  if (asset.purpose === 'cover' && !isImage) {
+    context.addIssue({ code: 'custom', path: ['contentType'], message: 'Produktcover müssen JPEG, PNG oder WebP sein.' });
+  }
+  if (asset.purpose === 'content' && isImage) {
+    context.addIssue({ code: 'custom', path: ['contentType'], message: 'Bilddateien sind nur als Produktcover zulässig.' });
+  }
+  if (asset.purpose === 'cover' && asset.byteSize > 10 * 1024 * 1024) {
+    context.addIssue({ code: 'custom', path: ['byteSize'], message: 'Coverbilder dürfen höchstens 10 MB groß sein.' });
+  }
 });
 
 export const POST: APIRoute = async (context) => {

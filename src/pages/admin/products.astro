@@ -7,299 +7,796 @@ if (!account) return Astro.redirect('/login/', 302);
 if (account.role !== 'admin') return Astro.redirect('/account/', 302);
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
 ---
-<Base title="Produkte verwalten">
-  <section class="section wrap commerce-admin" data-api-root={root('api/admin/')} data-site-root={root()}>
-    <a class="breadcrumb" href={root('admin/')}>← Artikelverwaltung</a>
-    <div class="section-label">Admin / Shop</div>
-    <h1>Produkte &amp; Inhalte <em>verwalten.</em></h1>
-    <p>Veröffentliche Inhalte und verknüpfe sie mit digitalen Produkten. Zahlungen bleiben deaktiviert, solange Stripe nicht ausdrücklich konfiguriert ist.</p>
-    <p class="form-message" id="commerce-message" role="status" aria-live="polite"></p>
+<Base title="CMS verwalten">
+  <section class="cms-admin" data-api-root={root('api/admin/')} data-site-root={root()}>
+    <header class="cms-header">
+      <a class="cms-brand" href={root('admin/')} aria-label="Zur Artikelverwaltung">iftiin <span>flow.</span> / CMS</a>
+      <nav aria-label="Admin-Navigation">
+        <a href={root('admin/')}>Redaktion</a>
+        <a href={root('admin/products/')} aria-current="page">Inhalte &amp; Produkte</a>
+        <a href={root('')}>Website ansehen ↗</a>
+      </nav>
+    </header>
 
-    <div class="commerce-columns">
-      <section>
-        <h2>Inhalt erstellen</h2>
-        <form id="content-form" class="commerce-form">
-          <input type="hidden" name="id" />
-          <input type="hidden" name="storageAssetId" />
-          <label>Inhaltstyp
-            <select name="contentType"><option value="download">Digitaler Download</option><option value="lesson">Lektion</option><option value="video">Video</option></select>
-          </label>
-          <label>Titel<input name="title" maxlength="180" required /></label>
-          <label>URL-Slug<input name="slug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /></label>
-          <label>Kurzbeschreibung<textarea name="description" maxlength="1000" rows="2"></textarea></label>
-          <label>Inhalt / Lerntext<textarea name="body" maxlength="100000" rows="6"></textarea></label>
-          <label>Datei (PDF, ZIP, MP4, WebM oder MOV; max. 500 MB)<input name="file" type="file" accept=".pdf,.zip,.mp4,.webm,.mov,application/pdf,application/zip,video/mp4,video/webm,video/quicktime" /></label>
-          <label>Veröffentlichung
-            <select name="status"><option value="draft">Entwurf</option><option value="published">Veröffentlicht</option></select>
-          </label>
-          <label>Reihenfolge<input name="position" type="number" min="0" max="10000" value="0" required /></label>
-          <button class="pill-link" type="submit">Inhalt speichern <span>↗</span></button>
-        </form>
-        <h3>Vorhandene Inhalte</h3>
-        <ul id="content-list" class="commerce-list"></ul>
-      </section>
+    <main class="cms-main">
+      <div class="cms-title-row">
+        <div>
+          <p class="cms-eyebrow">Admin / Verwaltung</p>
+          <h1>Inhalte &amp; Produkte</h1>
+        </div>
+        <p id="cms-message" class="cms-message" role="status" aria-live="polite"></p>
+      </div>
 
-      <section>
-        <h2 id="product-heading">Produkt erstellen</h2>
-        <form id="product-form" class="commerce-form">
-          <input type="hidden" name="id" />
-          <input type="hidden" name="coverAssetId" />
-          <label>Name<input name="name" maxlength="180" required /></label>
-          <label>URL-Slug<input name="slug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /></label>
-          <label>Produkttyp
-            <select name="productType">
-              <option value="digital_download">Digitaler Download</option>
-              <option value="premium_article">Premium-Artikel</option>
-              <option value="online_course">Online-Kurs</option>
+      <div class="cms-tabs" role="tablist" aria-label="Verwaltungsbereich">
+        <button id="contents-tab" type="button" role="tab" aria-controls="contents-panel">Inhalte</button>
+        <button id="products-tab" type="button" role="tab" aria-controls="products-panel">Produkte</button>
+      </div>
+
+      <section id="contents-panel" class="cms-panel" role="tabpanel" aria-labelledby="contents-tab">
+        <div class="cms-panel-heading">
+          <h2>Inhalte</h2>
+          <button class="cms-button cms-button-primary" id="create-content" type="button">+ Inhalt erstellen</button>
+        </div>
+        <div class="cms-filters">
+          <label>Suche Inhalte<input id="content-search" type="search" placeholder="Titel oder URL-Slug" /></label>
+          <label>Status filtern
+            <select id="content-status-filter">
+              <option value="">Alle Status</option>
+              <option value="draft">Entwurf</option>
+              <option value="published">Veröffentlicht</option>
+              <option value="archived">Archiviert</option>
             </select>
           </label>
-          <label>Beschreibung<textarea name="description" maxlength="2000" rows="3"></textarea></label>
-          <label>Coverbild (optional, JPEG, PNG oder WebP; max. 10 MB)
-            <input name="coverFile" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
-          </label>
-          <div class="cover-preview" id="cover-preview" hidden>
-            <img id="cover-preview-image" alt="Produktcover-Vorschau" />
-            <button class="text-link" id="cover-remove" type="button">Cover entfernen</button>
-          </div>
-          <label>Preis in Euro<input name="price" type="number" min="0.50" max="1000000" step="0.01" required /></label>
-          <label>Status
-            <select name="status"><option value="draft">Entwurf</option><option value="active">Aktiv</option><option value="archived">Archiviert</option></select>
-          </label>
-          <fieldset><legend>Zugeordnete Inhalte</legend><div id="content-options" class="content-options"></div></fieldset>
-          <div class="form-actions">
-            <button class="pill-link" type="submit">Produkt speichern <span>↗</span></button>
-            <button class="text-link" id="product-reset" type="button">Formular zurücksetzen</button>
-          </div>
-        </form>
-        <h3>Produktkatalog</h3>
-        <ul id="product-list" class="commerce-list"></ul>
+        </div>
+        <p id="content-empty" class="cms-empty" hidden>Keine Inhalte gefunden.</p>
+        <div class="cms-table-wrap">
+          <table>
+            <thead><tr><th>Titel</th><th>Typ</th><th>Status</th><th>Aktionen</th></tr></thead>
+            <tbody id="content-table"></tbody>
+          </table>
+        </div>
+        <div id="content-cards" class="cms-cards"></div>
       </section>
-    </div>
+
+      <section id="products-panel" class="cms-panel" role="tabpanel" aria-labelledby="products-tab" hidden>
+        <div class="cms-panel-heading">
+          <h2>Produkte</h2>
+          <button class="cms-button cms-button-primary" id="create-product" type="button">+ Produkt erstellen</button>
+        </div>
+        <p class="cms-payment-note">Zahlungen sind deaktiviert, solange Stripe nicht ausdrücklich konfiguriert ist.</p>
+        <div class="cms-filters">
+          <label>Suche Produkte<input id="product-search" type="search" placeholder="Name oder URL-Slug" /></label>
+          <label>Status filtern
+            <select id="product-status-filter">
+              <option value="">Alle Status</option>
+              <option value="draft">Entwurf</option>
+              <option value="active">Aktiv</option>
+              <option value="archived">Archiviert</option>
+            </select>
+          </label>
+        </div>
+        <p id="product-empty" class="cms-empty" hidden>Keine Produkte gefunden.</p>
+        <div class="cms-table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Preis</th><th>Status</th><th>Aktionen</th></tr></thead>
+            <tbody id="product-table"></tbody>
+          </table>
+        </div>
+        <div id="product-cards" class="cms-cards"></div>
+      </section>
+    </main>
+
+    <dialog id="content-editor" class="cms-dialog" aria-labelledby="content-editor-title">
+      <form id="content-form" class="cms-editor-form">
+        <header class="cms-editor-header">
+          <div>
+            <p class="cms-eyebrow">Inhalte</p>
+            <h2 id="content-editor-title">Inhalt erstellen</h2>
+          </div>
+          <button type="button" class="cms-icon-button" data-close-editor aria-label="Editor schließen">×</button>
+        </header>
+        <input type="hidden" name="id" />
+        <input type="hidden" name="storageAssetId" />
+        <div class="cms-editor-body">
+          <section class="cms-form-section">
+            <h3>Grunddaten</h3>
+            <div class="cms-form-grid">
+              <label>Titel<input name="title" maxlength="180" required /></label>
+              <label>Inhaltstyp
+                <select name="contentType">
+                  <option value="download">Digitaler Download</option>
+                  <option value="lesson">Lektion</option>
+                  <option value="video">Video</option>
+                </select>
+              </label>
+              <label class="cms-field-wide">Kurzbeschreibung<textarea name="description" maxlength="1000" rows="2"></textarea></label>
+            </div>
+          </section>
+          <section class="cms-form-section">
+            <h3>Inhalt &amp; Datei</h3>
+            <label>Inhalt / Lerntext<textarea name="body" maxlength="100000" rows="8"></textarea></label>
+            <label>Datei (PDF, ZIP, MP4, WebM oder MOV; max. 500 MB)
+              <input name="file" type="file" accept=".pdf,.zip,.mp4,.webm,.mov,application/pdf,application/zip,video/mp4,video/webm,video/quicktime" />
+            </label>
+            <p id="content-upload-status" class="cms-upload-status" role="status" aria-live="polite"></p>
+          </section>
+          <section class="cms-form-section">
+            <h3>Veröffentlichung</h3>
+            <div class="cms-form-grid">
+              <label>Status<select name="status"><option value="draft">Entwurf</option><option value="published">Veröffentlicht</option><option value="archived">Archiviert</option></select></label>
+              <label>Reihenfolge<input name="position" type="number" min="0" max="10000" value="0" required /></label>
+            </div>
+          </section>
+          <section class="cms-form-section">
+            <h3>URL-Einstellungen</h3>
+            <label>URL-Slug<input name="slug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /></label>
+          </section>
+        </div>
+        <footer class="cms-editor-actions">
+          <button type="button" class="cms-button cms-button-secondary" data-cancel-editor>Abbrechen</button>
+          <button type="submit" class="cms-button cms-button-primary">Speichern</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog id="product-editor" class="cms-dialog" aria-labelledby="product-editor-title">
+      <form id="product-form" class="cms-editor-form">
+        <header class="cms-editor-header">
+          <div>
+            <p class="cms-eyebrow">Produkte</p>
+            <h2 id="product-editor-title">Produkt erstellen</h2>
+          </div>
+          <button type="button" class="cms-icon-button" data-close-editor aria-label="Editor schließen">×</button>
+        </header>
+        <input type="hidden" name="id" />
+        <input type="hidden" name="coverAssetId" />
+        <div class="cms-editor-body">
+          <section class="cms-form-section">
+            <h3>Grunddaten</h3>
+            <div class="cms-form-grid">
+              <label>Name<input name="name" maxlength="180" required /></label>
+              <label>Produkttyp
+                <select name="productType">
+                  <option value="digital_download">Digitaler Download</option>
+                  <option value="premium_article">Premium-Artikel</option>
+                  <option value="online_course">Online-Kurs</option>
+                </select>
+              </label>
+              <label class="cms-field-wide">Beschreibung<textarea name="description" maxlength="2000" rows="3"></textarea></label>
+            </div>
+          </section>
+          <section class="cms-form-section">
+            <h3>Darstellung &amp; Preis</h3>
+            <div class="cms-form-grid">
+              <label class="cms-field-wide">Coverbild (optional, JPEG, PNG oder WebP; max. 10 MB)
+                <input name="coverFile" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
+              </label>
+              <div id="cover-preview" class="cms-cover-preview cms-field-wide" hidden>
+                <img id="cover-preview-image" alt="Produktcover-Vorschau" />
+                <button class="cms-button cms-button-secondary" id="cover-remove" type="button">Cover entfernen</button>
+              </div>
+              <label>Preis in Euro<input name="price" type="number" min="0.50" max="1000000" step="0.01" required /></label>
+            </div>
+            <p id="cover-upload-status" class="cms-upload-status" role="status" aria-live="polite"></p>
+          </section>
+          <section class="cms-form-section">
+            <h3>Enthaltene Inhalte</h3>
+            <label>Inhalte suchen<input id="linked-content-search" type="search" placeholder="Titel oder Typ" /></label>
+            <div id="content-options" class="cms-content-options" aria-label="Enthaltene Inhalte auswählen"></div>
+            <p id="selected-content-count" class="cms-hint">Keine Inhalte ausgewählt.</p>
+          </section>
+          <section class="cms-form-section">
+            <h3>Veröffentlichung</h3>
+            <div class="cms-form-grid">
+              <label>Status<select name="status"><option value="draft">Entwurf</option><option value="active">Aktiv</option><option value="archived">Archiviert</option></select></label>
+              <label class="cms-field-wide">URL-Slug<input name="slug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /></label>
+            </div>
+          </section>
+        </div>
+        <footer class="cms-editor-actions">
+          <button type="button" class="cms-button cms-button-secondary" data-cancel-editor>Abbrechen</button>
+          <button type="submit" class="cms-button cms-button-primary">Speichern</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog id="delete-confirmation" class="cms-confirm-dialog" aria-labelledby="delete-title" aria-describedby="delete-description">
+      <form method="dialog" id="delete-form">
+        <h2 id="delete-title">Inhalt löschen?</h2>
+        <p id="delete-description"></p>
+        <div id="delete-blocked-products" class="cms-delete-products" hidden></div>
+        <div class="cms-confirm-actions">
+          <button type="submit" class="cms-button cms-button-secondary" value="cancel">Abbrechen</button>
+          <button type="button" id="confirm-delete" class="cms-button cms-button-danger">Inhalt löschen</button>
+        </div>
+      </form>
+    </dialog>
   </section>
 </Base>
 
 <script>
   type ContentRecord = {
     id: string; slug: string; title: string; description: string; body: string;
-    contentType: string; status: string; storageAssetId: string | null; position: number;
+    contentType: string; status: string; storageAssetId: string | null;
+    originalFilename: string | null; articleId: string | null; position: number;
   };
   type ProductRecord = {
     id: string; slug: string; name: string; description: string; productType: string;
-    status: string; amountCents: number; coverAssetId: string | null; content: Pick<ContentRecord, 'id'>[];
+    status: string; amountCents: number; coverAssetId: string | null;
+    content: Pick<ContentRecord, 'id' | 'title' | 'contentType' | 'status'>[];
   };
   type UploadResponse = { id: string; uploadUrl: string; headers: Record<string, string> };
-  const root = document.querySelector<HTMLElement>('.commerce-admin')?.dataset.apiRoot ?? '/api/admin/';
-  const message = document.querySelector<HTMLElement>('#commerce-message');
+  type ApiError = Error & { products?: string[] };
+
+  const cms = document.querySelector<HTMLElement>('.cms-admin');
+  const root = cms?.dataset.apiRoot ?? '/api/admin/';
+  const siteRoot = cms?.dataset.siteRoot ?? '/';
+  const message = document.querySelector<HTMLElement>('#cms-message');
   const contentForm = document.querySelector<HTMLFormElement>('#content-form');
   const productForm = document.querySelector<HTMLFormElement>('#product-form');
-  const contentList = document.querySelector<HTMLUListElement>('#content-list');
-  const productList = document.querySelector<HTMLUListElement>('#product-list');
+  const contentDialog = document.querySelector<HTMLDialogElement>('#content-editor');
+  const productDialog = document.querySelector<HTMLDialogElement>('#product-editor');
+  const deleteDialog = document.querySelector<HTMLDialogElement>('#delete-confirmation');
+  const contentTable = document.querySelector<HTMLTableSectionElement>('#content-table');
+  const productTable = document.querySelector<HTMLTableSectionElement>('#product-table');
+  const contentCards = document.querySelector<HTMLDivElement>('#content-cards');
+  const productCards = document.querySelector<HTMLDivElement>('#product-cards');
   const contentOptions = document.querySelector<HTMLDivElement>('#content-options');
-  const productHeading = document.querySelector<HTMLElement>('#product-heading');
+  const contentSearch = document.querySelector<HTMLInputElement>('#content-search');
+  const productSearch = document.querySelector<HTMLInputElement>('#product-search');
+  const contentStatusFilter = document.querySelector<HTMLSelectElement>('#content-status-filter');
+  const productStatusFilter = document.querySelector<HTMLSelectElement>('#product-status-filter');
+  const contentOptionSearch = document.querySelector<HTMLInputElement>('#linked-content-search');
+  const contentUploadStatus = document.querySelector<HTMLElement>('#content-upload-status');
+  const coverUploadStatus = document.querySelector<HTMLElement>('#cover-upload-status');
   const coverPreview = document.querySelector<HTMLDivElement>('#cover-preview');
   const coverPreviewImage = document.querySelector<HTMLImageElement>('#cover-preview-image');
-  const siteRoot = document.querySelector<HTMLElement>('.commerce-admin')?.dataset.siteRoot ?? '/';
-  let coverPreviewObjectUrl: string | null = null;
+  const contentEditorTitle = document.querySelector<HTMLElement>('#content-editor-title');
+  const productEditorTitle = document.querySelector<HTMLElement>('#product-editor-title');
+  const deleteDescription = document.querySelector<HTMLElement>('#delete-description');
+  const deleteBlockedProducts = document.querySelector<HTMLDivElement>('#delete-blocked-products');
+  const confirmDelete = document.querySelector<HTMLButtonElement>('#confirm-delete');
+  const contentTypeNames: Record<string, string> = { download: 'Digitaler Download', lesson: 'Lektion', video: 'Video', article: 'Artikel' };
+  const statusNames: Record<string, string> = { draft: 'Entwurf', published: 'Veröffentlicht', active: 'Aktiv', archived: 'Archiviert' };
+  const stateKey = 'iftiin-cms-list-state';
 
-  function showCoverPreview(url: string | null) {
-    if (coverPreviewObjectUrl && coverPreviewObjectUrl !== url) {
-      URL.revokeObjectURL(coverPreviewObjectUrl);
-    }
-    coverPreviewObjectUrl = url?.startsWith('blob:') ? url : null;
-    if (!coverPreview || !coverPreviewImage) return;
-    if (!url) {
-      coverPreview.hidden = true;
-      coverPreviewImage.removeAttribute('src');
-      return;
-    }
-    coverPreviewImage.src = url;
-    coverPreview.hidden = false;
-  }
+  let contents: ContentRecord[] = [];
+  let products: ProductRecord[] = [];
+  let selectedForDeletion: ContentRecord | null = null;
+  let selectedContentIds = new Set<string>();
+  let saving = false;
+  let dirty = false;
+  let activeEditor: HTMLDialogElement | null = null;
+  let coverObjectUrl: string | null = null;
 
   function report(text: string) {
     if (message) message.textContent = text;
   }
+  for (const dialog of [contentDialog, productDialog]) {
+    dialog?.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      closeEditor(dialog, dialog === contentDialog ? contentForm : productForm);
+    });
+  }
+  function setDirty(value: boolean) {
+    dirty = value;
+  }
+  function formField<T extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+    form: HTMLFormElement | null,
+    name: string,
+  ): T | null {
+    return form?.elements.namedItem(name) as T | null;
+  }
   async function api<T>(url: string, init?: RequestInit): Promise<T> {
     const response = await fetch(url, init);
-    const result = await response.json() as T & { error?: string };
-    if (!response.ok) throw new Error(result.error ?? 'Die Anfrage konnte nicht verarbeitet werden.');
+    const result = await response.json() as T & { error?: string; products?: string[] };
+    if (!response.ok) {
+      const error = new Error(result.error ?? 'Die Anfrage konnte nicht verarbeitet werden.') as ApiError;
+      error.products = result.products;
+      throw error;
+    }
     return result;
   }
-  async function uploadAsset(file: File): Promise<string> {
+  function statusLabel(status: string) {
+    return statusNames[status] ?? status;
+  }
+  function setStatusBadge(element: HTMLElement, status: string) {
+    element.className = `cms-status cms-status-${status}`;
+    element.textContent = statusLabel(status);
+  }
+  function slugFromTitle(value: string) {
+    return value.normalize('NFKD').replace(/ß/g, 'ss').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120).replace(/-+$/g, '');
+  }
+  function suggestSlug(form: HTMLFormElement | null, titleName: string) {
+    const title = formField<HTMLInputElement>(form, titleName)?.value ?? '';
+    const slug = formField<HTMLInputElement>(form, 'slug');
+    if (slug && formField<HTMLInputElement>(form, 'id')?.value === '' && slug.dataset.manual !== 'true') {
+      slug.value = slugFromTitle(title);
+    }
+  }
+  function updateListState() {
+    const selectedTab = document.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')?.id === 'products-tab'
+      ? 'products' : 'contents';
+    const state = {
+      selectedTab,
+      contentSearch: contentSearch?.value ?? '',
+      productSearch: productSearch?.value ?? '',
+      contentStatus: contentStatusFilter?.value ?? '',
+      productStatus: productStatusFilter?.value ?? '',
+    };
+    try { sessionStorage.setItem(stateKey, JSON.stringify(state)); } catch {}
+  }
+  function restoreListState() {
+    try {
+      const raw = sessionStorage.getItem(stateKey);
+      if (!raw) return;
+      const state = JSON.parse(raw) as {
+        selectedTab?: string; contentSearch?: string; productSearch?: string;
+        contentStatus?: string; productStatus?: string;
+      };
+      if (contentSearch) contentSearch.value = state.contentSearch ?? '';
+      if (productSearch) productSearch.value = state.productSearch ?? '';
+      if (contentStatusFilter) contentStatusFilter.value = state.contentStatus ?? '';
+      if (productStatusFilter) productStatusFilter.value = state.productStatus ?? '';
+      setActiveTab(state.selectedTab === 'products' ? 'products' : 'contents');
+    } catch {
+      sessionStorage.removeItem(stateKey);
+    }
+  }
+  function setActiveTab(tab: 'contents' | 'products') {
+    for (const [name, id] of [['contents', 'contents-tab'], ['products', 'products-tab']] as const) {
+      const selected = name === tab;
+      const button = document.getElementById(id);
+      const panel = document.getElementById(`${name}-panel`);
+      button?.setAttribute('aria-selected', String(selected));
+      button?.setAttribute('tabindex', selected ? '0' : '-1');
+      panel?.toggleAttribute('hidden', !selected);
+    }
+    updateListState();
+  }
+  function addActionMenu(
+    id: string,
+    itemType: 'content' | 'product',
+    status: string,
+    row: HTMLElement,
+  ) {
+    const details = document.createElement('details');
+    details.className = 'cms-actions-menu';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Weitere Aktionen';
+    details.append(summary);
+    if (status !== 'archived') {
+      const archive = document.createElement('button');
+      archive.type = 'button';
+      archive.textContent = 'Archivieren';
+      archive.addEventListener('click', async () => {
+        details.open = false;
+        const label = itemType === 'content'
+          ? (contents.find((entry) => entry.id === id)?.title ?? 'Inhalt')
+          : (products.find((entry) => entry.id === id)?.name ?? 'Produkt');
+        if (!window.confirm(`„${label}“ archivieren?`)) return;
+        try {
+          if (itemType === 'content') {
+            const item = contents.find((entry) => entry.id === id);
+            if (!item) return;
+            await api(`${root}content/${encodeURIComponent(id)}/`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...item, status: 'archived' }),
+            });
+          } else {
+            await api(`${root}products/${encodeURIComponent(id)}/`, { method: 'DELETE' });
+          }
+          await loadData('Eintrag archiviert.');
+        } catch (error) {
+          report(error instanceof Error ? error.message : 'Eintrag konnte nicht archiviert werden.');
+        }
+      });
+      details.append(archive);
+    }
+    if (itemType === 'content') {
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = 'Löschen';
+      remove.addEventListener('click', () => {
+        details.open = false;
+        const item = contents.find((entry) => entry.id === id);
+        if (item) openDeleteDialog(item);
+      });
+      details.append(remove);
+    }
+    row.append(details);
+  }
+  function createActionCell(item: ContentRecord | ProductRecord, itemType: 'content' | 'product') {
+    const cell = document.createElement('td');
+    cell.className = 'cms-row-actions';
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.className = 'cms-button cms-button-small cms-button-secondary';
+    if (itemType === 'content' && (item as ContentRecord).articleId) {
+      edit.textContent = 'Redaktion öffnen';
+      edit.addEventListener('click', () => window.location.assign(`${siteRoot}admin/`));
+      cell.append(edit);
+      return cell;
+    }
+    edit.textContent = 'Bearbeiten';
+    edit.addEventListener('click', () => itemType === 'content'
+      ? openContentEditor(item as ContentRecord)
+      : openProductEditor(item as ProductRecord));
+    cell.append(edit);
+    addActionMenu(item.id, itemType, item.status, cell);
+    return cell;
+  }
+  function renderContent() {
+    const needle = contentSearch?.value.trim().toLocaleLowerCase('de') ?? '';
+    const status = contentStatusFilter?.value ?? '';
+    const visible = contents.filter((item) =>
+      (!status || item.status === status) &&
+      (!needle || `${item.title} ${item.slug}`.toLocaleLowerCase('de').includes(needle)));
+    if (contentTable) contentTable.replaceChildren();
+    if (contentCards) contentCards.replaceChildren();
+    for (const item of visible) {
+      const row = document.createElement('tr');
+      const title = document.createElement('th');
+      title.scope = 'row';
+      title.textContent = item.title;
+      const type = document.createElement('td');
+      type.textContent = contentTypeNames[item.contentType] ?? item.contentType;
+      const statusCell = document.createElement('td');
+      const badge = document.createElement('span');
+      setStatusBadge(badge, item.status);
+      statusCell.append(badge);
+      row.append(title, type, statusCell, createActionCell(item, 'content'));
+      contentTable?.append(row);
+
+      const card = document.createElement('article');
+      card.className = 'cms-card';
+      const cardTitle = document.createElement('h3');
+      cardTitle.textContent = item.title;
+      const cardMeta = document.createElement('p');
+      cardMeta.textContent = contentTypeNames[item.contentType] ?? item.contentType;
+      const cardStatus = document.createElement('span');
+      setStatusBadge(cardStatus, item.status);
+      const cardActions = document.createElement('div');
+      cardActions.className = 'cms-card-actions';
+      const edit = createActionCell(item, 'content');
+      cardActions.append(...Array.from(edit.children));
+      card.append(cardTitle, cardMeta, cardStatus, cardActions);
+      contentCards?.append(card);
+    }
+    document.querySelector<HTMLElement>('#content-empty')!.hidden = visible.length > 0;
+    updateListState();
+  }
+  function renderProducts() {
+    const needle = productSearch?.value.trim().toLocaleLowerCase('de') ?? '';
+    const status = productStatusFilter?.value ?? '';
+    const visible = products.filter((item) =>
+      (!status || item.status === status) &&
+      (!needle || `${item.name} ${item.slug}`.toLocaleLowerCase('de').includes(needle)));
+    if (productTable) productTable.replaceChildren();
+    if (productCards) productCards.replaceChildren();
+    for (const item of visible) {
+      const row = document.createElement('tr');
+      const title = document.createElement('th');
+      title.scope = 'row';
+      title.textContent = item.name;
+      const price = document.createElement('td');
+      price.textContent = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(item.amountCents / 100);
+      const statusCell = document.createElement('td');
+      const badge = document.createElement('span');
+      setStatusBadge(badge, item.status);
+      statusCell.append(badge);
+      row.append(title, price, statusCell, createActionCell(item, 'product'));
+      productTable?.append(row);
+
+      const card = document.createElement('article');
+      card.className = 'cms-card';
+      const cardTitle = document.createElement('h3');
+      cardTitle.textContent = item.name;
+      const cardMeta = document.createElement('p');
+      cardMeta.textContent = price.textContent;
+      const cardStatus = document.createElement('span');
+      setStatusBadge(cardStatus, item.status);
+      const cardActions = document.createElement('div');
+      cardActions.className = 'cms-card-actions';
+      const edit = createActionCell(item, 'product');
+      cardActions.append(...Array.from(edit.children));
+      card.append(cardTitle, cardMeta, cardStatus, cardActions);
+      productCards?.append(card);
+    }
+    document.querySelector<HTMLElement>('#product-empty')!.hidden = visible.length > 0;
+    updateListState();
+  }
+  function renderContentOptions(selected: Set<string> = new Set()) {
+    if (!contentOptions) return;
+    const needle = contentOptionSearch?.value.trim().toLocaleLowerCase('de') ?? '';
+    contentOptions.replaceChildren();
+    for (const item of contents) {
+      if (item.articleId === null && item.contentType === 'article') continue;
+      if (needle && !`${item.title} ${item.contentType}`.toLocaleLowerCase('de').includes(needle)) continue;
+      const label = document.createElement('label');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = 'contentIds';
+      checkbox.value = item.id;
+      checkbox.checked = selectedContentIds.has(item.id) || selected.has(item.id);
+      checkbox.disabled = item.status !== 'published';
+      const text = document.createElement('span');
+      text.textContent = `${item.title} · ${contentTypeNames[item.contentType] ?? item.contentType} · ${statusLabel(item.status)}`;
+      label.append(checkbox, text);
+      contentOptions.append(label);
+    }
+    updateSelectedCount();
+  }
+  function updateSelectedCount() {
+    const count = selectedContentIds.size;
+    const output = document.querySelector<HTMLElement>('#selected-content-count');
+    if (output) output.textContent = count === 1 ? '1 Inhalt ausgewählt.' : `${count} Inhalte ausgewählt.`;
+  }
+  function openEditor(dialog: HTMLDialogElement | null, form: HTMLFormElement | null) {
+    if (!dialog || !form) return;
+    if (activeEditor && activeEditor !== dialog) {
+      closeEditor(activeEditor, activeEditor === contentDialog ? contentForm : productForm, false);
+    }
+    activeEditor = dialog;
+    setDirty(false);
+    dialog.showModal();
+    dialog.querySelector<HTMLElement>('input:not([type="hidden"]),textarea,select,button')?.focus();
+  }
+  function closeEditor(dialog: HTMLDialogElement, form: HTMLFormElement | null, ask = true) {
+    if (saving && ask) return;
+    if (ask && dirty && !window.confirm('Änderungen verwerfen? Nicht gespeicherte Eingaben gehen verloren.')) return;
+    setDirty(false);
+    dialog.close();
+    if (activeEditor === dialog) activeEditor = null;
+    form?.reset();
+    if (formField<HTMLInputElement>(form, 'id')) formField<HTMLInputElement>(form, 'id')!.value = '';
+  }
+  function resetContentEditor() {
+    contentForm?.reset();
+    if (formField<HTMLInputElement>(contentForm, 'id')) formField<HTMLInputElement>(contentForm, 'id')!.value = '';
+    if (formField<HTMLInputElement>(contentForm, 'storageAssetId')) formField<HTMLInputElement>(contentForm, 'storageAssetId')!.value = '';
+    const slug = formField<HTMLInputElement>(contentForm, 'slug');
+    if (slug) { slug.value = ''; delete slug.dataset.manual; }
+    if (contentUploadStatus) contentUploadStatus.textContent = '';
+    if (contentEditorTitle) contentEditorTitle.textContent = 'Inhalt erstellen';
+  }
+  function resetProductEditor() {
+    productForm?.reset();
+    if (formField<HTMLInputElement>(productForm, 'id')) formField<HTMLInputElement>(productForm, 'id')!.value = '';
+    if (formField<HTMLInputElement>(productForm, 'coverAssetId')) formField<HTMLInputElement>(productForm, 'coverAssetId')!.value = '';
+    const slug = formField<HTMLInputElement>(productForm, 'slug');
+    if (slug) { slug.value = ''; delete slug.dataset.manual; }
+    if (coverUploadStatus) coverUploadStatus.textContent = '';
+    selectedContentIds.clear();
+    showCoverPreview(null);
+    renderContentOptions();
+    if (productEditorTitle) productEditorTitle.textContent = 'Produkt erstellen';
+  }
+  function openContentEditor(item?: ContentRecord) {
+    resetContentEditor();
+    if (item) {
+      formField<HTMLInputElement>(contentForm, 'id')!.value = item.id;
+      formField<HTMLInputElement>(contentForm, 'storageAssetId')!.value = item.storageAssetId ?? '';
+      formField<HTMLSelectElement>(contentForm, 'contentType')!.value = item.contentType;
+      formField<HTMLInputElement>(contentForm, 'title')!.value = item.title;
+      formField<HTMLInputElement>(contentForm, 'slug')!.value = item.slug;
+      formField<HTMLInputElement>(contentForm, 'slug')!.dataset.manual = 'true';
+      formField<HTMLTextAreaElement>(contentForm, 'description')!.value = item.description;
+      formField<HTMLTextAreaElement>(contentForm, 'body')!.value = item.body;
+      formField<HTMLSelectElement>(contentForm, 'status')!.value = item.status;
+      formField<HTMLInputElement>(contentForm, 'position')!.value = String(item.position);
+      if (contentUploadStatus) contentUploadStatus.textContent = item.originalFilename
+        ? `Aktuelle Datei: ${item.originalFilename}`
+        : 'Keine Datei verknüpft.';
+      if (contentEditorTitle) contentEditorTitle.textContent = `Inhalt bearbeiten: ${item.title}`;
+    }
+    openEditor(contentDialog, contentForm);
+  }
+  function openProductEditor(item?: ProductRecord) {
+    resetProductEditor();
+    if (item) {
+      formField<HTMLInputElement>(productForm, 'id')!.value = item.id;
+      formField<HTMLInputElement>(productForm, 'name')!.value = item.name;
+      formField<HTMLInputElement>(productForm, 'slug')!.value = item.slug;
+      formField<HTMLInputElement>(productForm, 'slug')!.dataset.manual = 'true';
+      formField<HTMLSelectElement>(productForm, 'productType')!.value = item.productType;
+      formField<HTMLTextAreaElement>(productForm, 'description')!.value = item.description;
+      formField<HTMLInputElement>(productForm, 'price')!.value = (item.amountCents / 100).toFixed(2);
+      formField<HTMLSelectElement>(productForm, 'status')!.value = item.status;
+      formField<HTMLInputElement>(productForm, 'coverAssetId')!.value = item.coverAssetId ?? '';
+      selectedContentIds = new Set(item.content.map((entry) => entry.id));
+      renderContentOptions(selectedContentIds);
+      showCoverPreview(item.coverAssetId
+        ? `${siteRoot}api/store/products/${encodeURIComponent(item.slug)}/cover/`
+        : null);
+      if (productEditorTitle) productEditorTitle.textContent = `Produkt bearbeiten: ${item.name}`;
+    }
+    openEditor(productDialog, productForm);
+  }
+  function showCoverPreview(url: string | null) {
+    if (coverObjectUrl && coverObjectUrl !== url) URL.revokeObjectURL(coverObjectUrl);
+    coverObjectUrl = url?.startsWith('blob:') ? url : null;
+    if (!coverPreview || !coverPreviewImage) return;
+    coverPreview.hidden = !url;
+    if (url) coverPreviewImage.src = url;
+    else coverPreviewImage.removeAttribute('src');
+  }
+  function openDeleteDialog(item: ContentRecord) {
+    selectedForDeletion = item;
+    if (deleteDescription) {
+      deleteDescription.textContent = `„${item.title}“ wird endgültig gelöscht. Bestehende Käufe und Lernfortschritte bleiben geschützt; Inhalte mit früheren Zugängen können nicht gelöscht werden. Falls Produkte zugeordnet sind, musst du diese Zuordnungen zuerst entfernen. Dateien werden nur entfernt, wenn sie ausschließlich diesem Inhalt gehören.`;
+    }
+    if (deleteBlockedProducts) {
+      deleteBlockedProducts.hidden = true;
+      deleteBlockedProducts.replaceChildren();
+    }
+    deleteDialog?.showModal();
+    confirmDelete?.focus();
+  }
+  async function uploadAsset(file: File, statusElement: HTMLElement | null, purpose: 'content' | 'cover' = 'content'): Promise<string> {
     const extensionTypes: Record<string, string> = {
       pdf: 'application/pdf', zip: 'application/zip', mp4: 'video/mp4',
       webm: 'video/webm', mov: 'video/quicktime', jpg: 'image/jpeg',
       jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
     };
     const contentType = file.type || extensionTypes[file.name.split('.').pop()?.toLowerCase() ?? ''] || '';
+    if (statusElement) statusElement.textContent = `Bereite Upload vor: ${file.name}`;
     const prepared = await api<UploadResponse>(`${root}assets/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: file.name, contentType, byteSize: file.size }),
+      body: JSON.stringify({ filename: file.name, contentType, byteSize: file.size, purpose }),
     });
-    const uploaded = await fetch(prepared.uploadUrl, { method: 'PUT', headers: prepared.headers, body: file });
-    if (!uploaded.ok) throw new Error('Die Datei konnte nicht in den privaten Speicher geladen werden.');
+    await new Promise<void>((resolve, reject) => {
+      const request = new XMLHttpRequest();
+      request.open('PUT', prepared.uploadUrl);
+      for (const [name, value] of Object.entries(prepared.headers)) request.setRequestHeader(name, value);
+      request.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable && statusElement) {
+          statusElement.textContent = `Upload ${file.name}: ${Math.round((event.loaded / event.total) * 100)} %`;
+        }
+      });
+      request.addEventListener('load', () => {
+        if (request.status >= 200 && request.status < 300) resolve();
+        else reject(new Error(`Upload von ${file.name} fehlgeschlagen (HTTP ${request.status}).`));
+      });
+      request.addEventListener('error', () => reject(new Error(`Upload von ${file.name} fehlgeschlagen. Prüfe die Verbindung und Bucket-CORS.`)));
+      request.addEventListener('abort', () => reject(new Error(`Upload von ${file.name} wurde abgebrochen.`)));
+      request.send(file);
+    });
     await api(`${root}assets/${encodeURIComponent(prepared.id)}/`, { method: 'PUT' });
+    if (statusElement) statusElement.textContent = `Upload abgeschlossen: ${file.name}`;
     return prepared.id;
   }
-  function addListItem(
-    parent: HTMLUListElement | null,
-    label: string,
-    actions: { text: string; run: () => void }[] = [],
-  ) {
-    if (!parent) return;
-    const item = document.createElement('li');
-    const text = document.createElement('span');
-    text.textContent = label;
-    item.append(text);
-    if (actions.length) {
-      const controls = document.createElement('span');
-      controls.className = 'list-actions';
-      for (const action of actions) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'text-link';
-        button.textContent = action.text;
-        button.addEventListener('click', action.run);
-        controls.append(button);
-      }
-      item.append(controls);
-    }
-    parent.append(item);
-  }
-  function drawContent(items: ContentRecord[]) {
-    if (contentList) contentList.replaceChildren();
-    if (contentOptions) contentOptions.replaceChildren();
-    for (const item of items) {
-      addListItem(contentList, `${item.title} · ${item.contentType} · ${item.status}`, [{
-        text: 'Bearbeiten',
-        run: () => {
-          if (!contentForm) return;
-          (contentForm.elements.namedItem('id') as HTMLInputElement).value = item.id;
-          (contentForm.elements.namedItem('storageAssetId') as HTMLInputElement).value = item.storageAssetId ?? '';
-          (contentForm.elements.namedItem('contentType') as HTMLSelectElement).value = item.contentType;
-          (contentForm.elements.namedItem('title') as HTMLInputElement).value = item.title;
-          (contentForm.elements.namedItem('slug') as HTMLInputElement).value = item.slug;
-          (contentForm.elements.namedItem('description') as HTMLTextAreaElement).value = item.description;
-          (contentForm.elements.namedItem('body') as HTMLTextAreaElement).value = item.body;
-          (contentForm.elements.namedItem('status') as HTMLSelectElement).value = item.status;
-          (contentForm.elements.namedItem('position') as HTMLInputElement).value = String(item.position);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        },
-      }]);
-      if (contentOptions) {
-        const label = document.createElement('label');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.name = 'contentIds';
-        checkbox.value = item.id;
-        checkbox.disabled = item.status !== 'published';
-        const text = document.createElement('span');
-        text.textContent = `${item.title}${item.status !== 'published' ? ' (zuerst veröffentlichen)' : ''}`;
-        label.append(checkbox, text);
-        contentOptions.append(label);
-      }
-    }
-  }
-  function selectProduct(product: ProductRecord) {
-    if (!productForm) return;
-    (productForm.elements.namedItem('id') as HTMLInputElement).value = product.id;
-    (productForm.elements.namedItem('name') as HTMLInputElement).value = product.name;
-    (productForm.elements.namedItem('slug') as HTMLInputElement).value = product.slug;
-    (productForm.elements.namedItem('productType') as HTMLSelectElement).value = product.productType;
-    (productForm.elements.namedItem('description') as HTMLTextAreaElement).value = product.description;
-    (productForm.elements.namedItem('price') as HTMLInputElement).value = (product.amountCents / 100).toFixed(2);
-    (productForm.elements.namedItem('status') as HTMLSelectElement).value = product.status;
-    (productForm.elements.namedItem('coverAssetId') as HTMLInputElement).value = product.coverAssetId ?? '';
-    showCoverPreview(product.coverAssetId
-      ? `${siteRoot}api/store/products/${encodeURIComponent(product.slug)}/cover/`
-      : null);
-    const selected = new Set(product.content.map((item) => item.id));
-    productForm.querySelectorAll<HTMLInputElement>('input[name="contentIds"]').forEach((input) => {
-      input.checked = selected.has(input.value);
-    });
-    if (productHeading) productHeading.textContent = `Produkt bearbeiten: ${product.name}`;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  async function loadData() {
+  async function loadData(successMessage?: string) {
+    report('Einträge werden geladen …');
     const [contentResult, productResult] = await Promise.all([
       api<{ content: ContentRecord[] }>(`${root}content/`),
       api<{ products: ProductRecord[] }>(`${root}products/`),
     ]);
-    drawContent(contentResult.content);
-    if (productList) productList.replaceChildren();
-    for (const product of productResult.products) {
-      addListItem(productList, `${product.name} · ${(product.amountCents / 100).toFixed(2)} € · ${product.status}`, [{
-        text: 'Bearbeiten',
-        run: () => selectProduct(product),
-      }, ...(product.status !== 'archived' ? [{
-        text: 'Archivieren',
-        run: async () => {
-          if (!window.confirm(`Produkt „${product.name}“ archivieren?`)) return;
-          try {
-            await api(`${root}products/${encodeURIComponent(product.id)}/`, { method: 'DELETE' });
-            report('Produkt archiviert.');
-            await loadData();
-          } catch (error) {
-            report(error instanceof Error ? error.message : 'Produkt konnte nicht archiviert werden.');
-          }
-        },
-      }] : [])]);
+    contents = contentResult.content;
+    products = productResult.products;
+    renderContentOptions(new Set(Array.from(productForm?.querySelectorAll<HTMLInputElement>('input[name="contentIds"]:checked') ?? []).map((input) => input.value)));
+    renderContent();
+    renderProducts();
+    report(successMessage ?? `${contents.filter((item) => item.contentType !== 'article').length} Inhalte · ${products.length} Produkte`);
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[role="tab"]').forEach((tab) => {
+    tab.addEventListener('click', () => setActiveTab(tab.id === 'products-tab' ? 'products' : 'contents'));
+    tab.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      const next = tab.id === 'products-tab' ? 'contents' : 'products';
+      document.getElementById(`${next}-tab`)?.focus();
+      setActiveTab(next);
+    });
+  });
+  document.querySelector<HTMLButtonElement>('#create-content')?.addEventListener('click', () => openContentEditor());
+  document.querySelector<HTMLButtonElement>('#create-product')?.addEventListener('click', () => openProductEditor());
+  contentSearch?.addEventListener('input', renderContent);
+  productSearch?.addEventListener('input', renderProducts);
+  contentStatusFilter?.addEventListener('change', renderContent);
+  productStatusFilter?.addEventListener('change', renderProducts);
+  contentOptionSearch?.addEventListener('input', () => {
+    renderContentOptions(selectedContentIds);
+  });
+  contentOptions?.addEventListener('change', (event) => {
+    const input = event.target;
+    if (input instanceof HTMLInputElement && input.name === 'contentIds') {
+      if (input.checked) selectedContentIds.add(input.value);
+      else selectedContentIds.delete(input.value);
     }
+    updateSelectedCount();
+  });
+
+  for (const form of [contentForm, productForm]) {
+    form?.addEventListener('input', () => setDirty(true));
+    form?.addEventListener('change', () => setDirty(true));
+    form?.querySelectorAll<HTMLButtonElement>('[data-cancel-editor],[data-close-editor]').forEach((button) => {
+      button.addEventListener('click', () => closeEditor(form === contentForm ? contentDialog! : productDialog!, form));
+    });
+    form?.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      closeEditor(form === contentForm ? contentDialog! : productDialog!, form);
+    });
+  }
+  window.addEventListener('beforeunload', (event) => {
+    if (!dirty) return;
+    event.preventDefault();
+  });
+
+  formField<HTMLInputElement>(contentForm, 'title')?.addEventListener('input', () => suggestSlug(contentForm, 'title'));
+  formField<HTMLInputElement>(productForm, 'name')?.addEventListener('input', () => suggestSlug(productForm, 'name'));
+  for (const form of [contentForm, productForm]) {
+    formField<HTMLInputElement>(form, 'slug')?.addEventListener('input', (event) => {
+      (event.currentTarget as HTMLInputElement).dataset.manual = 'true';
+    });
   }
 
   contentForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!contentForm) return;
-    const formData = new FormData(contentForm);
-    const file = formData.get('file');
-    const id = String(formData.get('id') ?? '');
-    let storageAssetId: string | null = null;
+    if (saving || !contentForm) return;
+    saving = true;
+    const buttons = contentForm.querySelectorAll<HTMLButtonElement>('button');
+    buttons.forEach((button) => { button.disabled = true; });
     try {
       report('Inhalt wird gespeichert …');
-      storageAssetId = String(formData.get('storageAssetId') ?? '') || null;
+      const data = new FormData(contentForm);
+      const id = String(data.get('id') ?? '');
+      let storageAssetId = String(data.get('storageAssetId') ?? '') || null;
+      const file = data.get('file');
       if (file instanceof File && file.size > 0) {
-        storageAssetId = await uploadAsset(file);
+        storageAssetId = await uploadAsset(file, contentUploadStatus);
+        formField<HTMLInputElement>(contentForm, 'storageAssetId')!.value = storageAssetId;
+        formField<HTMLInputElement>(contentForm, 'file')!.value = '';
       }
       const payload = {
-        contentType: formData.get('contentType'),
-        title: formData.get('title'),
-        slug: formData.get('slug'),
-        description: formData.get('description'),
-        body: formData.get('body'),
+        contentType: data.get('contentType'),
+        title: data.get('title'),
+        slug: data.get('slug'),
+        description: data.get('description'),
+        body: data.get('body'),
         storageAssetId,
-        status: formData.get('status'),
-        position: Number(formData.get('position')),
+        status: data.get('status'),
+        position: Number(data.get('position')),
       };
       await api(`${root}content/${id ? `${encodeURIComponent(id)}/` : ''}`, {
         method: id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      contentForm.reset();
-      (contentForm.elements.namedItem('id') as HTMLInputElement).value = '';
-      (contentForm.elements.namedItem('storageAssetId') as HTMLInputElement).value = '';
-      report('Inhalt gespeichert.');
-      await loadData();
+      closeEditor(contentDialog!, contentForm, false);
+      resetContentEditor();
+      await loadData('Inhalt gespeichert.');
     } catch (error) {
       report(error instanceof Error ? error.message : 'Der Inhalt konnte nicht gespeichert werden.');
+    } finally {
+      saving = false;
+      buttons.forEach((button) => { button.disabled = false; });
     }
   });
 
   productForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!productForm) return;
-    const data = new FormData(productForm);
-    const id = String(data.get('id') ?? '');
-    const coverFile = data.get('coverFile');
-    const contentIds = Array.from(productForm.querySelectorAll<HTMLInputElement>('input[name="contentIds"]:checked'), (input) => input.value);
+    if (saving || !productForm) return;
+    saving = true;
+    const buttons = productForm.querySelectorAll<HTMLButtonElement>('button');
+    buttons.forEach((button) => { button.disabled = true; });
     try {
       report('Produkt wird gespeichert …');
+      const data = new FormData(productForm);
+      const id = String(data.get('id') ?? '');
       let coverAssetId = String(data.get('coverAssetId') ?? '') || null;
+      const coverFile = data.get('coverFile');
       if (coverFile instanceof File && coverFile.size > 0) {
         if (coverFile.size > 10 * 1024 * 1024) throw new Error('Coverbilder dürfen höchstens 10 MB groß sein.');
-        coverAssetId = await uploadAsset(coverFile);
+        coverAssetId = await uploadAsset(coverFile, coverUploadStatus, 'cover');
+        formField<HTMLInputElement>(productForm, 'coverAssetId')!.value = coverAssetId;
+        formField<HTMLInputElement>(productForm, 'coverFile')!.value = '';
       }
+      const contentIds = Array.from(selectedContentIds);
       const payload = {
         slug: data.get('slug'),
         productType: data.get('productType'),
@@ -317,25 +814,24 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      productForm.reset();
-      (productForm.elements.namedItem('id') as HTMLInputElement).value = '';
-      (productForm.elements.namedItem('coverAssetId') as HTMLInputElement).value = '';
-      showCoverPreview(null);
-      if (productHeading) productHeading.textContent = 'Produkt erstellen';
-      report('Produkt gespeichert.');
-      await loadData();
+      closeEditor(productDialog!, productForm, false);
+      resetProductEditor();
+      await loadData('Produkt gespeichert.');
     } catch (error) {
       report(error instanceof Error ? error.message : 'Das Produkt konnte nicht gespeichert werden.');
+    } finally {
+      saving = false;
+      buttons.forEach((button) => { button.disabled = false; });
     }
   });
-  document.querySelector<HTMLButtonElement>('#product-reset')?.addEventListener('click', () => {
-    productForm?.reset();
-    if (productForm) (productForm.elements.namedItem('id') as HTMLInputElement).value = '';
-    if (productForm) (productForm.elements.namedItem('coverAssetId') as HTMLInputElement).value = '';
+
+  document.querySelector<HTMLButtonElement>('#cover-remove')?.addEventListener('click', () => {
+    formField<HTMLInputElement>(productForm, 'coverAssetId')!.value = '';
+    formField<HTMLInputElement>(productForm, 'coverFile')!.value = '';
     showCoverPreview(null);
-    if (productHeading) productHeading.textContent = 'Produkt erstellen';
+    setDirty(true);
   });
-  document.querySelector<HTMLInputElement>('input[name="coverFile"]')?.addEventListener('change', (event) => {
+  formField<HTMLInputElement>(productForm, 'coverFile')?.addEventListener('change', (event) => {
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -344,40 +840,158 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       report('Coverbilder dürfen höchstens 10 MB groß sein.');
       return;
     }
-    coverPreviewObjectUrl = URL.createObjectURL(file);
-    showCoverPreview(coverPreviewObjectUrl);
+    showCoverPreview(URL.createObjectURL(file));
+    if (coverUploadStatus) coverUploadStatus.textContent = `Ausgewählt: ${file.name} · Upload beim Speichern`;
   });
-  document.querySelector<HTMLButtonElement>('#cover-remove')?.addEventListener('click', () => {
-    if (!productForm) return;
-    (productForm.elements.namedItem('coverAssetId') as HTMLInputElement).value = '';
-    (productForm.elements.namedItem('coverFile') as HTMLInputElement).value = '';
-    showCoverPreview(null);
+
+  document.querySelector<HTMLButtonElement>('#confirm-delete')?.addEventListener('click', async () => {
+    if (!selectedForDeletion || !confirmDelete) return;
+    confirmDelete.disabled = true;
+    confirmDelete.textContent = 'Wird gelöscht …';
+    if (deleteBlockedProducts) {
+      deleteBlockedProducts.hidden = true;
+      deleteBlockedProducts.replaceChildren();
+    }
+    try {
+      const item = selectedForDeletion;
+      const result = await api<{ success: boolean; warning?: string }>(
+        `${root}content/${encodeURIComponent(item.id)}/`,
+        { method: 'DELETE' },
+      );
+      deleteDialog?.close();
+      selectedForDeletion = null;
+      await loadData(result.warning ?? `„${item.title}“ wurde gelöscht.`);
+    } catch (error) {
+      report(error instanceof Error ? error.message : 'Der Inhalt konnte nicht gelöscht werden.');
+      const typed = error as ApiError;
+      if (deleteDescription && error instanceof Error) deleteDescription.textContent = error.message;
+      if (typed.products?.length && deleteBlockedProducts) {
+        const heading = document.createElement('strong');
+        heading.textContent = 'Zuerst aus diesen Produkten entfernen:';
+        const list = document.createElement('ul');
+        for (const name of typed.products) {
+          const entry = document.createElement('li');
+          entry.textContent = name;
+          list.append(entry);
+        }
+        deleteBlockedProducts.replaceChildren(heading, list);
+        deleteBlockedProducts.hidden = false;
+      }
+    } finally {
+      confirmDelete.disabled = false;
+      confirmDelete.textContent = 'Inhalt löschen';
+    }
   });
-  loadData().catch((error: unknown) => report(error instanceof Error ? error.message : 'Shopdaten konnten nicht geladen werden.'));
+  deleteDialog?.addEventListener('close', () => { selectedForDeletion = null; });
+
+  restoreListState();
+  loadData().catch((error: unknown) => report(error instanceof Error ? error.message : 'Einträge konnten nicht geladen werden.'));
 </script>
 
-<style>
-  .commerce-admin { padding-top: 3rem; padding-bottom: 6rem; }
-  .commerce-admin h1 { font-size: clamp(2.5rem, 7vw, 5rem); margin: 0.8rem 0 1rem; }
-  .commerce-admin > p:not(.form-message) { color: var(--muted); line-height: 1.7; max-width: 760px; }
-  .commerce-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; margin-top: 3rem; }
-  .commerce-columns h2 { margin-top: 0; }
-  .commerce-columns h3 { margin-top: 2.5rem; }
-  .commerce-form { display: grid; gap: 1rem; }
-  .commerce-form label { display: grid; gap: 0.4rem; }
-  .commerce-form input:not([type="checkbox"]):not([type="file"]), .commerce-form textarea, .commerce-form select {
-    width: 100%; padding: 0.75rem; border: 1px solid var(--line); border-radius: 8px; background: white; color: inherit; font: inherit;
+<style is:global>
+  .cms-admin { --cms-ink: #191a19; --cms-muted: #716f67; --cms-line: #dedbd2; --cms-paper: #fffefa; color: var(--cms-ink); padding: 0 0 4rem; }
+  .cms-admin *, .cms-admin *::before, .cms-admin *::after { box-sizing: border-box; }
+  .cms-admin button, .cms-admin input, .cms-admin textarea, .cms-admin select { font: inherit; }
+  .cms-admin button, .cms-admin summary, .cms-admin a { -webkit-tap-highlight-color: transparent; }
+  .cms-admin :focus-visible { outline: 3px solid #d5ab36; outline-offset: 3px; }
+  .cms-header { min-height: 60px; padding: 0 clamp(1rem, 4vw, 3rem); display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--cms-line); background: var(--cms-paper); }
+  .cms-brand { font-weight: 750; color: var(--cms-ink); text-decoration: none; white-space: nowrap; }
+  .cms-brand span { color: #b39331; }
+  .cms-header nav { display: flex; align-items: center; justify-content: flex-end; gap: clamp(.8rem, 2vw, 1.5rem); flex-wrap: wrap; }
+  .cms-header nav a { color: var(--cms-muted); text-decoration: none; font-size: 14px; }
+  .cms-header nav a[aria-current="page"] { color: var(--cms-ink); font-weight: 700; }
+  .cms-main { width: min(1200px, calc(100% - 2rem)); margin: 2rem auto 0; }
+  .cms-title-row { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+  .cms-eyebrow { margin: 0 0 .4rem; color: var(--cms-muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+  .cms-title-row h1 { margin: 0; font-size: clamp(28px, 3vw, 32px); line-height: 1.15; }
+  .cms-message { min-height: 1.5em; margin: 0; color: var(--cms-muted); font-size: 14px; text-align: right; }
+  .cms-tabs { display: flex; gap: .35rem; border-bottom: 1px solid var(--cms-line); }
+  .cms-tabs button { padding: .8rem 1rem; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--cms-muted); font-size: 15px; font-weight: 650; cursor: pointer; }
+  .cms-tabs button[aria-selected="true"] { border-color: #d5ab36; color: var(--cms-ink); }
+  .cms-panel { padding-top: 1.25rem; }
+  .cms-panel[hidden] { display: none; }
+  .cms-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .cms-panel-heading h2 { margin: 0; font-size: 20px; }
+  .cms-payment-note { margin: 0 0 1rem; padding: .65rem .85rem; border-left: 3px solid #d5ab36; background: #f7f4e9; color: #58554b; font-size: 13px; }
+  .cms-button { min-height: 40px; padding: .55rem .9rem; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 1px solid transparent; border-radius: 8px; font-size: 14px; font-weight: 650; line-height: 1.2; text-decoration: none; cursor: pointer; }
+  .cms-button:disabled { opacity: .6; cursor: wait; }
+  .cms-button-primary { border-color: #171817; background: #171817; color: white; }
+  .cms-button-primary:hover:not(:disabled) { background: #353631; }
+  .cms-button-secondary { border-color: var(--cms-line); background: white; color: var(--cms-ink); }
+  .cms-button-danger { border-color: #a32d22; background: #a32d22; color: white; }
+  .cms-button-small { min-height: 34px; padding: .4rem .65rem; font-size: 13px; }
+  .cms-filters { display: grid; grid-template-columns: minmax(220px, 2fr) minmax(180px, 1fr); gap: .8rem; margin: 1rem 0; }
+  .cms-admin label { display: grid; gap: .35rem; color: #494942; font-size: 14px; font-weight: 600; }
+  .cms-admin input:not([type="checkbox"]):not([type="file"]), .cms-admin textarea, .cms-admin select { width: 100%; min-height: 42px; padding: .55rem .7rem; border: 1px solid #c9c6bd; border-radius: 7px; background: white; color: var(--cms-ink); font-size: 16px; font-weight: 400; }
+  .cms-admin textarea { min-height: 92px; resize: vertical; }
+  .cms-admin input[type="file"] { width: 100%; min-height: 40px; color: var(--cms-ink); font-size: 14px; }
+  .cms-table-wrap { overflow-x: auto; border: 1px solid var(--cms-line); border-radius: 10px; background: white; }
+  .cms-admin table { width: 100%; border-collapse: collapse; text-align: left; }
+  .cms-admin th, .cms-admin td { padding: .75rem .85rem; border-bottom: 1px solid #ebe9e3; vertical-align: middle; font-size: 14px; }
+  .cms-admin thead th { background: #f7f6f1; color: var(--cms-muted); font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+  .cms-admin tbody tr:last-child > * { border-bottom: 0; }
+  .cms-admin tbody th { max-width: 35rem; font-weight: 650; }
+  .cms-row-actions { display: flex; align-items: center; justify-content: flex-start; gap: .65rem; white-space: nowrap; }
+  .cms-actions-menu { position: relative; }
+  .cms-actions-menu summary { padding: .45rem .55rem; border: 1px solid var(--cms-line); border-radius: 7px; color: #4b4a43; font-size: 13px; cursor: pointer; list-style: none; }
+  .cms-actions-menu summary::-webkit-details-marker { display: none; }
+  .cms-actions-menu[open] summary { border-color: #a6a296; }
+  .cms-actions-menu > button { position: relative; z-index: 4; display: block; width: 100%; padding: .55rem .7rem; border: 0; background: white; color: var(--cms-ink); text-align: left; cursor: pointer; }
+  .cms-actions-menu[open] { min-width: 150px; }
+  .cms-actions-menu[open] > button { position: absolute; top: calc(100% + 2px); right: 0; border: 1px solid var(--cms-line); box-shadow: 0 8px 22px #0002; }
+  .cms-actions-menu[open] > button + button { top: calc(100% + 42px); }
+  .cms-status { display: inline-flex; align-items: center; padding: .25rem .55rem; border-radius: 999px; background: #eeede9; color: #4d4b44; font-size: 12px; font-weight: 650; white-space: nowrap; }
+  .cms-status-published, .cms-status-active { background: #e5f2e8; color: #255a32; }
+  .cms-status-archived { background: #f3e8e5; color: #804137; }
+  .cms-empty { padding: 1.5rem; border: 1px dashed var(--cms-line); border-radius: 9px; color: var(--cms-muted); text-align: center; }
+  .cms-cards { display: none; }
+  .cms-card { display: grid; gap: .5rem; padding: 1rem; border: 1px solid var(--cms-line); border-radius: 10px; background: white; }
+  .cms-card h3, .cms-card p { margin: 0; }
+  .cms-card h3 { font-size: 16px; }
+  .cms-card p { color: var(--cms-muted); font-size: 14px; }
+  .cms-card > .cms-status { justify-self: start; }
+  .cms-card-actions { display: flex; align-items: center; gap: .6rem; padding-top: .3rem; }
+  .cms-dialog, .cms-confirm-dialog { width: min(900px, calc(100% - 1.5rem)); max-width: none; max-height: min(94dvh, 1000px); padding: 0; overflow: hidden; border: 1px solid var(--cms-line); border-radius: 14px; background: var(--cms-paper); color: var(--cms-ink); box-shadow: 0 24px 80px #0004; }
+  .cms-dialog::backdrop, .cms-confirm-dialog::backdrop { background: #1119; backdrop-filter: blur(2px); }
+  .cms-editor-form { max-height: min(94dvh, 1000px); display: flex; flex-direction: column; }
+  .cms-editor-header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1.25rem; border-bottom: 1px solid var(--cms-line); background: var(--cms-paper); }
+  .cms-editor-header h2 { margin: 0; font-size: 22px; }
+  .cms-icon-button { width: 40px; height: 40px; border: 1px solid var(--cms-line); border-radius: 8px; background: white; color: var(--cms-ink); font-size: 24px; cursor: pointer; }
+  .cms-editor-body { flex: 1; padding: 1rem 1.25rem; overflow: auto; }
+  .cms-form-section { padding: 0 0 1rem; margin: 0 0 1rem; border-bottom: 1px solid var(--cms-line); }
+  .cms-form-section:last-child { margin-bottom: 0; border-bottom: 0; }
+  .cms-form-section h3 { margin: 0 0 .75rem; font-size: 18px; }
+  .cms-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem 1rem; }
+  .cms-field-wide { grid-column: 1 / -1; }
+  .cms-editor-actions { position: sticky; bottom: 0; z-index: 2; display: flex; justify-content: flex-end; gap: .65rem; padding: .75rem 1.25rem; border-top: 1px solid var(--cms-line); background: var(--cms-paper); }
+  .cms-cover-preview { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+  .cms-cover-preview[hidden] { display: none; }
+  .cms-cover-preview img { width: min(260px, 100%); aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: #f3f0e8; }
+  .cms-content-options { max-height: 250px; margin-top: .5rem; overflow: auto; border: 1px solid var(--cms-line); border-radius: 8px; }
+  .cms-content-options label { display: flex; align-items: center; gap: .6rem; padding: .6rem .7rem; border-bottom: 1px solid #efeee9; font-size: 14px; }
+  .cms-content-options label:last-child { border-bottom: 0; }
+  .cms-content-options input[type="checkbox"] { width: 18px; height: 18px; flex: 0 0 auto; accent-color: #a88727; }
+  .cms-upload-status, .cms-hint { min-height: 1.4em; margin: .4rem 0 0; color: var(--cms-muted); font-size: 13px; }
+  .cms-confirm-dialog { width: min(520px, calc(100% - 1.5rem)); padding: 1.25rem; overflow: auto; }
+  .cms-confirm-dialog h2 { margin: 0 0 .7rem; font-size: 22px; }
+  .cms-confirm-dialog p { line-height: 1.55; }
+  .cms-delete-products { padding: .8rem; border-radius: 8px; background: #f7f4e9; font-size: 14px; }
+  .cms-delete-products ul { margin-bottom: 0; padding-left: 1.25rem; }
+  .cms-confirm-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1.25rem; }
+  @media (max-width: 720px) {
+    .cms-header { align-items: flex-start; flex-direction: column; padding-top: .8rem; padding-bottom: .8rem; }
+    .cms-header nav { justify-content: flex-start; }
+    .cms-main { margin-top: 1.2rem; }
+    .cms-title-row { align-items: flex-start; flex-direction: column; gap: .3rem; }
+    .cms-message { text-align: left; }
+    .cms-filters { grid-template-columns: 1fr; }
+    .cms-table-wrap { display: none; }
+    .cms-cards { display: grid; gap: .7rem; }
+    .cms-dialog { width: calc(100% - .75rem); max-height: 96dvh; }
+    .cms-editor-form { max-height: 96dvh; }
+    .cms-editor-header, .cms-editor-body { padding-right: .9rem; padding-left: .9rem; }
+    .cms-editor-actions { padding-right: .9rem; padding-left: .9rem; }
+    .cms-form-grid { grid-template-columns: 1fr; }
+    .cms-field-wide { grid-column: auto; }
   }
-  .commerce-form input[type="file"] { max-width: 100%; }
-  .cover-preview { display: grid; justify-items: start; gap: 0.6rem; }
-  .cover-preview[hidden] { display: none; }
-  .cover-preview img { width: min(100%, 360px); aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; }
-  .commerce-form fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 1rem; }
-  .content-options { display: grid; gap: 0.5rem; max-height: 240px; overflow: auto; }
-  .content-options label { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: 0.6rem; }
-  .commerce-list { list-style: none; padding: 0; display: grid; gap: 0.65rem; }
-  .commerce-list li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 10px; }
-  .list-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; }
-  .form-actions { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
-  @media (max-width: 800px) { .commerce-columns { grid-template-columns: 1fr; } }
 </style>

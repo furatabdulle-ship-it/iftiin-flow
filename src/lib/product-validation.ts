@@ -2,20 +2,50 @@ import { initialProductTypes } from './commerce';
 import { query } from './db';
 import { json } from './http';
 import { isAllowedImageAssetType } from './storage';
+import type { PoolClient } from 'pg';
+
+export async function lockProductReferences(
+  client: PoolClient,
+  contentIds: string[],
+  coverAssetId: string | null,
+  active: boolean,
+): Promise<string | null> {
+  const content = await client.query<{ id: string; status: string }>(
+    `SELECT id, status FROM content_items
+     WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE`,
+    [contentIds],
+  );
+  if (content.rowCount !== contentIds.length) return 'Mindestens ein zugeordneter Inhalt wurde gleichzeitig entfernt.';
+  if (active && content.rows.some((item) => item.status !== 'published')) {
+    return 'Alle Inhalte eines aktiven Produkts müssen veröffentlicht sein.';
+  }
+
+  if (coverAssetId) {
+    const cover = await client.query<{ content_type: string }>(
+      `SELECT content_type FROM storage_assets
+       WHERE id = $1 AND status = 'ready'
+       FOR UPDATE`,
+      [coverAssetId],
+    );
+    if (!cover.rows[0] || !isAllowedImageAssetType(cover.rows[0].content_type)) {
+      return 'Das Cover ist nicht mehr verfügbar. Bitte lade es erneut hoch.';
+    }
+  }
+  return null;
+}
 
 export async function validateProductCoverAsset(
   coverAssetId: string | null,
-  userId: string,
 ): Promise<Response | null> {
   if (!coverAssetId) return null;
   const result = await query<{ content_type: string; status: string }>(
     `SELECT content_type, status FROM storage_assets
-     WHERE id = $1 AND uploaded_by = $2`,
-    [coverAssetId, userId],
+     WHERE id = $1`,
+    [coverAssetId],
   );
   const asset = result.rows[0];
   if (!asset || asset.status !== 'ready' || !isAllowedImageAssetType(asset.content_type)) {
-    return json({ error: 'Das Cover muss ein vollständig hochgeladenes Bild aus deinem Konto sein.' }, 400);
+    return json({ error: 'Das Cover muss ein vollständig hochgeladenes Bild sein.' }, 400);
   }
   return null;
 }

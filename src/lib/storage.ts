@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { query } from './db';
 
@@ -146,6 +146,21 @@ export async function createPrivateDownloadUrl(assetId: string, inline = false):
       ResponseContentDisposition: `${inline ? 'inline' : 'attachment'}; filename="${filename}"`,
     }),
     { expiresIn: 120 },
+  );
+}
+
+export async function deleteUnreferencedAssetObject(assetId: string, objectKey: string): Promise<void> {
+  const config = getStorageConfiguration();
+  await config.client.send(new DeleteObjectCommand({
+    Bucket: config.bucket,
+    Key: objectKey,
+  }));
+  await query(
+    `DELETE FROM storage_assets
+     WHERE id = $1 AND status = 'deleted'
+       AND NOT EXISTS (SELECT 1 FROM content_items WHERE storage_asset_id = $1)
+       AND NOT EXISTS (SELECT 1 FROM products WHERE cover_asset_id = $1)`,
+    [assetId],
   );
 }
 

@@ -2,10 +2,15 @@ import type { APIRoute } from 'astro';
 import { isHttpResponse, requireAdmin } from '../../../../lib/admin';
 import { withTransaction } from '../../../../lib/db';
 import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '../../../../lib/http';
-import { validateProductContentLinks, validateProductCoverAsset } from '../../../../lib/product-validation';
+import {
+  lockProductReferences,
+  validateProductContentLinks,
+  validateProductCoverAsset,
+} from '../../../../lib/product-validation';
 import { productInputSchema } from '../../../../lib/validation';
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+class ProductReferenceChangedError extends Error {}
 
 export const PUT: APIRoute = async (context) => {
   const originError = rejectCrossOriginWrite(context);
@@ -22,7 +27,7 @@ export const PUT: APIRoute = async (context) => {
       details: parsed.error.issues.map(({ path, message }) => ({ path, message })),
     }, 400);
     const product = parsed.data;
-    const coverError = await validateProductCoverAsset(product.coverAssetId, admin.id);
+    const coverError = await validateProductCoverAsset(product.coverAssetId);
     if (coverError) return coverError;
     const contentError = await validateProductContentLinks(
       product.contentIds,
@@ -37,6 +42,13 @@ export const PUT: APIRoute = async (context) => {
         [id],
       );
       if (!current.rowCount) return false;
+      const referenceError = await lockProductReferences(
+        client,
+        product.contentIds,
+        product.coverAssetId,
+        product.status === 'active',
+      );
+      if (referenceError) throw new ProductReferenceChangedError(referenceError);
       const productResult = await client.query(
         `UPDATE products SET slug = $2, product_type = $3, name = $4, description = $5,
            status = $6, cover_asset_id = $7, updated_at = NOW()
@@ -82,6 +94,7 @@ export const PUT: APIRoute = async (context) => {
     return json({ success: true });
   } catch (error) {
     if (error instanceof RequestInputError) return json({ error: error.message }, 400);
+    if (error instanceof ProductReferenceChangedError) return json({ error: error.message }, 409);
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
       return json({ error: 'Der Produkt-Slug ist bereits vergeben.' }, 409);
     }

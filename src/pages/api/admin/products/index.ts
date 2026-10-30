@@ -3,8 +3,14 @@ import { listAdminProducts } from '../../../../lib/commerce';
 import { isHttpResponse, requireAdmin } from '../../../../lib/admin';
 import { withTransaction } from '../../../../lib/db';
 import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '../../../../lib/http';
-import { validateProductContentLinks, validateProductCoverAsset } from '../../../../lib/product-validation';
+import {
+  lockProductReferences,
+  validateProductContentLinks,
+  validateProductCoverAsset,
+} from '../../../../lib/product-validation';
 import { productInputSchema } from '../../../../lib/validation';
+
+class ProductReferenceChangedError extends Error {}
 
 export const GET: APIRoute = async (context) => {
   try {
@@ -30,7 +36,7 @@ export const POST: APIRoute = async (context) => {
       details: parsed.error.issues.map(({ path, message }) => ({ path, message })),
     }, 400);
     const product = parsed.data;
-    const coverError = await validateProductCoverAsset(product.coverAssetId, admin.id);
+    const coverError = await validateProductCoverAsset(product.coverAssetId);
     if (coverError) return coverError;
     const contentError = await validateProductContentLinks(
       product.contentIds,
@@ -40,6 +46,13 @@ export const POST: APIRoute = async (context) => {
     if (contentError) return contentError;
 
     const id = await withTransaction(async (client) => {
+      const referenceError = await lockProductReferences(
+        client,
+        product.contentIds,
+        product.coverAssetId,
+        product.status === 'active',
+      );
+      if (referenceError) throw new ProductReferenceChangedError(referenceError);
       const created = await client.query<{ id: string }>(
         `INSERT INTO products (slug, product_type, name, description, status, cover_asset_id, created_by)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -63,6 +76,7 @@ export const POST: APIRoute = async (context) => {
     return json({ id }, 201);
   } catch (error) {
     if (error instanceof RequestInputError) return json({ error: error.message }, 400);
+    if (error instanceof ProductReferenceChangedError) return json({ error: error.message }, 409);
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
       return json({ error: 'Der Produkt-Slug ist bereits vergeben.' }, 409);
     }
