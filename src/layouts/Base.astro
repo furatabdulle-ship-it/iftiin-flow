@@ -1,7 +1,9 @@
 ---
 import { site } from '../config';
 import '../styles/global.css';
-const { title, description = site.shortDescription } = Astro.props;
+import '../styles/fonts.css';
+import '../styles/home.css';
+const { title, description = site.shortDescription, home = false } = Astro.props;
 const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — Wissen. Urteilskraft. Handlungsfähigkeit.`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const prefix = import.meta.env.BASE_URL;
@@ -21,22 +23,36 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
     <link rel="icon" href={root('favicon.svg')} type="image/svg+xml" />
     <title>{pageTitle}</title>
   </head>
-  <body>
+  <body class:list={{ 'home-page': home }}>
     <a class="skip" href="#content">Zum Inhalt springen</a>
-    <div class="announcement">Wissen · Urteilskraft · Handlungsfähigkeit <span aria-hidden="true">↗</span></div>
+    {!home && <div class="announcement">Wissen · Urteilskraft · Handlungsfähigkeit <span aria-hidden="true">↗</span></div>}
     <header class="site-header wrap">
       <a class="wordmark" href={root('')} aria-label="iftiin flow. Startseite">iftiin<span> flow.</span></a>
-      <nav aria-label="Hauptnavigation">
-        <a href={root('explore/')}>Explore</a>
-        <a href={root('about/')}>About</a>
-        <a href={root('account/')}>Konto</a>
-        <a href={root('store/')}>Shop</a>
-        {site.showResearch && <a href={root('research/')}>Research</a>}
-        {site.showLearning && <a href={root('learning/')}>Learning</a>}
-        {site.showTools && <a href={root('tools/')}>Tools</a>}
-        {site.showBooking && site.bookingUrl && <a class="nav-cta" href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen ↗</a>}
-      </nav>
+      {home ? <div class="header-actions">
+        <button class="pill pill--solid" type="button" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
+          <span data-menu-label>Menü</span><span class="burger" aria-hidden="true"><i></i><i></i></span>
+        </button>
+      </div> : <nav aria-label="Hauptnavigation">
+          <a href={root('explore/')}>Explore</a>
+          <a href={root('about/')}>About</a>
+          <a href={root('account/')}>Konto</a>
+          <a href={root('store/')}>Shop</a>
+          {site.showResearch && <a href={root('research/')}>Research</a>}
+          {site.showLearning && <a href={root('learning/')}>Learning</a>}
+          {site.showTools && <a href={root('tools/')}>Tools</a>}
+          {site.showBooking && site.bookingUrl && <a class="nav-cta" href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen ↗</a>}
+        </nav>}
     </header>
+    {home && <nav class="site-menu" id="site-menu" aria-label="Hauptmenü" inert>
+      <a href={root('explore/')}>Explore</a>
+      <a href={root('about/')}>About</a>
+      <a href={root('account/')}>Konto</a>
+      <a href={root('store/')}>Shop</a>
+      {site.showResearch && <a href={root('research/')}>Research</a>}
+      {site.showLearning && <a href={root('learning/')}>Learning</a>}
+      {site.showTools && <a href={root('tools/')}>Tools</a>}
+      {site.showBooking && site.bookingUrl && <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen ↗</a>}
+    </nav>}
     <main id="content"><slot /></main>
     <footer class="footer">
       <div class="wrap footer-grid">
@@ -45,5 +61,54 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
         <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · Unabhängige Wissensplattform</div>
       </div>
     </footer>
+    {home && <script>
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const menuToggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+      const menu = document.querySelector<HTMLElement>('#site-menu');
+
+      if (menuToggle && menu) {
+        const setMenuOpen = (open: boolean) => {
+          document.body.classList.toggle('menu-open', open);
+          menuToggle.setAttribute('aria-expanded', String(open));
+          menuToggle.querySelector('[data-menu-label]')!.textContent = open ? 'Schließen' : 'Menü';
+          menu.inert = !open;
+        };
+
+        menuToggle.addEventListener('click', () => {
+          setMenuOpen(menuToggle.getAttribute('aria-expanded') !== 'true');
+        });
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') setMenuOpen(false);
+        });
+        menu.querySelectorAll('a').forEach((link) => {
+          link.addEventListener('click', () => setMenuOpen(false));
+        });
+      }
+
+      const rotator = document.querySelector<HTMLElement>('[data-rotator]');
+      if (rotator && !reduceMotion) {
+        let index = 0;
+        window.setInterval(() => {
+          index = (index + 1) % rotator.children.length;
+          rotator.style.transform = `translateY(-${index * 0.98}em)`;
+        }, 2200);
+      }
+
+      const hero = document.querySelector<HTMLElement>('[data-parallax]');
+      const orbit = document.querySelector<HTMLElement>('[data-orbit]');
+      if (hero && orbit && window.matchMedia('(pointer: fine)').matches && !reduceMotion) {
+        let frame: number | null = null;
+        hero.addEventListener('mousemove', (event) => {
+          if (frame !== null) return;
+          frame = window.requestAnimationFrame(() => {
+            frame = null;
+            const bounds = hero.getBoundingClientRect();
+            const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+            const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+            orbit.style.transform = `translate(${Math.round(x * -60)}px, ${Math.round(y * -40)}px)`;
+          });
+        });
+      }
+    </script>}
   </body>
 </html>
