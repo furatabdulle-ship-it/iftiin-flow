@@ -26,8 +26,12 @@ function getStorageConfiguration(): StorageConfiguration {
   const accessKeyId = process.env.STORAGE_ACCESS_KEY_ID;
   const secretAccessKey = process.env.STORAGE_SECRET_ACCESS_KEY;
   const region = process.env.STORAGE_REGION;
+  const forcePathStyle = process.env.STORAGE_FORCE_PATH_STYLE;
   if (!endpoint || !bucket || !accessKeyId || !secretAccessKey || !region) {
     throw new Error('Privater Dateispeicher ist nicht vollständig konfiguriert.');
+  }
+  if (forcePathStyle !== undefined && forcePathStyle !== 'true' && forcePathStyle !== 'false') {
+    throw new Error('STORAGE_FORCE_PATH_STYLE muss true oder false sein.');
   }
   const endpointUrl = new URL(endpoint);
   if (process.env.NODE_ENV === 'production' && endpointUrl.protocol !== 'https:') {
@@ -38,7 +42,7 @@ function getStorageConfiguration(): StorageConfiguration {
     client: new S3Client({
       endpoint: endpointUrl.toString(),
       region,
-      forcePathStyle: true,
+      forcePathStyle: forcePathStyle !== 'false',
       credentials: { accessKeyId, secretAccessKey },
     }),
   };

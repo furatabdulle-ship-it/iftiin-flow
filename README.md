@@ -64,11 +64,31 @@ In Railway beziehungsweise der lokalen `.env` sind folgende Werte erforderlich:
 | `STRIPE_WEBHOOK_SECRET` | Signaturgeheimnis des Stripe-Webhook-Endpunkts |
 | `STRIPE_LIVE_MODE_ENABLED` | Nur für bewusst freigegebene Livezahlungen auf `true` setzen |
 | `STORAGE_ENDPOINT` | HTTPS-Endpunkt des privaten S3-kompatiblen Buckets |
-| `STORAGE_BUCKET` | Name des privaten Buckets |
-| `STORAGE_ACCESS_KEY_ID` / `STORAGE_SECRET_ACCESS_KEY` | Zugangsdaten mit Zugriff nur auf den benötigten Bucket |
-| `STORAGE_REGION` | Region des Speicheranbieters |
+| `STORAGE_BUCKET` | S3-Bucketname |
+| `STORAGE_ACCESS_KEY_ID` / `STORAGE_SECRET_ACCESS_KEY` | Zugangsdaten des Buckets |
+| `STORAGE_REGION` | S3-Region, bei Railway Buckets `auto` |
+| `STORAGE_FORCE_PATH_STYLE` | `false` für Railway Buckets; Standard `true` für kompatible ältere/path-style Endpunkte |
 
-Für Browser-Uploads muss der Bucket CORS `PUT` von der Website-Origin erlauben und den signierten `Content-Type`-Header akzeptieren. Der Bucket darf nicht öffentlich lesbar sein. Uploads sind auf PDF, ZIP und die Videoformate MP4, WebM und MOV mit höchstens 500 MB begrenzt. Ohne Stripe- und Speicher-Konfiguration bleiben Checkout beziehungsweise Upload gesperrt; bestehende Artikel und Konten werden dadurch nicht verändert. Live-Zahlungen erst nach Prüfung von Steuer-, Verbraucher-, Widerrufs- und Datenschutzpflichten aktivieren.
+#### Railway Storage Bucket einrichten
+
+Railway Buckets sind private S3-kompatible Buckets. Im Railway-Projekt in der Projektansicht **Create** → **Bucket** wählen, Region festlegen (sie kann nach dem Anlegen nicht geändert werden) und den Bucket erstellen. Laut [Railway-Dokumentation](https://docs.railway.com/storage-buckets/billing) kostet gespeicherter Inhalt **$0.015 pro GB-Monat**; S3-Operationen und Bucket-Egress sind kostenlos. Die Speichernutzung zählt zur Railway-Nutzung und kann enthaltene Tarif-Credits verbrauchen; Nutzung über enthaltene Credits hinaus wird gemäß Tarif abgerechnet. Es wird hier kein Bucket automatisch angelegt.
+
+Im Bucket unter **Credentials** die Werte abrufen. Im Website-Service in Railway die Variablen des Buckets möglichst über **Add Reference** mit diesen Namen verbinden:
+
+| Variable im Website-Service | Railway-Bucket-Variable |
+|---|---|
+| `STORAGE_ENDPOINT` | `ENDPOINT` |
+| `STORAGE_BUCKET` | `BUCKET` |
+| `STORAGE_ACCESS_KEY_ID` | `ACCESS_KEY_ID` |
+| `STORAGE_SECRET_ACCESS_KEY` | `SECRET_ACCESS_KEY` |
+| `STORAGE_REGION` | `REGION` |
+| `STORAGE_FORCE_PATH_STYLE` | `false` |
+
+Neue Railway Buckets verwenden standardmäßig virtual-hosted-style URLs. Deshalb muss `STORAGE_FORCE_PATH_STYLE=false` gesetzt sein. Maßgeblich für den Endpoint und URL-Stil sind die Angaben im Bucket-Tab **Credentials**. Lege den Bucket in derselben Railway-Umgebung wie den Website-Service an, damit Test- und Produktionsdaten getrennt bleiben.
+
+Für Browser-Uploads im Bucket-CORS ausschließlich die Website-Origin `https://www.iftiin-flow.com`, die Methode `PUT` und den Header `Content-Type` erlauben. Den Bucket nicht öffentlich machen. Nach dem Speichern der Variablen den Service neu deployen. Uploads sind auf PDF, ZIP sowie MP4, WebM und MOV bis 500 MB begrenzt.
+
+Dateien werden beim Upload direkt mit einer kurzlebigen, auf ein Objekt begrenzten URL übertragen. Downloads laufen zuerst über die Website: Sie prüft Anmeldung, Veröffentlichung und Kaufberechtigung serverseitig und gibt erst danach einen signierten Download-Link frei, der nach 120 Sekunden abläuft. Ohne Speicher-Konfiguration bleiben Datei-Uploads gesperrt; bestehende Artikel und Konten werden dadurch nicht verändert. Live-Zahlungen erst nach Prüfung von Steuer-, Verbraucher-, Widerrufs- und Datenschutzpflichten aktivieren.
 
 Passwörter müssen mindestens 12 Zeichen lang sein und werden mit scrypt gehasht. Anmeldesitzungen verwenden zufällige, nicht im Klartext gespeicherte Tokens in `HttpOnly`-Cookies. Login-Versuche sind pro Serverprozess begrenzt; bei mehreren App-Instanzen braucht es zusätzlich ein gemeinsames Rate-Limit am vertrauenswürdigen Proxy. In Produktion müssen Website und Datenbankverbindung verschlüsselt übertragen werden.
 
