@@ -1,5 +1,5 @@
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
-import { query } from './db';
+import { query, withTransaction } from './db';
 
 const SESSION_LIFETIME_SECONDS = 60 * 60 * 24 * 30;
 const PASSWORD_KEY_LENGTH = 64;
@@ -94,6 +94,56 @@ export async function authenticateAccount(email: string, password: string): Prom
     role: account.role,
     displayName: account.display_name,
   };
+}
+
+export async function issuePasswordReset(email: string): Promise<{ email: string; token: string } | null> {
+  const token = randomBytes(32).toString('base64url');
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  const result = await query<{ email: string }>(
+    `WITH account AS (
+       SELECT id, email FROM users WHERE email = $1
+     ),
+     issued AS (
+       INSERT INTO password_reset_tokens (user_id, token_hash, expires_at, requested_at)
+       SELECT id, $2, NOW() + INTERVAL '30 minutes', NOW() FROM account
+       ON CONFLICT (user_id) DO UPDATE
+       SET token_hash = EXCLUDED.token_hash,
+           expires_at = EXCLUDED.expires_at,
+           requested_at = EXCLUDED.requested_at
+       WHERE password_reset_tokens.requested_at <= NOW() - INTERVAL '1 minute'
+       RETURNING user_id
+     )
+     SELECT account.email FROM account
+     JOIN issued ON issued.user_id = account.id`,
+    [email, tokenHash],
+  );
+  const account = result.rows[0];
+  return account ? { email: account.email, token } : null;
+}
+
+export async function completePasswordReset(token: string, password: string): Promise<boolean> {
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  return withTransaction(async (client) => {
+    const reset = await client.query<{ user_id: string }>(
+      `SELECT user_id FROM password_reset_tokens
+       WHERE token_hash = $1 AND expires_at > NOW()
+       FOR UPDATE`,
+      [tokenHash],
+    );
+    const userId = reset.rows[0]?.user_id;
+    if (!userId) return false;
+
+    const passwordHash = await hashPassword(password);
+    await client.query('UPDATE users SET password_hash = $2 WHERE id = $1', [userId, passwordHash]);
+    await client.query('DELETE FROM sessions WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [userId]);
+    return true;
+  });
+}
+
+export async function cancelPasswordReset(token: string): Promise<void> {
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  await query('DELETE FROM password_reset_tokens WHERE token_hash = $1', [tokenHash]);
 }
 
 export async function createSession(accountId: string): Promise<string> {

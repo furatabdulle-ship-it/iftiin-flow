@@ -9,6 +9,7 @@ const requestedNext = Astro.url.searchParams.get('next');
 const redirectTo = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\')
   ? requestedNext
   : '/account/';
+const passwordResetEnabled = Boolean(process.env.RESEND_API_KEY && process.env.PASSWORD_RESET_FROM);
 ---
 <Base title="Anmelden" description="Melde dich bei iftiin flow. an.">
   <section class="interior-hero wrap account-hero">
@@ -16,6 +17,7 @@ const redirectTo = requestedNext?.startsWith('/') && !requestedNext.startsWith('
     <h1>Willkommen <em>zurück.</em></h1>
     <p>Melde dich mit deinem Konto an.</p>
     <AuthForm mode="login" redirectTo={redirectTo} />
+    {passwordResetEnabled && <p class="account-switch"><a href="/forgot-password/">Passwort vergessen? ↗</a></p>}
     <p class="account-switch">Noch kein Konto? <a href="/register/">Jetzt registrieren ↗</a></p>
   </section>
 </Base>

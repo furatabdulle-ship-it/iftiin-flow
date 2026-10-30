@@ -72,6 +72,12 @@ Für Browser-Uploads muss der Bucket CORS `PUT` von der Website-Origin erlauben 
 
 Passwörter müssen mindestens 12 Zeichen lang sein und werden mit scrypt gehasht. Anmeldesitzungen verwenden zufällige, nicht im Klartext gespeicherte Tokens in `HttpOnly`-Cookies. Login-Versuche sind pro Serverprozess begrenzt; bei mehreren App-Instanzen braucht es zusätzlich ein gemeinsames Rate-Limit am vertrauenswürdigen Proxy. In Produktion müssen Website und Datenbankverbindung verschlüsselt übertragen werden.
 
+### Passwort zurücksetzen
+
+Auf der Anmeldeseite führt „Passwort vergessen?“ zum Reset. Dafür müssen in der lokalen `.env` beziehungsweise als Railway-Umgebungsvariablen `RESEND_API_KEY` und `PASSWORD_RESET_FROM` gesetzt sein. `PASSWORD_RESET_FROM` muss eine in Resend verifizierte Absenderadresse enthalten, zum Beispiel `IFTIIN Flow <konto@deine-domain.de>`. `SITE_URL` muss auf die öffentliche Website zeigen, damit der Link in der E-Mail zur richtigen Domain führt. In Docker Compose werden diese Werte an die App weitergegeben.
+
+Reset-Links sind 30 Minuten gültig und nur einmal verwendbar. Nach erfolgreicher Änderung werden alle bestehenden Anmeldesitzungen beendet. Die Datenbankmigration `005_password_reset.sql` wird beim Start beziehungsweise mit `npm run db:migrate` angewendet. Ohne Resend-Konfiguration bleibt der Reset-Endpunkt deaktiviert.
+
 ## Artikel
 
 Im Admin-Bereich kannst du Titel, URL-Slug, Teaser, Datum, Themenfeld, Format, Markdown-Inhalt, Tags, Quellen und Veröffentlichungsstatus verwalten. Video-Beiträge unterstützen YouTube- und Vimeo-Links; die Option „Nur für angemeldete Konten anzeigen“ blendet den Beitrag aus öffentlichen Listen aus, leitet nicht angemeldete Besucher zum Login und spielt das Video nach dem Login ab. Der externe Video-Link bleibt beim Anbieter erreichbar, daher ist das kein DRM und kein sicherer Schutz der Videodatei. Entwürfe bleiben privat; nur `published`-Beiträge erscheinen in Explore, Themenfeldern und auf der Startseite. Markdown wird vor der Ausgabe in HTML umgewandelt und bereinigt.
@@ -127,4 +133,4 @@ npm run build
 
 ## Redaktion und Datenschutz
 
-Vor einem öffentlichen Start müssen Impressum und Datenschutzangaben, Verantwortliche, Hosting-/Datenbankanbieter und die Speicherung von Nutzerkonten geprüft werden. Die Registrierung speichert E-Mail-Adresse, Passwort-Hash und Sitzungsdaten. Derzeit gibt es keine E-Mail-Verifikation, Passwort-zurücksetzen-Funktion oder Löschseite für Nutzerkonten.
+Vor einem öffentlichen Start müssen Impressum und Datenschutzangaben, Verantwortliche, Hosting-/Datenbankanbieter und die Speicherung von Nutzerkonten geprüft werden. Die Registrierung speichert E-Mail-Adresse, Passwort-Hash und Sitzungsdaten. Derzeit gibt es keine E-Mail-Verifikation oder Löschseite für Nutzerkonten.

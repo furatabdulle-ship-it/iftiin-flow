@@ -10,6 +10,15 @@ export const registrationSchema = credentialsSchema.extend({
   displayName: z.string().trim().min(1).max(80).transform((name) => name.replace(/\s+/g, ' ')),
 });
 
+export const passwordResetRequestSchema = z.object({
+  email: z.string().trim().max(254).pipe(z.email()).transform((email) => email.toLowerCase()),
+});
+
+export const passwordResetConfirmSchema = z.object({
+  token: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+  password: z.string().min(12).max(128),
+});
+
 export const productInputSchema = z.object({
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   productType: z.enum(['digital_download', 'premium_article', 'online_course', 'bundle', 'membership']),

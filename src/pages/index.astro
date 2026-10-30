@@ -21,9 +21,12 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
           <circle cx="80" cy="500" r="7" fill="var(--violet)" />
           <circle cx="500" cy="170" r="4" fill="#fff" />
         </g>
-        <g class="orbit-star" stroke="var(--yellow)" stroke-width="4" stroke-linecap="round">
-          <line x1="500" y1="456" x2="500" y2="544" /><line x1="456" y1="500" x2="544" y2="500" />
-          <line x1="469" y1="469" x2="531" y2="531" /><line x1="531" y1="469" x2="469" y2="531" />
+        <g class="orbit-star" fill="var(--yellow)" stroke="var(--yellow)" stroke-width="7" stroke-linecap="round">
+          <line x1="500" y1="380" x2="500" y2="480" /><line x1="500" y1="520" x2="500" y2="620" />
+          <line x1="380" y1="500" x2="480" y2="500" /><line x1="520" y1="500" x2="620" y2="500" />
+          <line x1="433" y1="433" x2="483" y2="483" /><line x1="517" y1="517" x2="567" y2="567" />
+          <line x1="567" y1="433" x2="517" y2="483" /><line x1="483" y1="517" x2="433" y2="567" />
+          <circle cx="500" cy="500" r="14" stroke="none" />
         </g>
       </svg>
     </div>
