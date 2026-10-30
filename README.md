@@ -74,9 +74,25 @@ Passwörter müssen mindestens 12 Zeichen lang sein und werden mit scrypt gehash
 
 ### Passwort zurücksetzen
 
-Auf der Anmeldeseite führt „Passwort vergessen?“ zum Reset. Dafür müssen in der lokalen `.env` beziehungsweise als Railway-Umgebungsvariablen `RESEND_API_KEY` und `PASSWORD_RESET_FROM` gesetzt sein. `PASSWORD_RESET_FROM` muss eine in Resend verifizierte Absenderadresse enthalten, zum Beispiel `IFTIIN Flow <konto@deine-domain.de>`. `SITE_URL` muss auf die öffentliche Website zeigen, damit der Link in der E-Mail zur richtigen Domain führt. In Docker Compose werden diese Werte an die App weitergegeben.
+Der Passwort-Reset versendet E-Mails über die Gmail API mit OAuth und benötigt keinen zusätzlichen E-Mail-Dienst. Railway erlaubt ausgehendes SMTP nur auf Pro und Enterprise; der für dieses Projekt verbundene Railway-Workspace ist Hobby. Die App-Passwörter oder normalen Google-Passwörter werden nicht verwendet.
 
-Reset-Links sind 30 Minuten gültig und nur einmal verwendbar. Nach erfolgreicher Änderung werden alle bestehenden Anmeldesitzungen beendet. Die Datenbankmigration `005_password_reset.sql` wird beim Start beziehungsweise mit `npm run db:migrate` angewendet. Ohne Resend-Konfiguration bleibt der Reset-Endpunkt deaktiviert.
+In der Google Cloud Console ein Projekt erstellen oder auswählen und die Gmail API aktivieren. Den OAuth-Zustimmungsbildschirm konfigurieren; für ein Konto in der eigenen Workspace-Organisation „Intern“ als Zielgruppe verwenden, sofern diese Option verfügbar ist. Einen OAuth-Client vom Typ „Web application“ erstellen und als Weiterleitungs-URI `https://developers.google.com/oauthplayground` hinzufügen. Im [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) in den Einstellungen **Use your own OAuth credentials** aktivieren und Client-ID sowie Secret des eigenen Clients dort lokal eingeben. Im Playground ausschließlich `https://www.googleapis.com/auth/gmail.send` autorisieren, den Consent für das tatsächliche Absenderpostfach erteilen und den Authorization Code gegen Tokens tauschen. Den Refresh Token verwenden, nicht den kurzlebigen Access Token. Ohne eigene OAuth-Zugangsdaten widerruft der Playground Refresh Tokens nach 24 Stunden. Das OAuth-Client-Secret und der Refresh Token sind Geheimnisse und dürfen nur in den Railway-Variablen gespeichert werden.
+
+Für den Versand müssen diese serverseitigen Variablen gesetzt sein:
+
+| Variable | Wert |
+|---|---|
+| `GMAIL_OAUTH_CLIENT_ID` | OAuth-Client-ID aus der Google Cloud Console |
+| `GMAIL_OAUTH_CLIENT_SECRET` | OAuth-Client-Secret; geheim halten |
+| `GMAIL_OAUTH_REFRESH_TOKEN` | Refresh Token mit dem `gmail.send`-Scope; geheim halten |
+| `GMAIL_SENDER_EMAIL` | Vollständige Adresse des autorisierten Workspace-Postfachs |
+| `SITE_URL` | Vertrauenswürdige öffentliche Website-URL, ausschließlich HTTPS und ohne Pfad, Query oder Fragment |
+
+Die OAuth-Freigabe muss für dasselbe Workspace-Postfach wie `GMAIL_SENDER_EMAIL` erteilt worden sein. Das Postfach muss zum Versand über die Gmail API berechtigt sein. Trage die Werte in Railway unter **Project → iftiin-flow service → Variables** im `production`-Environment ein. Lokal gehören sie in `.env`; `.env.example` enthält nur leere Platzhalter. In Docker Compose werden sie an den App-Container weitergereicht. Ohne gültige OAuth-Konfiguration und eine HTTPS-`SITE_URL` bleibt „Passwort vergessen?“ verborgen und der Reset-Endpunkt deaktiviert. HTTP-URLs wie `http://localhost:4321` werden absichtlich nicht für Reset-Links verwendet.
+
+Reset-Links werden kryptografisch zufällig erzeugt, nur gehasht in PostgreSQL gespeichert, sind 30 Minuten gültig und einmal verwendbar. Antworten verraten nicht, ob ein Konto existiert; Anfragen sind zusätzlich begrenzt. Nach erfolgreicher Änderung werden alle bestehenden Anmeldesitzungen beendet. Die Datenbankmigration `005_password_reset.sql` wird beim Start beziehungsweise mit `npm run db:migrate` angewendet.
+
+Die Gmail API sendet als Google Workspace; SPF/DKIM/DMARC und die tatsächliche Zustellbarkeit müssen weiterhin in den empfangenen Nachrichten beziehungsweise mit Googles Admin-/Postmaster-Werkzeugen geprüft werden.
 
 ## Artikel
 

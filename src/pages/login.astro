@@ -2,6 +2,7 @@
 import AuthForm from '../components/AuthForm.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
+import { isPasswordResetEmailConfigured } from '../lib/password-reset-email';
 
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 if (account) return Astro.redirect(account.role === 'admin' ? '/admin/' : '/account/', 302);
@@ -9,7 +10,7 @@ const requestedNext = Astro.url.searchParams.get('next');
 const redirectTo = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\')
   ? requestedNext
   : '/account/';
-const passwordResetEnabled = Boolean(process.env.RESEND_API_KEY && process.env.PASSWORD_RESET_FROM);
+const passwordResetEnabled = isPasswordResetEmailConfigured();
 ---
 <Base title="Anmelden" description="Melde dich bei iftiin flow. an.">
   <section class="interior-hero wrap account-hero">

@@ -29,8 +29,10 @@ services:
       PORT: 4321
       SITE_URL: ${SITE_URL:-http://localhost:4321}
       DATABASE_URL: postgresql://iftiin_flow:${POSTGRES_PASSWORD:-local_development_only}@database:5432/iftiin_flow
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
-      PASSWORD_RESET_FROM: ${PASSWORD_RESET_FROM:-}
+      GMAIL_OAUTH_CLIENT_ID: ${GMAIL_OAUTH_CLIENT_ID:-}
+      GMAIL_OAUTH_CLIENT_SECRET: ${GMAIL_OAUTH_CLIENT_SECRET:-}
+      GMAIL_OAUTH_REFRESH_TOKEN: ${GMAIL_OAUTH_REFRESH_TOKEN:-}
+      GMAIL_SENDER_EMAIL: ${GMAIL_SENDER_EMAIL:-}
     ports:
       - "4321:4321"
 
