@@ -21,11 +21,11 @@ let storageConfiguration: StorageConfiguration | undefined;
 
 function getStorageConfiguration(): StorageConfiguration {
   if (storageConfiguration) return storageConfiguration;
-  const endpoint = process.env.STORAGE_ENDPOINT;
-  const bucket = process.env.STORAGE_BUCKET;
-  const accessKeyId = process.env.STORAGE_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.STORAGE_SECRET_ACCESS_KEY;
-  const region = process.env.STORAGE_REGION;
+  const endpoint = process.env.STORAGE_ENDPOINT ?? process.env.AWS_ENDPOINT_URL;
+  const bucket = process.env.STORAGE_BUCKET ?? process.env.AWS_S3_BUCKET_NAME;
+  const accessKeyId = process.env.STORAGE_ACCESS_KEY_ID ?? process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.STORAGE_SECRET_ACCESS_KEY ?? process.env.AWS_SECRET_ACCESS_KEY;
+  const region = process.env.STORAGE_REGION ?? process.env.AWS_DEFAULT_REGION ?? process.env.AWS_REGION;
   const forcePathStyle = process.env.STORAGE_FORCE_PATH_STYLE;
   if (!endpoint || !bucket || !accessKeyId || !secretAccessKey || !region) {
     throw new Error('Privater Dateispeicher ist nicht vollständig konfiguriert.');
@@ -42,7 +42,9 @@ function getStorageConfiguration(): StorageConfiguration {
     client: new S3Client({
       endpoint: endpointUrl.toString(),
       region,
-      forcePathStyle: forcePathStyle !== 'false',
+      forcePathStyle: forcePathStyle === undefined
+        ? process.env.STORAGE_ENDPOINT !== undefined
+        : forcePathStyle === 'true',
       credentials: { accessKeyId, secretAccessKey },
     }),
   };

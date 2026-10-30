@@ -67,7 +67,7 @@ In Railway beziehungsweise der lokalen `.env` sind folgende Werte erforderlich:
 | `STORAGE_BUCKET` | S3-Bucketname |
 | `STORAGE_ACCESS_KEY_ID` / `STORAGE_SECRET_ACCESS_KEY` | Zugangsdaten des Buckets |
 | `STORAGE_REGION` | S3-Region, bei Railway Buckets `auto` |
-| `STORAGE_FORCE_PATH_STYLE` | `false` für Railway Buckets; Standard `true` für kompatible ältere/path-style Endpunkte |
+| `STORAGE_FORCE_PATH_STYLE` | Optionaler Override: `false` für Railway Buckets, `true` für path-style Endpunkte |
 
 #### Railway Storage Bucket einrichten
 
@@ -84,7 +84,7 @@ Im Bucket unter **Credentials** die Werte abrufen. Im Website-Service in Railway
 | `STORAGE_REGION` | `REGION` |
 | `STORAGE_FORCE_PATH_STYLE` | `false` |
 
-Neue Railway Buckets verwenden standardmäßig virtual-hosted-style URLs. Deshalb muss `STORAGE_FORCE_PATH_STYLE=false` gesetzt sein. Maßgeblich für den Endpoint und URL-Stil sind die Angaben im Bucket-Tab **Credentials**. Lege den Bucket in derselben Railway-Umgebung wie den Website-Service an, damit Test- und Produktionsdaten getrennt bleiben.
+Alternativ kann Railway die Variablen mit dem AWS-SDK-Preset automatisch als `AWS_ENDPOINT_URL`, `AWS_S3_BUCKET_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` und `AWS_DEFAULT_REGION` bereitstellen. Die Anwendung erkennt sowohl diese Railway-Namen als auch die oben gezeigten `STORAGE_*`-Namen. Neue Railway Buckets verwenden virtual-hosted-style URLs; dafür ist kein manueller Path-Style-Override erforderlich. Maßgeblich für Endpoint, Bucketname, Region und URL-Stil sind die Angaben im Bucket-Tab **Credentials**. Lege den Bucket in derselben Railway-Umgebung wie den Website-Service an, damit Test- und Produktionsdaten getrennt bleiben.
 
 Für Browser-Uploads im Bucket-CORS ausschließlich die Website-Origin `https://www.iftiin-flow.com`, die Methode `PUT` und den Header `Content-Type` erlauben. Den Bucket nicht öffentlich machen. Nach dem Speichern der Variablen den Service neu deployen. Uploads sind auf PDF, ZIP sowie MP4, WebM und MOV bis 500 MB begrenzt.
 
