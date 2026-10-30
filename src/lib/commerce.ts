@@ -10,6 +10,12 @@ export const availableProductTypes = [
 ] as const;
 export type ProductType = 'digital_download' | 'premium_article' | 'online_course' | 'bundle' | 'membership';
 export type BillingInterval = 'one_time' | 'month' | 'year';
+export type ProductPrice = {
+  priceId: string;
+  amountCents: number;
+  currency: string;
+  billingInterval: BillingInterval;
+};
 
 export type ProductRecord = {
   id: string;
@@ -19,12 +25,11 @@ export type ProductRecord = {
   description: string;
   status: 'draft' | 'active' | 'archived';
   coverAssetId: string | null;
-  priceId: string;
-  amountCents: number;
-  currency: string;
-  billingInterval: BillingInterval;
+  prices: ProductPrice[];
   content: { id: string; slug: string; title: string; contentType: string }[];
 };
+
+export type CheckoutProduct = Omit<ProductRecord, 'prices'> & ProductPrice;
 
 export type AccountContent = {
   id: string;
@@ -53,33 +58,44 @@ type ProductRow = QueryResultRow & {
   description: string;
   status: ProductRecord['status'];
   cover_asset_id: string | null;
-  price_id: string;
-  amount_cents: string | number;
-  currency: string;
-  billing_interval: BillingInterval;
+  prices: ProductRecord['prices'];
   content: ProductRecord['content'];
 };
 
 const productSelection = `
   SELECT p.id, p.slug, p.product_type, p.name, p.description, p.status,
          p.cover_asset_id,
-         pr.id AS price_id, pr.amount_cents, pr.currency, pr.billing_interval,
-         COALESCE(
-           json_agg(json_build_object(
+         COALESCE((
+           SELECT json_agg(json_build_object(
+             'priceId', pr.id, 'amountCents', pr.amount_cents, 'currency', pr.currency,
+             'billingInterval', pr.billing_interval
+           ) ORDER BY pr.created_at)
+           FROM prices pr
+           WHERE pr.product_id = p.id
+             AND (
+               pr.active = TRUE
+               OR (
+                 NOT EXISTS (
+                   SELECT 1 FROM prices active_price
+                   WHERE active_price.product_id = p.id AND active_price.active = TRUE
+                 )
+                 AND pr.id = (
+                   SELECT latest_price.id FROM prices latest_price
+                   WHERE latest_price.product_id = p.id
+                   ORDER BY latest_price.created_at DESC LIMIT 1
+                 )
+               )
+             )
+         ), '[]'::json) AS prices,
+         COALESCE((
+           SELECT json_agg(json_build_object(
              'id', ci.id, 'slug', ci.slug, 'title', ci.title, 'contentType', ci.content_type
-           )) FILTER (WHERE ci.id IS NOT NULL),
-           '[]'::json
-         ) AS content
+           ) ORDER BY ci.position, ci.title)
+           FROM product_content pc
+           JOIN content_items ci ON ci.id = pc.content_item_id
+           WHERE pc.product_id = p.id
+         ), '[]'::json) AS content
   FROM products p
-  JOIN LATERAL (
-    SELECT id, amount_cents, currency, billing_interval, active
-    FROM prices
-    WHERE product_id = p.id
-    ORDER BY active DESC, created_at DESC
-    LIMIT 1
-  ) pr ON TRUE
-  LEFT JOIN product_content pc ON pc.product_id = p.id
-  LEFT JOIN content_items ci ON ci.id = pc.content_item_id
 `;
 
 function mapProduct(row: ProductRow): ProductRecord {
@@ -91,10 +107,10 @@ function mapProduct(row: ProductRow): ProductRecord {
     description: row.description,
     status: row.status,
     coverAssetId: row.cover_asset_id,
-    priceId: row.price_id,
-    amountCents: Number(row.amount_cents),
-    currency: row.currency,
-    billingInterval: row.billing_interval,
+    prices: (row.prices ?? []).map((price) => ({
+      ...price,
+      amountCents: Number(price.amountCents),
+    })),
     content: row.content ?? [],
   };
 }
@@ -102,13 +118,14 @@ function mapProduct(row: ProductRow): ProductRecord {
 export async function listPublicProducts(): Promise<ProductRecord[]> {
   const result = await query<ProductRow>(
     `${productSelection}
-     WHERE p.status = 'active' AND pr.active = TRUE AND p.product_type = ANY($1::text[])
+     WHERE p.status = 'active'
+       AND EXISTS (SELECT 1 FROM prices pr WHERE pr.product_id = p.id AND pr.active = TRUE)
+       AND p.product_type = ANY($1::text[])
        AND NOT EXISTS (
          SELECT 1 FROM product_content pending_pc
          JOIN content_items pending_ci ON pending_ci.id = pending_pc.content_item_id
          WHERE pending_pc.product_id = p.id AND pending_ci.status <> 'published'
        )
-     GROUP BY p.id, pr.id, pr.amount_cents, pr.currency, pr.billing_interval
      ORDER BY p.created_at DESC`,
     [availableProductTypes],
   );
@@ -118,26 +135,33 @@ export async function listPublicProducts(): Promise<ProductRecord[]> {
 export async function listAdminProducts(): Promise<ProductRecord[]> {
   const result = await query<ProductRow>(
     `${productSelection}
-     GROUP BY p.id, pr.id, pr.amount_cents, pr.currency, pr.billing_interval
      ORDER BY p.updated_at DESC`,
   );
   return result.rows.map(mapProduct);
 }
 
-export async function getCheckoutProduct(productId: string): Promise<ProductRecord | null> {
+export async function getCheckoutProduct(productId: string, priceId: string): Promise<CheckoutProduct | null> {
   const result = await query<ProductRow>(
     `${productSelection}
-     WHERE p.id = $1 AND p.status = 'active' AND pr.active = TRUE
-       AND p.product_type = ANY($2::text[])
+     WHERE p.id = $1 AND p.status = 'active'
+       AND EXISTS (
+         SELECT 1 FROM prices selected_price
+         WHERE selected_price.id = $2 AND selected_price.product_id = p.id AND selected_price.active = TRUE
+       )
+       AND p.product_type = ANY($3::text[])
        AND NOT EXISTS (
          SELECT 1 FROM product_content pending_pc
          JOIN content_items pending_ci ON pending_ci.id = pending_pc.content_item_id
          WHERE pending_pc.product_id = p.id AND pending_ci.status <> 'published'
-       )
-     GROUP BY p.id, pr.id, pr.amount_cents, pr.currency, pr.billing_interval`,
-    [productId, availableProductTypes],
+       )`,
+    [productId, priceId, availableProductTypes],
   );
-  return result.rows[0] ? mapProduct(result.rows[0]) : null;
+  if (!result.rows[0]) return null;
+  const product = mapProduct(result.rows[0]);
+  const selectedPrice = product.prices.find((price) => price.priceId === priceId);
+  if (!selectedPrice) return null;
+  const { prices, ...checkoutProduct } = product;
+  return { ...checkoutProduct, ...selectedPrice };
 }
 
 export async function hasContentAccess(userId: string, contentItemId: string): Promise<boolean> {

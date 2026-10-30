@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { withTransaction, query } from './db';
-import type { ProductRecord } from './commerce';
+import type { CheckoutProduct } from './commerce';
 
 type StripeCheckoutSession = { id: string; url: string | null };
 
@@ -57,7 +57,7 @@ async function stripeRequest<T>(path: string, body: URLSearchParams): Promise<T>
 export async function createCheckoutSession(
   userId: string,
   email: string,
-  product: ProductRecord,
+  product: CheckoutProduct,
 ): Promise<{ checkoutUrl: string }> {
   if (!Number.isSafeInteger(product.amountCents) || product.amountCents < 50) {
     throw new Error('Für den Checkout ist ein aktiver Preis von mindestens 0,50 € erforderlich.');

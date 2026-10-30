@@ -182,14 +182,10 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
                 <img id="cover-preview-image" alt="Produktcover-Vorschau" />
                 <button class="cms-button cms-button-secondary" id="cover-remove" type="button">Cover entfernen</button>
               </div>
-              <label>Preis in Euro<input name="price" type="number" min="0.50" max="1000000" step="0.01" required /></label>
-              <label hidden>Abrechnung
-                <select name="billingInterval">
-                  <option value="one_time">Einmalig</option>
-                  <option value="month">Monatliches Abo</option>
-                  <option value="year">Jährliches Abo</option>
-                </select>
-              </label>
+              <label>Einmalkauf in Euro<input name="priceOneTime" type="number" min="0.50" max="1000000" step="0.01" required /></label>
+              <label class="membership-price" hidden>Monatliches Abo in Euro<input name="priceMonthly" type="number" min="0.50" max="1000000" step="0.01" /></label>
+              <label class="membership-price" hidden>Jährliches Abo in Euro<input name="priceYearly" type="number" min="0.50" max="1000000" step="0.01" /></label>
+              <p id="membership-pricing-hint" class="cms-hint cms-field-wide" hidden>Memberships können als Einmalkauf, monatliches oder jährliches Abo angeboten werden. Mindestens eine Preisoption ist erforderlich.</p>
             </div>
             <p id="cover-upload-status" class="cms-upload-status" role="status" aria-live="polite"></p>
           </section>
@@ -236,7 +232,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   };
   type ProductRecord = {
     id: string; slug: string; name: string; description: string; productType: string;
-    status: string; amountCents: number; billingInterval: 'one_time' | 'month' | 'year';
+    status: string;
+    prices: { priceId: string; amountCents: number; currency: string; billingInterval: 'one_time' | 'month' | 'year' }[];
     coverAssetId: string | null;
     content: Pick<ContentRecord, 'id' | 'title' | 'contentType' | 'status'>[];
   };
@@ -497,10 +494,14 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       title.scope = 'row';
       title.textContent = item.name;
       const price = document.createElement('td');
-      price.textContent = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(item.amountCents / 100);
-      if (item.billingInterval !== 'one_time') {
-        price.textContent += ` / ${item.billingInterval === 'month' ? 'Monat' : 'Jahr'}`;
-      }
+      price.textContent = item.prices.map((option) => {
+        const amount = new Intl.NumberFormat('de-DE', { style: 'currency', currency: option.currency.toUpperCase() })
+          .format(option.amountCents / 100);
+        const interval = option.billingInterval === 'one_time'
+          ? 'einmalig'
+          : option.billingInterval === 'month' ? 'monatlich' : 'jährlich';
+        return `${amount} ${interval}`;
+      }).join(' · ') || 'Kein Preis';
       const statusCell = document.createElement('td');
       const badge = document.createElement('span');
       setStatusBadge(badge, item.status);
@@ -621,8 +622,15 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       formField<HTMLInputElement>(productForm, 'slug')!.dataset.manual = 'true';
       formField<HTMLSelectElement>(productForm, 'productType')!.value = item.productType;
       formField<HTMLTextAreaElement>(productForm, 'description')!.value = item.description;
-      formField<HTMLInputElement>(productForm, 'price')!.value = (item.amountCents / 100).toFixed(2);
-      formField<HTMLSelectElement>(productForm, 'billingInterval')!.value = item.billingInterval;
+      const priceFields: Record<string, string> = {
+        one_time: 'priceOneTime',
+        month: 'priceMonthly',
+        year: 'priceYearly',
+      };
+      for (const price of item.prices) {
+        const field = priceFields[price.billingInterval];
+        if (field) formField<HTMLInputElement>(productForm, field)!.value = (price.amountCents / 100).toFixed(2);
+      }
       formField<HTMLSelectElement>(productForm, 'status')!.value = item.status;
       formField<HTMLInputElement>(productForm, 'coverAssetId')!.value = item.coverAssetId ?? '';
       selectedContentIds = new Set(item.content.map((entry) => entry.id));
@@ -637,9 +645,16 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   }
   function toggleMembershipBilling() {
     const type = formField<HTMLSelectElement>(productForm, 'productType')?.value;
-    const interval = formField<HTMLSelectElement>(productForm, 'billingInterval');
-    const label = interval?.closest('label');
-    if (label) label.hidden = type !== 'membership';
+    const membership = type === 'membership';
+    productForm?.querySelectorAll<HTMLLabelElement>('.membership-price').forEach((label) => {
+      label.hidden = !membership;
+      const input = label.querySelector<HTMLInputElement>('input');
+      if (input) input.disabled = !membership;
+    });
+    const oneTimePrice = formField<HTMLInputElement>(productForm, 'priceOneTime');
+    if (oneTimePrice) oneTimePrice.required = !membership;
+    const hint = document.querySelector<HTMLElement>('#membership-pricing-hint');
+    if (hint) hint.hidden = !membership;
   }
   function showCoverPreview(url: string | null) {
     if (coverObjectUrl && coverObjectUrl !== url) URL.revokeObjectURL(coverObjectUrl);
@@ -815,6 +830,21 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       report('Produkt wird gespeichert …');
       const data = new FormData(productForm);
       const id = String(data.get('id') ?? '');
+      const productType = String(data.get('productType') ?? '');
+      const priceFields = [
+        { field: 'priceOneTime', billingInterval: 'one_time' },
+        { field: 'priceMonthly', billingInterval: 'month' },
+        { field: 'priceYearly', billingInterval: 'year' },
+      ] as const;
+      const prices = priceFields
+        .filter(({ billingInterval }) => productType === 'membership' || billingInterval === 'one_time')
+        .map(({ field, billingInterval }) => ({ amount: String(data.get(field) ?? '').trim(), billingInterval }))
+        .filter(({ amount }) => amount !== '')
+        .map(({ amount, billingInterval }) => ({
+          amountCents: Math.round(Number(amount) * 100),
+          billingInterval,
+        }));
+      if (prices.length === 0) throw new Error('Bitte gib mindestens eine Preisoption an.');
       let coverAssetId = String(data.get('coverAssetId') ?? '') || null;
       const coverFile = data.get('coverFile');
       if (coverFile instanceof File && coverFile.size > 0) {
@@ -826,13 +856,12 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       const contentIds = Array.from(selectedContentIds);
       const payload = {
         slug: data.get('slug'),
-        productType: data.get('productType'),
+        productType,
         name: data.get('name'),
         description: data.get('description'),
         status: data.get('status'),
-        amountCents: Math.round(Number(data.get('price')) * 100),
         currency: 'eur',
-        billingInterval: data.get('productType') === 'membership' ? data.get('billingInterval') : 'one_time',
+        prices,
         coverAssetId,
         contentIds,
       };
@@ -952,6 +981,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   .cms-admin input:not([type="checkbox"]):not([type="file"]), .cms-admin textarea, .cms-admin select { width: 100%; min-height: 42px; padding: .55rem .7rem; border: 1px solid #c9c6bd; border-radius: 7px; background: white; color: var(--cms-ink); font-size: 16px; font-weight: 400; }
   .cms-admin textarea { min-height: 92px; resize: vertical; }
   .cms-admin input[type="file"] { width: 100%; min-height: 40px; color: var(--cms-ink); font-size: 14px; }
+  .cms-admin label[hidden], .cms-admin [hidden] { display: none !important; }
   .cms-table-wrap { overflow-x: auto; border: 1px solid var(--cms-line); border-radius: 10px; background: white; }
   .cms-admin table { width: 100%; border-collapse: collapse; text-align: left; }
   .cms-admin th, .cms-admin td { padding: .75rem .85rem; border-bottom: 1px solid #ebe9e3; vertical-align: middle; font-size: 14px; }

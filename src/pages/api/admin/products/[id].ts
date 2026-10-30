@@ -57,27 +57,37 @@ export const PUT: APIRoute = async (context) => {
       );
       if (!productResult.rowCount) return false;
 
-      const price = await client.query<{
+      const currentPrices = await client.query<{
+        id: string;
         amount_cents: string;
         currency: string;
         billing_interval: string;
       }>(
-        `SELECT amount_cents, currency, billing_interval
+        `SELECT id, amount_cents, currency, billing_interval
          FROM prices WHERE product_id = $1 AND active = TRUE FOR UPDATE`,
         [id],
       );
-      const activePrice = price.rows[0];
-      if (
-        !activePrice ||
-        Number(activePrice.amount_cents) !== product.amountCents ||
-        activePrice.currency.trim() !== product.currency ||
-        activePrice.billing_interval !== product.billingInterval
-      ) {
-        await client.query('UPDATE prices SET active = FALSE WHERE product_id = $1 AND active = TRUE', [id]);
+      for (const currentPrice of currentPrices.rows) {
+        const submittedPrice = product.prices.find((price) => price.billingInterval === currentPrice.billing_interval);
+        if (
+          !submittedPrice ||
+          Number(currentPrice.amount_cents) !== submittedPrice.amountCents ||
+          currentPrice.currency.trim() !== product.currency
+        ) {
+          await client.query('UPDATE prices SET active = FALSE WHERE id = $1', [currentPrice.id]);
+        }
+      }
+      for (const price of product.prices) {
+        const currentPrice = currentPrices.rows.find((current) => current.billing_interval === price.billingInterval);
+        if (
+          currentPrice &&
+          Number(currentPrice.amount_cents) === price.amountCents &&
+          currentPrice.currency.trim() === product.currency
+        ) continue;
         await client.query(
           `INSERT INTO prices (product_id, currency, amount_cents, billing_interval)
            VALUES ($1, $2, $3, $4)`,
-          [id, product.currency, product.amountCents, product.billingInterval],
+          [id, product.currency, price.amountCents, price.billingInterval],
         );
       }
 

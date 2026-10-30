@@ -19,21 +19,28 @@ export const passwordResetConfirmSchema = z.object({
   password: z.string().min(12).max(128),
 });
 
+const productPriceInputSchema = z.object({
+  amountCents: z.number().int().min(50).max(100_000_000),
+  billingInterval: z.enum(['one_time', 'month', 'year']),
+});
+
 export const productInputSchema = z.object({
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   productType: z.enum(['digital_download', 'premium_article', 'online_course', 'bundle', 'membership']),
   name: z.string().trim().min(1).max(180),
   description: z.string().trim().max(2000),
   status: z.enum(['draft', 'active', 'archived']),
-  amountCents: z.number().int().min(50).max(100_000_000),
   currency: z.literal('eur'),
-  billingInterval: z.enum(['one_time', 'month', 'year']),
+  prices: z.array(productPriceInputSchema).min(1).max(3)
+    .refine((prices) => new Set(prices.map((price) => price.billingInterval)).size === prices.length,
+      'Jede Abrechnungsart darf nur einmal vorkommen.'),
   coverAssetId: z.uuid().nullable(),
   contentIds: z.array(z.uuid()).max(100)
     .refine((ids) => new Set(ids).size === ids.length, 'Inhalte dürfen nicht doppelt zugeordnet werden.'),
-}).refine((product) => product.productType === 'membership' || product.billingInterval === 'one_time', {
-  path: ['billingInterval'],
-  message: 'Wiederkehrende Preise sind nur für Membership-Produkte zulässig.',
+}).refine((product) => product.productType === 'membership'
+  || (product.prices.length === 1 && product.prices[0].billingInterval === 'one_time'), {
+  path: ['prices'],
+  message: 'Nur Membership-Produkte können mehrere oder wiederkehrende Preise haben.',
 });
 
 export const contentItemInputSchema = z.object({

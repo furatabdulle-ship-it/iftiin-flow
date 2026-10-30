@@ -49,18 +49,32 @@ const typeNames: Record<string, string> = {
         />}
         <div class="store-card-top">
           <span class="section-label">{typeNames[product.productType]}</span>
-          <strong>{formatPrice(product.amountCents, product.currency)}{product.billingInterval !== 'one_time' ? ` / ${product.billingInterval === 'month' ? 'Monat' : 'Jahr'}` : ''}</strong>
         </div>
         <h2>{product.name}</h2>
         <p>{product.description}</p>
         {product.content.length > 0 && <ul>
           {product.content.map((item) => <li>{item.title}</li>)}
         </ul>}
-        {account
-          ? <button class="pill-link checkout-button" type="button" data-product-id={product.id} disabled={!checkoutReady}>
-              {checkoutReady ? (product.billingInterval === 'one_time' ? 'Sicher kaufen' : 'Abo starten') : 'Checkout noch nicht eingerichtet'} <span>↗</span>
-            </button>
-          : <a class="pill-link" href={root('login/?next=%2Fstore%2F')}>Anmelden zum Kaufen <span>↗</span></a>}
+        <div class="store-price-options">
+          {product.prices.map((price) => <div class="store-price-option">
+            <strong>{formatPrice(price.amountCents, price.currency)}{price.billingInterval !== 'one_time' ? ` / ${price.billingInterval === 'month' ? 'Monat' : 'Jahr'}` : ' einmalig'}</strong>
+            {account
+              ? <button
+                  class="pill-link checkout-button"
+                  type="button"
+                  data-product-id={product.id}
+                  data-price-id={price.priceId}
+                  disabled={!checkoutReady}
+                >
+                  {checkoutReady
+                    ? (price.billingInterval === 'one_time' ? 'Sicher kaufen' : 'Abo starten')
+                    : 'Checkout noch nicht eingerichtet'} <span>↗</span>
+                </button>
+              : <a class="pill-link" href={root('login/?next=%2Fstore%2F')}>
+                  Anmelden zum Kaufen <span>↗</span>
+                </a>}
+          </div>)}
+        </div>
       </article>)}
     </div> : <div class="empty-state">
       <span class="empty-symbol">✳</span>
@@ -75,14 +89,14 @@ const typeNames: Record<string, string> = {
   const message = document.querySelector<HTMLElement>('#store-message');
   document.querySelectorAll<HTMLButtonElement>('.checkout-button').forEach((button) => {
     button.addEventListener('click', async () => {
-      if (!message || !button.dataset.productId) return;
+      if (!message || !button.dataset.productId || !button.dataset.priceId) return;
       message.textContent = 'Sicherer Checkout wird vorbereitet …';
       button.disabled = true;
       try {
         const response = await fetch('/api/checkout/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: button.dataset.productId }),
+          body: JSON.stringify({ productId: button.dataset.productId, priceId: button.dataset.priceId }),
         });
         const result = await response.json() as { checkoutUrl?: string; error?: string };
         if (!response.ok || !result.checkoutUrl) throw new Error(result.error ?? 'Checkout konnte nicht gestartet werden.');
@@ -105,6 +119,9 @@ const typeNames: Record<string, string> = {
   .store-card h2 { margin: 1.25rem 0 0.5rem; font-size: 1.5rem; }
   .store-card p { color: var(--muted); line-height: 1.7; }
   .store-card ul { padding-left: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem; }
-  .store-card .pill-link { margin-top: auto; }
+  .store-price-options { width: 100%; margin-top: auto; display: grid; gap: .75rem; }
+  .store-price-option { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-top: .75rem; border-top: 1px solid var(--line); }
+  .store-price-option .pill-link { margin: 0; }
   .store-notice { margin-bottom: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 12px; }
+  @media (max-width: 520px) { .store-price-option { align-items: flex-start; flex-direction: column; } }
 </style>

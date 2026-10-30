@@ -60,11 +60,13 @@ export const POST: APIRoute = async (context) => {
         [product.slug, product.productType, product.name, product.description, product.status, product.coverAssetId, admin.id],
       );
       const productId = created.rows[0].id;
-      await client.query(
-        `INSERT INTO prices (product_id, currency, amount_cents, billing_interval)
-         VALUES ($1, $2, $3, $4)`,
-        [productId, product.currency, product.amountCents, product.billingInterval],
-      );
+      for (const price of product.prices) {
+        await client.query(
+          `INSERT INTO prices (product_id, currency, amount_cents, billing_interval)
+           VALUES ($1, $2, $3, $4)`,
+          [productId, product.currency, price.amountCents, price.billingInterval],
+        );
+      }
       for (const contentId of product.contentIds) {
         await client.query(
           'INSERT INTO product_content (product_id, content_item_id) VALUES ($1, $2)',
