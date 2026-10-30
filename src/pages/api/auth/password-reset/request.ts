@@ -22,17 +22,19 @@ export const POST: APIRoute = async (context) => {
 
     const reset = await issuePasswordReset(parsed.data.email);
     if (reset) {
-      void sendPasswordResetEmail(reset.email, reset.token).catch(async (error: unknown) => {
-        console.error(
-          'E-Mail zum Passwort-Reset konnte nicht versendet werden:',
-          error instanceof Error ? error.message : 'Unbekannter Fehler.',
-        );
-        try {
-          await cancelPasswordReset(reset.token);
-        } catch {
-          console.error('Ungesendeter Passwort-Reset-Token konnte nicht entfernt werden.');
-        }
-      });
+      void sendPasswordResetEmail(reset.email, reset.token)
+        .then(() => console.info('Passwort-Reset-E-Mail von Gmail API angenommen.'))
+        .catch(async (error: unknown) => {
+          console.error(
+            'E-Mail zum Passwort-Reset konnte nicht versendet werden:',
+            error instanceof Error ? error.message : 'Unbekannter Fehler.',
+          );
+          try {
+            await cancelPasswordReset(reset.token);
+          } catch {
+            console.error('Ungesendeter Passwort-Reset-Token konnte nicht entfernt werden.');
+          }
+        });
     }
 
     return json({ message: confirmationMessage });
