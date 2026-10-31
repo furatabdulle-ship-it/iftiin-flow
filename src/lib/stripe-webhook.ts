@@ -257,8 +257,12 @@ async function applyCheckoutSession(client: PoolClient, session: StripeRecord): 
        (order_id, provider_payment_intent_id, status, amount_cents, currency)
        VALUES ($1, $2, 'succeeded', $3, $4)
        ON CONFLICT (provider_payment_intent_id) DO UPDATE
-       SET status = 'succeeded', amount_cents = EXCLUDED.amount_cents,
-           currency = EXCLUDED.currency, updated_at = NOW()`,
+       SET status = CASE
+           WHEN payments.status IN ('refunded', 'partially_refunded', 'disputed') THEN payments.status
+           ELSE 'succeeded'
+         END,
+           amount_cents = EXCLUDED.amount_cents,
+           currency = EXCLUDED.currency, updated_at = NOW()` ,
       [order.id, paymentIntentId, amount, order.currency],
     );
   } else {
