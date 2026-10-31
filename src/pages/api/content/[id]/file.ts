@@ -31,13 +31,14 @@ export const GET: APIRoute = async (context) => {
     if (!accountAllowed && !guestAllowed) {
       return json({ error: 'Für diese Datei besitzt dein Konto keinen Zugriff.' }, 403);
     }
-    const response = Response.redirect(
-      await createPrivateDownloadUrl(assetId, result.rows[0].content_type === 'video'),
-      302,
-    );
-    response.headers.set('Cache-Control', 'private, no-store');
-    response.headers.set('Referrer-Policy', 'no-referrer');
-    return response;
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: await createPrivateDownloadUrl(assetId, result.rows[0].content_type === 'video'),
+        'Cache-Control': 'private, no-store',
+        'Referrer-Policy': 'no-referrer',
+      },
+    });
   } catch (error) {
     console.error('Privater Dateiabruf konnte nicht erstellt werden:', error);
     return json({ error: 'Die Datei ist derzeit nicht verfügbar.' }, 503);
