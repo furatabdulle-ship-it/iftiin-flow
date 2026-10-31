@@ -71,14 +71,14 @@ async function getAccessToken(config: PasswordResetEmailConfig): Promise<string>
   return result.access_token;
 }
 
-export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
-  const config = getPasswordResetEmailConfig();
-  if (!config) throw new Error('Gmail API password reset settings are missing or invalid.');
-  if (!isEmailAddress(email)) throw new Error('The password reset recipient address is invalid.');
-
-  const resetUrl = new URL('/reset-password/', config.siteUrl);
-  resetUrl.searchParams.set('token', token);
-  const subject = `=?UTF-8?B?${Buffer.from('Passwort zurücksetzen – iftiin flow.', 'utf8').toString('base64')}?=`;
+async function sendPlainTextEmail(
+  config: PasswordResetEmailConfig,
+  email: string,
+  subjectText: string,
+  content: string[],
+): Promise<void> {
+  if (!isEmailAddress(email)) throw new Error('The email recipient address is invalid.');
+  const subject = `=?UTF-8?B?${Buffer.from(subjectText, 'utf8').toString('base64')}?=`;
   const message = [
     `From: ${config.senderEmail}`,
     `To: ${email}`,
@@ -87,16 +87,10 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     'Content-Type: text/plain; charset=UTF-8',
     'Content-Transfer-Encoding: 8bit',
     '',
-    'Du hast das Zurücksetzen deines Passworts angefordert.',
-    'Öffne diesen Link innerhalb von 30 Minuten:',
-    '',
-    resetUrl.toString(),
-    '',
-    'Wenn du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren.',
+    ...content,
   ].join('\r\n');
   const raw = Buffer.from(message, 'utf8').toString('base64url');
   const accessToken = await getAccessToken(config);
-
   const response = await fetch(GMAIL_API_URL, {
     method: 'POST',
     headers: {
@@ -106,5 +100,41 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     body: JSON.stringify({ raw }),
     signal: AbortSignal.timeout(10_000),
   });
-  if (!response.ok) throw new Error(`Gmail API rejected the password reset email (HTTP ${response.status}).`);
+  if (!response.ok) throw new Error(`Gmail API rejected the email (HTTP ${response.status}).`);
+}
+
+export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  const config = getPasswordResetEmailConfig();
+  if (!config) throw new Error('Gmail API password reset settings are missing or invalid.');
+
+  const resetUrl = new URL('/reset-password/', config.siteUrl);
+  resetUrl.searchParams.set('token', token);
+  await sendPlainTextEmail(config, email, 'Passwort zurücksetzen – iftiin flow.', [
+    'Du hast das Zurücksetzen deines Passworts angefordert.',
+    'Öffne diesen Link innerhalb von 30 Minuten:',
+    '',
+    resetUrl.toString(),
+    '',
+    'Wenn du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren.',
+  ]);
+}
+
+export function isGuestAccessEmailConfigured(): boolean {
+  return getPasswordResetEmailConfig() !== null;
+}
+
+export async function sendGuestAccessEmail(email: string, token: string): Promise<void> {
+  const config = getPasswordResetEmailConfig();
+  if (!config) throw new Error('Gmail API guest access settings are missing or invalid.');
+
+  const accessUrl = new URL('/guest-access/', config.siteUrl);
+  accessUrl.searchParams.set('token', token);
+  await sendPlainTextEmail(config, email, 'Dein iftiin flow. Zugang', [
+    'Dein Kauf ist bestätigt. Öffne diesen persönlichen Zugangslink innerhalb von 30 Minuten:',
+    '',
+    accessUrl.toString(),
+    '',
+    'Der Link ist einmalig. Danach bleibt deine konto-freie Bibliothek bis zu 30 Tage angemeldet.',
+    'Über die Shopseite kannst du jederzeit einen neuen Zugangslink anfordern.',
+  ]);
 }

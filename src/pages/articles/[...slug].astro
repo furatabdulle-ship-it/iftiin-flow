@@ -3,20 +3,31 @@ import Base from '../../layouts/Base.astro';
 import { renderArticleMarkdown, getPublishedArticle } from '../../lib/articles';
 import { formatDate } from '../../lib/content';
 import { getSessionAccount } from '../../lib/auth';
-import { hasArticleAccess } from '../../lib/commerce';
+import { hasArticleAccess, hasGuestArticleAccess } from '../../lib/commerce';
+import { getGuestAccessEmail } from '../../lib/guest-access';
 import { getVideoEmbedUrl } from '../../lib/validation';
 import { pillars, formatNames } from '../../config';
 
 const article = Astro.params.slug ? await getPublishedArticle(Astro.params.slug) : null;
 if (article?.data.loginRequired || article?.data.requiresPurchase) {
+  Astro.response.headers.set('Cache-Control', 'private, no-store');
   const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
-  if (!account) return Astro.redirect(`/login/?next=${encodeURIComponent(Astro.url.pathname)}`, 302);
-  if (
+  const guestEmail = await getGuestAccessEmail(Astro.cookies.get('iftiin_guest_access')?.value);
+  const accountAllowed = Boolean(account && (
+    account.role === 'admin' ||
+    !article.data.requiresPurchase ||
+    await hasArticleAccess(account.id, article.id)
+  ));
+  const guestAllowed = Boolean(
+    guestEmail &&
     article.data.requiresPurchase &&
-    account.role !== 'admin' &&
-    !(await hasArticleAccess(account.id, article.id))
-  ) {
-    return Astro.redirect(`/store/?locked=${encodeURIComponent(article.slug)}`, 302);
+    await hasGuestArticleAccess(guestEmail, article.id),
+  );
+  if (!accountAllowed && !guestAllowed) {
+    if (article.data.requiresPurchase) {
+      return Astro.redirect(`/store/?locked=${encodeURIComponent(article.slug)}`, 302);
+    }
+    return Astro.redirect(`/login/?next=${encodeURIComponent(Astro.url.pathname)}`, 302);
   }
 }
 if (!article) Astro.response.status = 404;

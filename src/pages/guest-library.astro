@@ -1,0 +1,74 @@
+---
+import Base from '../layouts/Base.astro';
+import { listGuestLibrary } from '../lib/commerce';
+import { getGuestAccessEmail } from '../lib/guest-access';
+
+const email = await getGuestAccessEmail(Astro.cookies.get('iftiin_guest_access')?.value);
+if (!email) return Astro.redirect('/guest-access/', 302);
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+const purchases = await listGuestLibrary(email);
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const typeNames: Record<string, string> = {
+  digital_download: 'Digitaler Download',
+  premium_article: 'Premium-Artikel',
+  online_course: 'Online-Kurs',
+  bundle: 'Bundle',
+  membership: 'Membership',
+};
+---
+<Base title="Deine Bibliothek">
+  <section class="interior-hero wrap guest-library">
+    <div class="section-label">Dein Zugang / Bibliothek</div>
+    <h1>Deine <em>Bibliothek.</em></h1>
+    <p>Angemeldet mit {email}. Der sichere Zugang bleibt bis zu 30 Tage aktiv.</p>
+    {purchases.length
+      ? <div class="guest-purchases">
+          {purchases.map((purchase) => <article class="guest-purchase">
+            <div class="section-label">{typeNames[purchase.productType]} · {new Date(purchase.createdAt).toLocaleDateString('de-DE')}</div>
+            <h2>{purchase.productName}</h2>
+            {purchase.content.length
+              ? <ul>
+                  {purchase.content.map((item) => <li>
+                    {item.contentType === 'download'
+                      ? <a href={root(`api/content/${item.id}/file/`)}>{item.title} herunterladen ↗</a>
+                      : item.contentType === 'lesson' || item.contentType === 'video'
+                        ? <a href={root(`learn/${item.slug}/`)}>{item.title} ↗</a>
+                        : <a href={root(`articles/${item.slug}/`)}>{item.title} ↗</a>}
+                  </li>)}
+                </ul>
+              : <p>Für dieses Produkt sind noch keine digitalen Inhalte zugeordnet.</p>}
+          </article>)}
+        </div>
+      : <p>Für diese E-Mail-Adresse sind derzeit keine aktiven Käufe verfügbar. <a href={root('store/')}>Zum Shop ↗</a></p>}
+    <p><a href={root('guest-access/')}>Neuen Zugangslink anfordern ↗</a></p>
+    <form id="guest-logout-form">
+      <button class="text-link" type="submit">Auf diesem Gerät abmelden</button>
+      <p class="form-message" id="guest-logout-message" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+</Base>
+
+<script>
+  const logoutForm = document.querySelector<HTMLFormElement>('#guest-logout-form');
+  const logoutMessage = document.querySelector<HTMLElement>('#guest-logout-message');
+  logoutForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!logoutMessage) return;
+    try {
+      const response = await fetch('/api/guest-access/logout/', { method: 'POST' });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? 'Abmeldung fehlgeschlagen.');
+      window.location.assign('/guest-access/');
+    } catch (error) {
+      logoutMessage.textContent = error instanceof Error ? error.message : 'Abmeldung fehlgeschlagen.';
+    }
+  });
+</script>
+
+<style>
+  .guest-library { max-width: 860px; padding-top: 4rem; padding-bottom: 5rem; }
+  .guest-purchases { display: grid; gap: 1rem; margin: 2rem 0; }
+  .guest-purchase { padding: 1.25rem 1.5rem; border: 1px solid var(--line); border-radius: 16px; }
+  .guest-purchase h2 { margin: .5rem 0; font-size: 1.4rem; }
+  .guest-purchase ul { margin-bottom: 0; padding-left: 1.25rem; line-height: 1.9; }
+</style>

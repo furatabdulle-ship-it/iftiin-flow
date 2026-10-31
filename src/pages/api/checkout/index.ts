@@ -5,8 +5,13 @@ import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '..
 import { rateLimit } from '../../../lib/rate-limit';
 import { createCheckoutSession } from '../../../lib/stripe';
 import { z } from 'astro/zod';
+import { isGuestAccessEmailConfigured } from '../../../lib/password-reset-email';
 
-const checkoutSchema = z.object({ productId: z.uuid(), priceId: z.uuid() });
+const checkoutSchema = z.object({
+  productId: z.uuid(),
+  priceId: z.uuid(),
+  email: z.string().trim().max(254).pipe(z.email()).transform((email) => email.toLowerCase()).optional(),
+});
 
 export const POST: APIRoute = async (context) => {
   const originError = rejectCrossOriginWrite(context);
@@ -16,12 +21,16 @@ export const POST: APIRoute = async (context) => {
 
   try {
     const account = await getSessionAccount(context.cookies.get('iftiin_session')?.value);
-    if (!account) return json({ error: 'Bitte melde dich an, bevor du ein Produkt kaufst.' }, 401);
     const parsed = checkoutSchema.safeParse(await requestJson(context.request));
     if (!parsed.success) return json({ error: 'Das ausgewählte Produkt ist ungültig.' }, 400);
+    const email = account?.email ?? parsed.data.email;
+    if (!email) return json({ error: 'Bitte gib deine E-Mail-Adresse für den sicheren Zugang ein.' }, 400);
+    if (!account && !isGuestAccessEmailConfigured()) {
+      return json({ error: 'Der konto-freie Zugang ist derzeit nicht verfügbar. Bitte versuche es später erneut.' }, 503);
+    }
     const product = await getCheckoutProduct(parsed.data.productId, parsed.data.priceId);
     if (!product) return json({ error: 'Dieses Produkt ist derzeit nicht verfügbar.' }, 404);
-    const result = await createCheckoutSession(account.id, account.email, product);
+    const result = await createCheckoutSession(account?.id ?? null, email, product);
     return json(result);
   } catch (error) {
     if (error instanceof RequestInputError) return json({ error: error.message }, 400);

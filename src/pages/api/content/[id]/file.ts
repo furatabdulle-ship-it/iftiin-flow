@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getSessionAccount } from '../../../../lib/auth';
-import { hasContentAccess } from '../../../../lib/commerce';
+import { hasContentAccess, hasGuestContentAccess } from '../../../../lib/commerce';
 import { query } from '../../../../lib/db';
+import { getGuestAccessEmail } from '../../../../lib/guest-access';
 import { json } from '../../../../lib/http';
 import { createPrivateDownloadUrl } from '../../../../lib/storage';
 
@@ -11,7 +12,8 @@ export const GET: APIRoute = async (context) => {
   const { id } = context.params;
   if (!id || !uuidPattern.test(id)) return json({ error: 'Ungültige Inhalts-ID.' }, 400);
   const account = await getSessionAccount(context.cookies.get('iftiin_session')?.value);
-  if (!account) return json({ error: 'Bitte melde dich an.' }, 401);
+  const guestEmail = await getGuestAccessEmail(context.cookies.get('iftiin_guest_access')?.value);
+  if (!account && !guestEmail) return json({ error: 'Bitte öffne deinen persönlichen Zugangslink.' }, 401);
 
   try {
     const result = await query<{ storage_asset_id: string | null; content_type: string }>(
@@ -22,13 +24,20 @@ export const GET: APIRoute = async (context) => {
     );
     const assetId = result.rows[0]?.storage_asset_id;
     if (!assetId) return json({ error: 'Datei nicht gefunden.' }, 404);
-    if (account.role !== 'admin' && !(await hasContentAccess(account.id, id))) {
+    const accountAllowed = Boolean(account && (
+      account.role === 'admin' || await hasContentAccess(account.id, id)
+    ));
+    const guestAllowed = Boolean(guestEmail && await hasGuestContentAccess(guestEmail, id));
+    if (!accountAllowed && !guestAllowed) {
       return json({ error: 'Für diese Datei besitzt dein Konto keinen Zugriff.' }, 403);
     }
-    return Response.redirect(
+    const response = Response.redirect(
       await createPrivateDownloadUrl(assetId, result.rows[0].content_type === 'video'),
       302,
     );
+    response.headers.set('Cache-Control', 'private, no-store');
+    response.headers.set('Referrer-Policy', 'no-referrer');
+    return response;
   } catch (error) {
     console.error('Privater Dateiabruf konnte nicht erstellt werden:', error);
     return json({ error: 'Die Datei ist derzeit nicht verfügbar.' }, 503);

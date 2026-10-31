@@ -1,6 +1,8 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { withTransaction } from './db';
+import { createGuestAccessToken } from './guest-access';
+import { sendGuestAccessEmail } from './password-reset-email';
 
 type StripeRecord = Record<string, unknown>;
 
@@ -55,7 +57,7 @@ async function grantOrderEntitlements(client: PoolClient, orderId: string): Prom
      JOIN order_items oi ON oi.order_id = o.id
      JOIN products p ON p.id = oi.product_id
      JOIN prices pr ON pr.id = oi.price_id AND pr.product_id = oi.product_id
-     WHERE o.id = $1 AND o.status = 'paid'
+     WHERE o.id = $1 AND o.status = 'paid' AND o.user_id IS NOT NULL
        AND (p.product_type <> 'membership' OR pr.billing_interval = 'one_time')
      ON CONFLICT (order_id, product_id) DO UPDATE
        SET status = 'active', starts_at = NOW(), expires_at = NULL, revoked_at = NULL
@@ -90,7 +92,7 @@ async function grantOrderEntitlements(client: PoolClient, orderId: string): Prom
 
 async function refreshSubscriptionEntitlement(client: PoolClient, subscriptionId: string): Promise<void> {
   const result = await client.query<{
-    user_id: string;
+    user_id: string | null;
     product_id: string;
     status: string;
     current_period_end: Date | null;
@@ -101,6 +103,7 @@ async function refreshSubscriptionEntitlement(client: PoolClient, subscriptionId
   );
   const subscription = result.rows[0];
   if (!subscription) return;
+  if (!subscription.user_id) return;
   if (subscription.status === 'active' || subscription.status === 'trialing') {
     const granted = await client.query<{ id: string }>(
       `INSERT INTO entitlements
@@ -149,23 +152,33 @@ async function applySubscription(
   const allowedStatuses = new Set(['incomplete', 'trialing', 'active', 'past_due', 'canceled', 'unpaid', 'paused']);
   if (!status || !allowedStatuses.has(status)) throw new Error('Unbekannter Stripe-Subscription-Status.');
 
-  const existing = await client.query<{ user_id: string; product_id: string }>(
-    'SELECT user_id, product_id FROM subscriptions WHERE stripe_subscription_id = $1',
+  const existing = await client.query<{
+    user_id: string | null;
+    guest_email: string | null;
+    product_id: string;
+  }>(
+    'SELECT user_id, guest_email, product_id FROM subscriptions WHERE stripe_subscription_id = $1',
     [stripeId],
   );
   const finalUserId = userId ?? existing.rows[0]?.user_id;
   const finalProductId = productId ?? existing.rows[0]?.product_id;
-  if (!finalUserId || !finalProductId) throw new Error('Subscription-Metadaten fehlen.');
+  const metadataEmail = metadataText(subscription, 'guest_email')?.toLowerCase();
+  const finalEmail = metadataEmail ?? existing.rows[0]?.guest_email;
+  if ((!finalUserId && !finalEmail) || !finalProductId) {
+    throw new Error('Subscription-Metadaten fehlen.');
+  }
 
   const metadataOrderId = metadataText(subscription, 'order_id');
   const orderId = metadataOrderId && /^[0-9a-f-]{36}$/i.test(metadataOrderId) ? metadataOrderId : null;
   const customerId = idFrom(subscription.customer);
   await client.query(
     `INSERT INTO subscriptions
-       (user_id, product_id, order_id, stripe_subscription_id, stripe_customer_id, status,
+       (user_id, guest_email, product_id, order_id, stripe_subscription_id, stripe_customer_id, status,
         current_period_start, current_period_end, cancel_at_period_end)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      ON CONFLICT (stripe_subscription_id) DO UPDATE SET
+       user_id = COALESCE(EXCLUDED.user_id, subscriptions.user_id),
+       guest_email = COALESCE(EXCLUDED.guest_email, subscriptions.guest_email),
        status = EXCLUDED.status,
        stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, subscriptions.stripe_customer_id),
        current_period_start = EXCLUDED.current_period_start,
@@ -173,7 +186,7 @@ async function applySubscription(
        cancel_at_period_end = EXCLUDED.cancel_at_period_end,
        updated_at = NOW()`,
     [
-      finalUserId, finalProductId, orderId, stripeId, customerId, status,
+      finalUserId, finalEmail, finalProductId, orderId, stripeId, customerId, status,
       asDate(subscription.current_period_start), asDate(subscription.current_period_end),
       subscription.cancel_at_period_end === true,
     ],
@@ -187,12 +200,18 @@ async function applyCheckoutSession(client: PoolClient, session: StripeRecord): 
   const orderId = metadataOrderId && /^[0-9a-f-]{36}$/i.test(metadataOrderId) ? metadataOrderId : null;
   if (!sessionId) throw new Error('Stripe-Checkout-Session ohne ID.');
   const orderResult = orderId
-    ? await client.query<{ id: string; total_cents: string; currency: string; status: string }>(
-      'SELECT id, total_cents, currency, status FROM orders WHERE id = $1 FOR UPDATE',
+    ? await client.query<{
+      id: string; user_id: string | null; guest_email: string | null;
+      total_cents: string; currency: string; status: string;
+    }>(
+      'SELECT id, user_id, guest_email, total_cents, currency, status FROM orders WHERE id = $1 FOR UPDATE',
       [orderId],
     )
-    : await client.query<{ id: string; total_cents: string; currency: string; status: string }>(
-      'SELECT id, total_cents, currency, status FROM orders WHERE stripe_checkout_session_id = $1 FOR UPDATE',
+    : await client.query<{
+      id: string; user_id: string | null; guest_email: string | null;
+      total_cents: string; currency: string; status: string;
+    }>(
+      'SELECT id, user_id, guest_email, total_cents, currency, status FROM orders WHERE stripe_checkout_session_id = $1 FOR UPDATE',
       [sessionId],
     );
   const order = orderResult.rows[0];
@@ -211,10 +230,16 @@ async function applyCheckoutSession(client: PoolClient, session: StripeRecord): 
   const customerId = idFrom(session.customer);
   const paymentIntentId = idFrom(session.payment_intent);
   const amount = sessionAmount;
+  const customerDetailsEmail = text(record(session.customer_details)?.email)?.toLowerCase();
+  const guestEmail = order.user_id
+    ? null
+    : customerDetailsEmail ?? metadataText(session, 'guest_email')?.toLowerCase() ?? order.guest_email;
+  if (!order.user_id && !guestEmail) throw new Error('Die Gast-E-Mail-Adresse der Bestellung fehlt.');
   await client.query(
-    `UPDATE orders SET status = 'paid', stripe_customer_id = COALESCE($2, stripe_customer_id),
-       updated_at = NOW() WHERE id = $1 AND status IN ('pending', 'paid')`,
-    [order.id, customerId],
+    `UPDATE orders SET status = 'paid', guest_email = COALESCE($3, guest_email),
+       stripe_customer_id = COALESCE($2, stripe_customer_id), updated_at = NOW()
+     WHERE id = $1 AND status IN ('pending', 'paid')`,
+    [order.id, customerId, guestEmail],
   );
   if (paymentIntentId) {
     await client.query(
@@ -236,22 +261,27 @@ async function applyCheckoutSession(client: PoolClient, session: StripeRecord): 
 
   const subscriptionId = idFrom(session.subscription);
   if (subscriptionId && text(session.mode) === 'subscription') {
-    const userId = metadataText(session, 'user_id');
+    const userId = order.user_id ?? metadataText(session, 'user_id');
     const productId = metadataText(session, 'product_id');
-    if (!userId || !productId) throw new Error('Subscription-Metadaten im Checkout fehlen.');
+    if ((!userId && !guestEmail) || !productId) throw new Error('Subscription-Metadaten im Checkout fehlen.');
     await client.query(
       `INSERT INTO subscriptions
-       (user_id, product_id, order_id, stripe_subscription_id, stripe_customer_id, status)
-       VALUES ($1, $2, $3, $4, $5, 'active')
+       (user_id, guest_email, product_id, order_id, stripe_subscription_id, stripe_customer_id, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'active')
        ON CONFLICT (stripe_subscription_id) DO UPDATE SET
          order_id = COALESCE(subscriptions.order_id, EXCLUDED.order_id),
+         guest_email = COALESCE(EXCLUDED.guest_email, subscriptions.guest_email),
          stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, subscriptions.stripe_customer_id),
          updated_at = NOW()`,
-      [userId, productId, order.id, subscriptionId, customerId],
+      [userId, guestEmail, productId, order.id, subscriptionId, customerId],
     );
     await refreshSubscriptionEntitlement(client, subscriptionId);
   }
   await grantOrderEntitlements(client, order.id);
+  if (guestEmail) {
+    const accessToken = await createGuestAccessToken(client, guestEmail);
+    await sendGuestAccessEmail(guestEmail, accessToken);
+  }
 }
 
 async function applyRefund(client: PoolClient, charge: StripeRecord): Promise<void> {

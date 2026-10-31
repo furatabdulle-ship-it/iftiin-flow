@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
 import { listPublicProducts } from '../lib/commerce';
+import { isGuestAccessEmailConfigured } from '../lib/password-reset-email';
 import { isCheckoutConfigured } from '../lib/stripe';
 
 const products = await listPublicProducts();
@@ -12,6 +13,7 @@ const hasLockedProduct = lockedSlug
   ? products.some((product) => product.content.some((item) => item.slug === lockedSlug))
   : false;
 const checkoutReady = isCheckoutConfigured();
+const guestAccessReady = isGuestAccessEmailConfigured();
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
 const formatPrice = (amount: number, currency: string) => new Intl.NumberFormat('de-DE', {
   style: 'currency',
@@ -29,7 +31,7 @@ const typeNames: Record<string, string> = {
   <section class="interior-hero wrap store-hero">
     <div class="section-label">Shop / Wissen vertiefen</div>
     <h1>Ideas into <em>practice.</em></h1>
-    <p>Digitale Materialien, vertiefende Analysen und Lernformate. Käufe werden deinem Konto zugeordnet.</p>
+    <p>Digitale Materialien, vertiefende Analysen und Lernformate. Du kannst mit oder ohne Konto kaufen.</p>
   </section>
   <section class="section wrap store-content">
     {lockedSlug && <aside class="store-notice" role="status">
@@ -58,21 +60,25 @@ const typeNames: Record<string, string> = {
         <div class="store-price-options">
           {product.prices.map((price) => <div class="store-price-option">
             <strong>{formatPrice(price.amountCents, price.currency)}{price.billingInterval !== 'one_time' ? ` / ${price.billingInterval === 'month' ? 'Monat' : 'Jahr'}` : ' einmalig'}</strong>
-            {account
-              ? <button
-                  class="pill-link checkout-button"
-                  type="button"
-                  data-product-id={product.id}
-                  data-price-id={price.priceId}
-                  disabled={!checkoutReady}
-                >
-                  {checkoutReady
-                    ? (price.billingInterval === 'one_time' ? 'Sicher kaufen' : 'Abo starten')
-                    : 'Checkout noch nicht eingerichtet'} <span>↗</span>
-                </button>
-              : <a class="pill-link" href={root('login/?next=%2Fstore%2F')}>
-                  Anmelden zum Kaufen <span>↗</span>
-                </a>}
+            {!account && <label class="guest-email-label">
+              E-Mail für deinen Zugangslink
+              <input class="guest-email" type="email" autocomplete="email" maxlength="254" required />
+            </label>}
+            <button
+              class="pill-link checkout-button"
+              type="button"
+              data-product-id={product.id}
+              data-price-id={price.priceId}
+              disabled={!checkoutReady || (!account && !guestAccessReady)}
+            >
+              {checkoutReady
+                ? (!account && !guestAccessReady
+                  ? 'E-Mail-Zugang nicht eingerichtet'
+                  : account
+                  ? (price.billingInterval === 'one_time' ? 'Sicher kaufen' : 'Abo starten')
+                  : (price.billingInterval === 'one_time' ? 'Ohne Konto kaufen' : 'Abo ohne Konto starten'))
+                : 'Checkout noch nicht eingerichtet'} <span>↗</span>
+            </button>
           </div>)}
         </div>
       </article>)}
@@ -81,6 +87,10 @@ const typeNames: Record<string, string> = {
       <h2>Der Shop wird vorbereitet.</h2>
       <p>Produkte und Lernmaterialien werden hier verfügbar, sobald sie veröffentlicht sind.</p>
     </div>}
+    {!account && checkoutReady && guestAccessReady && <p class="guest-access-note">
+      Nach bestätigter Zahlung erhältst du einen persönlichen E-Mail-Link zu deiner Bibliothek.
+      <a href={root('guest-access/')}>Bereits gekauft? Zugangslink erneut senden ↗</a>
+    </p>}
     <p class="form-message" id="store-message" role="status" aria-live="polite"></p>
   </section>
 </Base>
@@ -90,13 +100,20 @@ const typeNames: Record<string, string> = {
   document.querySelectorAll<HTMLButtonElement>('.checkout-button').forEach((button) => {
     button.addEventListener('click', async () => {
       if (!message || !button.dataset.productId || !button.dataset.priceId) return;
+      const emailInput = button.closest('.store-card')?.querySelector<HTMLInputElement>('.guest-email');
+      if (emailInput && !emailInput.reportValidity()) return;
       message.textContent = 'Sicherer Checkout wird vorbereitet …';
       button.disabled = true;
       try {
+        const email = emailInput?.value.trim();
         const response = await fetch('/api/checkout/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: button.dataset.productId, priceId: button.dataset.priceId }),
+          body: JSON.stringify({
+            productId: button.dataset.productId,
+            priceId: button.dataset.priceId,
+            ...(email ? { email } : {}),
+          }),
         });
         const result = await response.json() as { checkoutUrl?: string; error?: string };
         if (!response.ok || !result.checkoutUrl) throw new Error(result.error ?? 'Checkout konnte nicht gestartet werden.');
@@ -122,6 +139,10 @@ const typeNames: Record<string, string> = {
   .store-price-options { width: 100%; margin-top: auto; display: grid; gap: .75rem; }
   .store-price-option { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-top: .75rem; border-top: 1px solid var(--line); }
   .store-price-option .pill-link { margin: 0; }
+  .guest-email-label { display: grid; width: 100%; gap: .35rem; font-size: .9rem; }
+  .guest-email { width: 100%; min-height: 42px; padding: .5rem .7rem; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: inherit; font: inherit; }
+  .guest-access-note { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; color: var(--muted); }
+  .guest-access-note a { color: inherit; }
   .store-notice { margin-bottom: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 12px; }
   @media (max-width: 520px) { .store-price-option { align-items: flex-start; flex-direction: column; } }
 </style>

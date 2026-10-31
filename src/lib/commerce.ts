@@ -199,6 +199,95 @@ export async function hasArticleAccess(userId: string, articleId: string): Promi
   return result.rows[0]?.allowed === true;
 }
 
+export async function hasGuestContentAccess(email: string, contentItemId: string): Promise<boolean> {
+  const result = await query<{ allowed: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM order_item_content oic
+       JOIN order_items oi ON oi.id = oic.order_item_id
+       JOIN orders o ON o.id = oi.order_id
+       JOIN prices pr ON pr.id = oi.price_id
+       WHERE o.user_id IS NULL AND o.guest_email = $1 AND o.status = 'paid'
+         AND oic.content_item_id = $2
+         AND (
+           pr.billing_interval = 'one_time'
+           OR EXISTS (
+             SELECT 1 FROM subscriptions s
+             WHERE s.order_id = o.id AND s.product_id = oi.product_id
+               AND s.status IN ('active', 'trialing')
+               AND (s.current_period_end IS NULL OR s.current_period_end > NOW())
+           )
+         )
+     ) AS allowed`,
+    [email, contentItemId],
+  );
+  return result.rows[0]?.allowed === true;
+}
+
+export async function hasGuestArticleAccess(email: string, articleId: string): Promise<boolean> {
+  const result = await query<{ allowed: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM content_items ci
+       JOIN order_item_content oic ON oic.content_item_id = ci.id
+       JOIN order_items oi ON oi.id = oic.order_item_id
+       JOIN orders o ON o.id = oi.order_id
+       JOIN prices pr ON pr.id = oi.price_id
+       WHERE ci.article_id = $1 AND o.user_id IS NULL
+         AND o.guest_email = $2 AND o.status = 'paid'
+         AND (
+           pr.billing_interval = 'one_time'
+           OR EXISTS (
+             SELECT 1 FROM subscriptions s
+             WHERE s.order_id = o.id AND s.product_id = oi.product_id
+               AND s.status IN ('active', 'trialing')
+               AND (s.current_period_end IS NULL OR s.current_period_end > NOW())
+           )
+         )
+     ) AS allowed`,
+    [articleId, email],
+  );
+  return result.rows[0]?.allowed === true;
+}
+
+export async function listGuestLibrary(email: string) {
+  const result = await query<{
+    orderId: string;
+    productName: string;
+    productType: ProductType;
+    createdAt: Date;
+    content: AccountContent[];
+  }>(
+    `SELECT o.id AS "orderId", oi.product_name AS "productName",
+            p.product_type AS "productType", o.created_at AS "createdAt",
+            COALESCE(json_agg(json_build_object(
+              'id', ci.id, 'slug', ci.slug, 'title', ci.title,
+              'contentType', ci.content_type, 'progressPercent', NULL,
+              'completedAt', NULL
+            ) ORDER BY ci.position, ci.title) FILTER (WHERE ci.id IS NOT NULL), '[]'::json) AS content
+     FROM orders o
+     JOIN order_items oi ON oi.order_id = o.id
+     JOIN products p ON p.id = oi.product_id
+     JOIN prices pr ON pr.id = oi.price_id
+     LEFT JOIN order_item_content oic ON oic.order_item_id = oi.id
+     LEFT JOIN content_items ci ON ci.id = oic.content_item_id AND ci.status = 'published'
+     WHERE o.user_id IS NULL AND o.guest_email = $1 AND o.status = 'paid'
+       AND (
+         pr.billing_interval = 'one_time'
+         OR EXISTS (
+           SELECT 1 FROM subscriptions s
+           WHERE s.order_id = o.id AND s.product_id = oi.product_id
+             AND s.status IN ('active', 'trialing')
+             AND (s.current_period_end IS NULL OR s.current_period_end > NOW())
+         )
+       )
+     GROUP BY o.id, oi.id, p.product_type
+     ORDER BY o.created_at DESC`,
+    [email],
+  );
+  return result.rows;
+}
+
 export async function listAccountEntitlements(userId: string): Promise<AccountEntitlement[]> {
   const result = await query<AccountEntitlement>(
     `SELECT e.id, e.product_id AS "productId", p.name AS "productName",

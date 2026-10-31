@@ -1,0 +1,90 @@
+---
+import Base from '../layouts/Base.astro';
+import { getGuestAccessEmail } from '../lib/guest-access';
+
+const token = Astro.url.searchParams.get('token') ?? '';
+const validTokenShape = /^[A-Za-z0-9_-]{43}$/.test(token);
+const email = await getGuestAccessEmail(Astro.cookies.get('iftiin_guest_access')?.value);
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+---
+<Base title="Zugang zur Bibliothek">
+  <section class="interior-hero wrap guest-access">
+    <div class="section-label">Shop / Sicherer Zugang</div>
+    {email
+      ? <>
+          <h1>Du bist <em>angemeldet.</em></h1>
+          <p>Deine konto-freie Bibliothek ist mit {email} verbunden.</p>
+          <a class="pill-link" href="/guest-library/">Zur Bibliothek <span>↗</span></a>
+        </>
+      : validTokenShape
+        ? <>
+            <h1>Deinen Zugang <em>öffnen.</em></h1>
+            <p>Der Link ist einmalig und läuft nach 30 Minuten ab.</p>
+            <form id="redeem-form" data-token={token}>
+              <button class="pill-link" type="submit">Bibliothek öffnen <span>↗</span></button>
+              <p class="form-message" id="redeem-message" role="status" aria-live="polite"></p>
+            </form>
+          </>
+        : <>
+            <h1>Zugangslink <em>anfordern.</em></h1>
+            <p>Gib die E-Mail-Adresse ein, die du beim Kauf verwendet hast. Wenn ein Kauf dazugehört, senden wir dir einen persönlichen Link.</p>
+            <form id="request-form">
+              <label for="guest-email">E-Mail-Adresse</label>
+              <input id="guest-email" name="email" type="email" autocomplete="email" maxlength="254" required />
+              <button class="pill-link" type="submit">Link senden <span>↗</span></button>
+              <p class="form-message" id="request-message" role="status" aria-live="polite"></p>
+            </form>
+          </>}
+  </section>
+</Base>
+
+<script>
+  const redeemForm = document.querySelector<HTMLFormElement>('#redeem-form');
+  const redeemMessage = document.querySelector<HTMLElement>('#redeem-message');
+  redeemForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const token = redeemForm.dataset.token;
+    if (!token || !redeemMessage) return;
+    redeemMessage.textContent = 'Zugang wird geprüft …';
+    try {
+      const response = await fetch('/api/guest-access/redeem/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const result = await response.json() as { redirectUrl?: string; error?: string };
+      if (!response.ok || !result.redirectUrl) throw new Error(result.error ?? 'Der Zugang konnte nicht geöffnet werden.');
+      window.location.assign(result.redirectUrl);
+    } catch (error) {
+      redeemMessage.textContent = error instanceof Error ? error.message : 'Der Zugang konnte nicht geöffnet werden.';
+    }
+  });
+
+  const requestForm = document.querySelector<HTMLFormElement>('#request-form');
+  const requestMessage = document.querySelector<HTMLElement>('#request-message');
+  requestForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!requestForm || !requestMessage) return;
+    requestMessage.textContent = 'Zugangslink wird angefordert …';
+    try {
+      const response = await fetch('/api/guest-access/request/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: new FormData(requestForm).get('email') }),
+      });
+      const result = await response.json() as { message?: string; error?: string };
+      if (!response.ok) throw new Error(result.error ?? 'Die Anfrage ist fehlgeschlagen.');
+      requestMessage.textContent = result.message ?? 'Wenn ein Kauf zu dieser Adresse gehört, erhältst du einen Link.';
+    } catch (error) {
+      requestMessage.textContent = error instanceof Error ? error.message : 'Die Anfrage ist fehlgeschlagen.';
+    }
+  });
+</script>
+
+<style>
+  .guest-access { max-width: 760px; min-height: 55vh; padding-top: 5rem; }
+  .guest-access form { display: grid; max-width: 420px; gap: .75rem; margin-top: 2rem; }
+  .guest-access input { min-height: 44px; padding: .6rem .75rem; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: inherit; font: inherit; }
+  .guest-access button { justify-self: start; }
+</style>

@@ -63,7 +63,7 @@ async function stripeRequest<T>(path: string, body: URLSearchParams): Promise<T>
 }
 
 export async function createCheckoutSession(
-  userId: string,
+  userId: string | null,
   email: string,
   product: CheckoutProduct,
 ): Promise<{ checkoutUrl: string }> {
@@ -86,9 +86,9 @@ export async function createCheckoutSession(
   const orderId = randomUUID();
   await withTransaction(async (client) => {
     await client.query(
-      `INSERT INTO orders (id, user_id, status, currency, subtotal_cents, total_cents)
-       VALUES ($1, $2, 'pending', $3, $4, $4)`,
-      [orderId, userId, product.currency, product.amountCents],
+      `INSERT INTO orders (id, user_id, guest_email, status, currency, subtotal_cents, total_cents)
+       VALUES ($1, $2, $3, 'pending', $4, $5, $5)`,
+      [orderId, userId, userId ? null : email, product.currency, product.amountCents],
     );
     const item = await client.query<{ id: string }>(
       `INSERT INTO order_items
@@ -106,7 +106,10 @@ export async function createCheckoutSession(
 
   const form = new URLSearchParams();
   form.set('mode', product.billingInterval === 'one_time' ? 'payment' : 'subscription');
-  form.set('success_url', new URL('/account/?checkout=success', origin).toString());
+  form.set(
+    'success_url',
+    new URL(userId ? '/account/?checkout=success' : '/checkout/success/', origin).toString(),
+  );
   form.set('cancel_url', new URL('/store/?checkout=cancelled', origin).toString());
   form.set('customer_email', email);
   form.set('client_reference_id', orderId);
@@ -116,13 +119,21 @@ export async function createCheckoutSession(
   form.set('line_items[0][price_data][product_data][name]', product.name);
   form.set('line_items[0][price_data][product_data][metadata][product_id]', product.id);
   form.set('metadata[order_id]', orderId);
-  form.set('metadata[user_id]', userId);
   form.set('metadata[product_id]', product.id);
+  if (userId) {
+    form.set('metadata[user_id]', userId);
+  } else {
+    form.set('metadata[guest_email]', email);
+  }
   if (product.billingInterval !== 'one_time') {
     form.set('line_items[0][price_data][recurring][interval]', product.billingInterval);
     form.set('subscription_data[metadata][order_id]', orderId);
-    form.set('subscription_data[metadata][user_id]', userId);
     form.set('subscription_data[metadata][product_id]', product.id);
+    if (userId) {
+      form.set('subscription_data[metadata][user_id]', userId);
+    } else {
+      form.set('subscription_data[metadata][guest_email]', email);
+    }
   } else {
     form.set('payment_intent_data[metadata][order_id]', orderId);
   }

@@ -46,6 +46,21 @@ export function clearSessionCookie(context: APIContext): void {
   context.cookies.delete('iftiin_session', { path: '/' });
 }
 
+export function guestAccessCookie(context: APIContext, token: string): void {
+  const secureCookie = new URL(import.meta.env.SITE ?? context.request.url).protocol === 'https:';
+  context.cookies.set('iftiin_guest_access', token, {
+    httpOnly: true,
+    secure: secureCookie,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30,
+  });
+}
+
+export function clearGuestAccessCookie(context: APIContext): void {
+  context.cookies.delete('iftiin_guest_access', { path: '/' });
+}
+
 export async function requestJson(request: Request): Promise<unknown> {
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
     throw new RequestInputError('Die Anfrage muss JSON enthalten.');
