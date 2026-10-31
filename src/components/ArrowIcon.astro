@@ -1,0 +1,39 @@
+---
+interface Props {
+  direction?: 'up-right' | 'left' | 'down';
+  size?: number | string;
+  class?: string;
+}
+
+const { direction = 'up-right', size = '1em', class: className } = Astro.props;
+const dimension = typeof size === 'number' ? `${size}px` : size;
+const path = direction === 'left'
+  ? 'M13 8H3m0 0 4-4m-4 4 4 4'
+  : direction === 'down'
+    ? 'M8 3v10m0 0-4-4m4 4 4-4'
+    : 'M4 12 12 4M5 4h7v7';
+---
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 16 16"
+  width={dimension}
+  height={dimension}
+  class={className}
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d={path} />
+</svg>
+
+<style>
+  svg {
+    display: inline-block;
+    flex: none;
+    vertical-align: -0.125em;
+  }
+</style>

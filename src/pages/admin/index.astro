@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from '../../components/ArrowIcon.astro';
 import Base from '../../layouts/Base.astro';
 import { getSessionAccount } from '../../lib/auth';
 
@@ -11,7 +12,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
     <div class="section-label">Admin / Redaktion</div>
     <h1>Artikel <em>verwalten.</em></h1>
     <p>Beiträge werden als Entwurf gespeichert und erst mit Status „Veröffentlicht“ öffentlich angezeigt.</p>
-    <a class="pill-link" href="/admin/products/">Shop-Produkte &amp; Inhalte verwalten <span>↗</span></a>
+    <a class="pill-link" href="/admin/products/">Shop-Produkte &amp; Inhalte verwalten <ArrowIcon /></a>
     <button class="pill-link" type="button" id="new-article">Neuen Artikel anlegen <span>+</span></button>
     <p class="admin-message" id="admin-message" role="status" aria-live="polite"></p>
     <div class="admin-grid">
@@ -37,11 +38,8 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
           <div class="editor-meta">
             <label>Themenfeld
               <select name="pillar">
-                <option value="knowledge-agency">Knowledge &amp; Agency</option>
-                <option value="ai-domain">AI × Domain</option>
-                <option value="institutions-work-power">Institutions, Work &amp; Power</option>
-                <option value="human-capability">Human Capability</option>
-                <option value="culture-meaning">Culture &amp; Meaning</option>
+                <option value="systems-power">Systems &amp; Power</option>
+                <option value="skills-agency">Skills &amp; Agency</option>
               </select>
             </label>
             <label>Format
@@ -74,7 +72,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
           </label>
           <label><span><input name="featured" type="checkbox" /> Auf der Startseite hervorheben</span></label>
           <div class="editor-actions">
-            <button class="pill-link" type="submit">Speichern <span>↗</span></button>
+            <button class="pill-link" type="submit">Speichern <ArrowIcon /></button>
             <button class="editor-delete" type="button" id="delete-article" hidden>Artikel löschen</button>
           </div>
         </form>

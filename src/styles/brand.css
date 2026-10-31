@@ -1,0 +1,36 @@
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.wordmark-sun {
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+}
+
+.wordmark .wordmark-text {
+  font-weight: 800;
+}
+
+.wordmark .wordmark-accent {
+  font-weight: 500;
+}
+
+.home-page .wordmark-sun {
+  width: 20px;
+  height: 20px;
+}
+
+.empty-symbol {
+  width: 42px;
+  height: 42px;
+}
+
+.home-page .manifesto-sun {
+  display: block;
+  width: clamp(48px, 5vw, 64px);
+  height: auto;
+  margin-bottom: 28px;
+}

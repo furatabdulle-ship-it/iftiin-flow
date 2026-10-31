@@ -1,4 +1,6 @@
 ---
+import ArrowIcon from '../components/ArrowIcon.astro';
+import IftiinSun from '../components/brand/IftiinSun.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
 import { listPublicProducts } from '../lib/commerce';
@@ -30,7 +32,7 @@ const typeNames: Record<string, string> = {
 <Base title="Shop" description="Downloads, Premium-Analysen und Kurse von iftiin flow.">
   <section class="interior-hero wrap store-hero">
     <div class="section-label">Shop / Wissen vertiefen</div>
-    <h1>Ideas into <em>practice.</em></h1>
+    <h1>Visions into <em>practice.</em></h1>
     <p>Digitale Materialien, vertiefende Analysen und Lernformate. Du kannst mit oder ohne Konto kaufen.</p>
   </section>
   <section class="section wrap store-content">
@@ -77,19 +79,19 @@ const typeNames: Record<string, string> = {
                   : account
                   ? (price.billingInterval === 'one_time' ? 'Sicher kaufen' : 'Abo starten')
                   : (price.billingInterval === 'one_time' ? 'Ohne Konto kaufen' : 'Abo ohne Konto starten'))
-                : 'Checkout noch nicht eingerichtet'} <span>↗</span>
+                : 'Checkout noch nicht eingerichtet'} <ArrowIcon />
             </button>
           </div>)}
         </div>
       </article>)}
     </div> : <div class="empty-state">
-      <span class="empty-symbol">✳</span>
+      <IftiinSun class="empty-symbol" color="var(--violet)" />
       <h2>Der Shop wird vorbereitet.</h2>
       <p>Produkte und Lernmaterialien werden hier verfügbar, sobald sie veröffentlicht sind.</p>
     </div>}
     {!account && checkoutReady && guestAccessReady && <p class="guest-access-note">
       Nach bestätigter Zahlung erhältst du einen persönlichen E-Mail-Link zu deiner Bibliothek.
-      <a href={root('guest-access/')}>Bereits gekauft? Zugangslink erneut senden ↗</a>
+      <a href={root('guest-access/')}>Bereits gekauft? Zugangslink erneut senden <ArrowIcon /></a>
     </p>}
     <p class="form-message" id="store-message" role="status" aria-live="polite"></p>
   </section>

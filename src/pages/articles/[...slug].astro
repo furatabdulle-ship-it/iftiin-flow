@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from '../../components/ArrowIcon.astro';
 import Base from '../../layouts/Base.astro';
 import { renderArticleMarkdown, getPublishedArticle } from '../../lib/articles';
 import { formatDate } from '../../lib/content';
@@ -40,7 +41,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   {article ? <>
   <article>
     <header class="article-header wrap">
-      <a class="breadcrumb" href={root(`topics/${pillar?.slug}/`)}>← {pillar?.name}</a>
+      <a class="breadcrumb" href={root(`topics/${pillar?.slug}/`)}><ArrowIcon direction="left" /> {pillar?.name}</a>
       <div class="section-label">{formatNames[article.data.format]} / {pillar?.name}</div>
       <h1>{article.data.title}</h1>
       <p>{article.data.description}</p>
@@ -65,14 +66,14 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     <div class="prose" set:html={html}></div>
     {article.data.sources.length > 0 && <section class="sources wrap">
       <h2>Quellen</h2>
-      <ol>{article.data.sources.map((source) => <li><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} ↗</a></li>)}</ol>
+      <ol>{article.data.sources.map((source) => <li><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ArrowIcon /></a></li>)}</ol>
     </section>}
   </article>
   </> : <section class="interior-hero wrap">
     <div class="section-label">404 / Nicht gefunden</div>
     <h1>Beitrag nicht <em>gefunden.</em></h1>
     <p>Dieser Beitrag ist nicht verfügbar oder wurde noch nicht veröffentlicht.</p>
-    <a class="pill-link" href={root('explore/')}>Zur Explore-Seite <span>↗</span></a>
+    <a class="pill-link" href={root('explore/')}>Zur Explore-Seite <ArrowIcon /></a>
   </section>}
 </Base>
 

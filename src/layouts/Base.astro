@@ -1,8 +1,11 @@
 ---
+import ArrowIcon from '../components/ArrowIcon.astro';
 import { site } from '../config';
+import IftiinSun from '../components/brand/IftiinSun.astro';
 import '../styles/global.css';
 import '../styles/fonts.css';
 import '../styles/home.css';
+import '../styles/brand.css';
 const { title, description = site.shortDescription, home = false } = Astro.props;
 const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — Wissen. Urteilskraft. Handlungsfähigkeit.`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -21,18 +24,27 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
     <meta property="og:type" content="website" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={root('favicon.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" sizes="180x180" href={root('apple-touch-icon.png')} />
     <title>{pageTitle}</title>
   </head>
   <body class:list={{ 'home-page': home }}>
     <a class="skip" href="#content">Zum Inhalt springen</a>
-    {!home && <div class="announcement">Wissen · Urteilskraft · Handlungsfähigkeit <span aria-hidden="true">↗</span></div>}
+    {!home && <div class="announcement">Wissen · Urteilskraft · Handlungsfähigkeit <span aria-hidden="true"><ArrowIcon /></span></div>}
     <header class="site-header wrap">
-      <a class="wordmark" href={root('')} aria-label="iftiin flow. Startseite">iftiin<span> flow.</span></a>
-      {home ? <div class="header-actions">
-        <button class="pill pill--solid" type="button" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
-          <span data-menu-label>Menü</span><span class="burger" aria-hidden="true"><i></i><i></i></span>
-        </button>
-      </div> : <nav aria-label="Hauptnavigation">
+      <a class="wordmark" href={root('')} aria-label="iftiin flow. Startseite"><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a>
+        {home ? <>
+          <nav class="home-nav" aria-label="Hauptnavigation">
+            <a href={root('explore/')}>Magazin</a>
+            <a href={root('store/')}>Shop <ArrowIcon /></a>
+            <a href={root('about/')}>Über IFTIIN</a>
+          </nav>
+          <a class="home-account" href={root('account/')}>Mein Konto</a>
+          <div class="header-actions">
+          <button class="pill pill--solid" type="button" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
+            <span data-menu-label>Menü</span><span class="burger" aria-hidden="true"><i></i><i></i></span>
+          </button>
+          </div>
+        </> : <nav aria-label="Hauptnavigation">
           <a href={root('explore/')}>Explore</a>
           <a href={root('about/')}>About</a>
           <a href={root('account/')}>Konto</a>
@@ -40,24 +52,24 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
           {site.showResearch && <a href={root('research/')}>Research</a>}
           {site.showLearning && <a href={root('learning/')}>Learning</a>}
           {site.showTools && <a href={root('tools/')}>Tools</a>}
-          {site.showBooking && site.bookingUrl && <a class="nav-cta" href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen ↗</a>}
+          {site.showBooking && site.bookingUrl && <a class="nav-cta" href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen <ArrowIcon /></a>}
         </nav>}
     </header>
     {home && <nav class="site-menu" id="site-menu" aria-label="Hauptmenü" inert>
-      <a href={root('explore/')}>Explore</a>
-      <a href={root('about/')}>About</a>
-      <a href={root('account/')}>Konto</a>
+      <a href={root('explore/')}>Magazin</a>
       <a href={root('store/')}>Shop</a>
+      <a href={root('about/')}>Über IFTIIN</a>
+      <a href={root('account/')}>Mein Konto</a>
       {site.showResearch && <a href={root('research/')}>Research</a>}
       {site.showLearning && <a href={root('learning/')}>Learning</a>}
       {site.showTools && <a href={root('tools/')}>Tools</a>}
-      {site.showBooking && site.bookingUrl && <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen ↗</a>}
+      {site.showBooking && site.bookingUrl && <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen <ArrowIcon /></a>}
     </nav>}
     <main id="content"><slot /></main>
     <footer class="footer">
       <div class="wrap footer-grid">
-        <div><a class="wordmark" href={root('')}>iftiin<span> flow.</span></a><p>Understand complexity.<br/>Think with clarity. Act with agency.</p></div>
-        <div class="footer-links"><a href={root('explore/')}>Explore</a><a href={root('store/')}>Shop</a><a href={root('about/')}>About</a><a href={root('impressum/')}>Impressum</a>{site.email && <a href={`mailto:${site.email}`}>Kontakt</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter ↗</a>}</div>
+        <div><a class="wordmark" href={root('')}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a><p>Understand complexity.<br/>Think with clarity. Act with agency.</p></div>
+        <div class="footer-links"><a href={root('explore/')}>Explore</a><a href={root('store/')}>Shop</a><a href={root('about/')}>About</a><a href={root('impressum/')}>Impressum</a>{site.email && <a href={`mailto:${site.email}`}>Kontakt</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter <ArrowIcon /></a>}</div>
         <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · Unabhängige Wissensplattform</div>
       </div>
     </footer>

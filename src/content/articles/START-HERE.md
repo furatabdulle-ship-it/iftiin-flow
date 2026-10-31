@@ -2,7 +2,7 @@
 title: "Information ist nicht Wissen"
 description: "Warum der Zugang zu mehr Informationen nicht automatisch zu besserem Urteilen führt."
 date: 2026-10-15
-pillar: knowledge-agency
+pillar: skills-agency
 format: essay
 status: draft
 featured: false

@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from './ArrowIcon.astro';
 const { mode, redirectTo = '/account/' } = Astro.props as { mode: 'login' | 'register'; redirectTo?: string };
 const register = mode === 'register';
 ---
@@ -21,7 +22,7 @@ const register = mode === 'register';
   />
   {register && <p class="form-hint">Mindestens 12 Zeichen. Verwende ein einzigartiges Passwort.</p>}
   <p class="form-message" id="auth-message" role="status" aria-live="polite"></p>
-  <button class="pill-link" type="submit">{register ? 'Konto erstellen' : 'Anmelden'} <span>↗</span></button>
+  <button class="pill-link" type="submit">{register ? 'Konto erstellen' : 'Anmelden'} <ArrowIcon /></button>
 </form>
 
 <script>

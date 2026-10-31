@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
 import { listAccountEntitlements, listAccountOrders } from '../lib/commerce';
@@ -27,15 +28,15 @@ const orderStatusNames: Record<string, string> = {
     <h1><em>{account.displayName || 'Dein Name'}</em></h1>
     <p>Angemeldet als <strong>{account.email}</strong></p>
     <p class="account-role">Rolle: {account.role === 'admin' ? 'Administrator' : 'Besucher'}</p>
-    {account.role === 'admin' && <a class="pill-link" href={root('admin/')}>Artikel verwalten <span>↗</span></a>}
+    {account.role === 'admin' && <a class="pill-link" href={root('admin/')}>Artikel verwalten <ArrowIcon /></a>}
     <form class="account-form" id="profile-form">
       <label for="profile-name">Anzeigename</label>
       <input id="profile-name" name="displayName" type="text" autocomplete="name" maxlength="80" value={account.displayName} required />
       <p class="form-message" id="profile-message" role="status" aria-live="polite"></p>
-      <button class="pill-link" type="submit">Namen speichern <span>↗</span></button>
+      <button class="pill-link" type="submit">Namen speichern <ArrowIcon /></button>
     </form>
     <form id="logout-form">
-      <button class="text-link logout-button" type="submit">Abmelden <span>↗</span></button>
+      <button class="text-link logout-button" type="submit">Abmelden <ArrowIcon /></button>
     </form>
     <p class="form-message" id="logout-message" role="status" aria-live="polite"></p>
   </section>
@@ -51,15 +52,15 @@ const orderStatusNames: Record<string, string> = {
         {entitlement.content.length ? <ul>
           {entitlement.content.map((item) => <li>
             {item.contentType === 'download'
-              ? <a href={root(`api/content/${item.id}/file/`)}>{item.title} herunterladen ↗</a>
+              ? <a href={root(`api/content/${item.id}/file/`)}>{item.title} herunterladen <ArrowIcon /></a>
               : item.contentType === 'lesson' || item.contentType === 'video'
-                ? <a href={root(`learn/${item.slug}/`)}>{item.title} ↗</a>
-                : <a href={root(`articles/${item.slug}/`)}>{item.title} ↗</a>}
+                ? <a href={root(`learn/${item.slug}/`)}>{item.title} <ArrowIcon /></a>
+                : <a href={root(`articles/${item.slug}/`)}>{item.title} <ArrowIcon /></a>}
             {(item.contentType === 'lesson' || item.contentType === 'video') && <span class="library-progress">{item.progressPercent ?? 0}% abgeschlossen</span>}
           </li>)}
         </ul> : <p class="library-meta">Für dieses Produkt sind noch keine Inhalte zugeordnet.</p>}
       </article>)}
-    </div> : <p class="library-meta">Deine freigeschalteten Inhalte erscheinen hier. <a href={root('store/')}>Zum Shop ↗</a></p>}
+    </div> : <p class="library-meta">Deine freigeschalteten Inhalte erscheinen hier. <a href={root('store/')}>Zum Shop <ArrowIcon /></a></p>}
   </section>
   <section class="section wrap account-library">
     <div class="section-label">Dein Konto / Bestellungen</div>

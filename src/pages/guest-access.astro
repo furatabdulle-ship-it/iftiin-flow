@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import { getGuestAccessEmail } from '../lib/guest-access';
 
@@ -15,14 +16,14 @@ Astro.response.headers.set('Referrer-Policy', 'no-referrer');
       ? <>
           <h1>Du bist <em>angemeldet.</em></h1>
           <p>Deine konto-freie Bibliothek ist mit {email} verbunden.</p>
-          <a class="pill-link" href="/guest-library/">Zur Bibliothek <span>↗</span></a>
+          <a class="pill-link" href="/guest-library/">Zur Bibliothek <ArrowIcon /></a>
         </>
       : validTokenShape
         ? <>
             <h1>Deinen Zugang <em>öffnen.</em></h1>
             <p>Der Link ist einmalig und läuft nach 30 Minuten ab.</p>
             <form id="redeem-form" data-token={token}>
-              <button class="pill-link" type="submit">Bibliothek öffnen <span>↗</span></button>
+              <button class="pill-link" type="submit">Bibliothek öffnen <ArrowIcon /></button>
               <p class="form-message" id="redeem-message" role="status" aria-live="polite"></p>
             </form>
           </>
@@ -32,7 +33,7 @@ Astro.response.headers.set('Referrer-Policy', 'no-referrer');
             <form id="request-form">
               <label for="guest-email">E-Mail-Adresse</label>
               <input id="guest-email" name="email" type="email" autocomplete="email" maxlength="254" required />
-              <button class="pill-link" type="submit">Link senden <span>↗</span></button>
+              <button class="pill-link" type="submit">Link senden <ArrowIcon /></button>
               <p class="form-message" id="request-message" role="status" aria-live="polite"></p>
             </form>
           </>}

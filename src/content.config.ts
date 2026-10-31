@@ -9,7 +9,7 @@ const articles = defineCollection({
     description: z.string(),
     date: z.coerce.date(),
     updated: z.coerce.date().optional(),
-    pillar: z.enum(['knowledge-agency', 'ai-domain', 'institutions-work-power', 'human-capability', 'culture-meaning']),
+    pillar: z.enum(['systems-power', 'skills-agency']),
     format: z.enum(['essay', 'note', 'map', 'deconstruct', 'research', 'ai-domain', 'capability', 'field-note', 'question', 'video']).default('essay'),
     status: z.enum(['draft', 'published']).default('draft'),
     featured: z.boolean().default(false),

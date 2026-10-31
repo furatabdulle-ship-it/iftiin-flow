@@ -16,11 +16,8 @@ export const site = {
 };
 
 export const pillars = [
-  { slug: 'knowledge-agency', number: '01', name: 'Knowledge & Agency', question: 'Wie wird aus Information Verständnis, Urteilskraft und Handlungsfähigkeit?', description: 'Wissen, Expertise, Entscheidungsfähigkeit und menschlicher Handlungsspielraum.' },
-  { slug: 'ai-domain', number: '02', name: 'AI × Domain', question: 'Was verändert KI in echten Fachgebieten, Aufgaben und Rollen?', description: 'Fachwissen, Workflows, Verifikation, Verantwortung und neue Kompetenzen.' },
-  { slug: 'institutions-work-power', number: '03', name: 'Institutions, Work & Power', question: 'Wie prägen Institutionen und Anreize technologische Veränderungen?', description: 'Governance, Arbeit, Infrastruktur, Regeln und Machtverhältnisse.' },
-  { slug: 'human-capability', number: '04', name: 'Human Capability', question: 'Welche Fähigkeiten bleiben wichtig oder werden neu benötigt?', description: 'Lernen, Kommunikation, Kontextdenken, Delegation und Urteilskraft.' },
-  { slug: 'culture-meaning', number: '05', name: 'Culture & Meaning', question: 'Wie verändern Technologien Sprache, Kultur und Öffentlichkeit?', description: 'Philosophie, Medien, Sprache, Kunst und gesellschaftliche Narrative.' },
+  { slug: 'systems-power', number: '01', name: 'Systems & Power', question: 'Verstehe, wie Technologie, Arbeit, Medien und Macht zusammenwirken.', description: 'KI und ihre gesellschaftlichen Folgen, Organisationslogiken, Wissensproduktion, Propaganda und kulturelle Narrative.' },
+  { slug: 'skills-agency', number: '02', name: 'Skills & Agency', question: 'Denke eigenständig, entwickle Ideen und bringe sie wirksam in die Welt.', description: 'Kritisches Denken, KI-Anwendung, Kreativität, Ausdruck, Storytelling und das Navigieren in Organisationen.' },
 ] as const;
 
 export const formatNames: Record<string, string> = {

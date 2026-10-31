@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import { listGuestLibrary } from '../lib/commerce';
 import { getGuestAccessEmail } from '../lib/guest-access';
@@ -30,17 +31,17 @@ const typeNames: Record<string, string> = {
               ? <ul>
                   {purchase.content.map((item) => <li>
                     {item.contentType === 'download'
-                      ? <a href={root(`api/content/${item.id}/file/`)}>{item.title} herunterladen ↗</a>
+                      ? <a href={root(`api/content/${item.id}/file/`)}>{item.title} herunterladen <ArrowIcon /></a>
                       : item.contentType === 'lesson' || item.contentType === 'video'
-                        ? <a href={root(`learn/${item.slug}/`)}>{item.title} ↗</a>
-                        : <a href={root(`articles/${item.slug}/`)}>{item.title} ↗</a>}
+                        ? <a href={root(`learn/${item.slug}/`)}>{item.title} <ArrowIcon /></a>
+                        : <a href={root(`articles/${item.slug}/`)}>{item.title} <ArrowIcon /></a>}
                   </li>)}
                 </ul>
               : <p>Für dieses Produkt sind noch keine digitalen Inhalte zugeordnet.</p>}
           </article>)}
         </div>
-      : <p>Für diese E-Mail-Adresse sind derzeit keine aktiven Käufe verfügbar. <a href={root('store/')}>Zum Shop ↗</a></p>}
-    <p><a href={root('guest-access/')}>Neuen Zugangslink anfordern ↗</a></p>
+      : <p>Für diese E-Mail-Adresse sind derzeit keine aktiven Käufe verfügbar. <a href={root('store/')}>Zum Shop <ArrowIcon /></a></p>}
+    <p><a href={root('guest-access/')}>Neuen Zugangslink anfordern <ArrowIcon /></a></p>
     <form id="guest-logout-form">
       <button class="text-link" type="submit">Auf diesem Gerät abmelden</button>
       <p class="form-message" id="guest-logout-message" role="status" aria-live="polite"></p>

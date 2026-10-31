@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from '../components/ArrowIcon.astro';
 import AuthForm from '../components/AuthForm.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
@@ -18,8 +19,8 @@ const passwordResetEnabled = isPasswordResetEmailConfigured();
     <h1>Willkommen <em>zurück.</em></h1>
     <p>Melde dich mit deinem Konto an.</p>
     <AuthForm mode="login" redirectTo={redirectTo} />
-    {passwordResetEnabled && <p class="account-switch"><a href="/forgot-password/">Passwort vergessen? ↗</a></p>}
-    <p class="account-switch">Noch kein Konto? <a href="/register/">Jetzt registrieren ↗</a></p>
+    {passwordResetEnabled && <p class="account-switch"><a href="/forgot-password/">Passwort vergessen? <ArrowIcon /></a></p>}
+    <p class="account-switch">Noch kein Konto? <a href="/register/">Jetzt registrieren <ArrowIcon /></a></p>
   </section>
 </Base>
 

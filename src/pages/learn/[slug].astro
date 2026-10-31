@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from '../../components/ArrowIcon.astro';
 import Base from '../../layouts/Base.astro';
 import { getSessionAccount } from '../../lib/auth';
 import { hasContentAccess, hasGuestContentAccess } from '../../lib/commerce';
@@ -40,7 +41,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
 ---
 <Base title={lesson?.title ?? 'Lerneinheit nicht gefunden'} description={lesson?.description ?? 'Diese Lerneinheit ist nicht verfügbar.'}>
   {lesson ? <article class="section wrap lesson-page">
-    <a class="breadcrumb" href={root(account ? 'account/' : 'guest-library/')}>← Zur Bibliothek</a>
+    <a class="breadcrumb" href={root(account ? 'account/' : 'guest-library/')}><ArrowIcon direction="left" /> Zur Bibliothek</a>
     <div class="section-label">Lernen / Lerneinheit</div>
     <h1>{lesson.title}</h1>
     <p>{lesson.description}</p>
@@ -49,14 +50,14 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     {account && <form id="progress-form" data-content-id={lesson.id} data-progress={lesson.progressPercent ?? 0}>
       <label for="progress-percent">Dein Fortschritt: <output id="progress-value">{lesson.progressPercent ?? 0}%</output></label>
       <input id="progress-percent" type="range" min="0" max="100" step="10" value={lesson.progressPercent ?? 0} />
-      <button class="pill-link" type="submit">Fortschritt speichern <span>↗</span></button>
+      <button class="pill-link" type="submit">Fortschritt speichern <ArrowIcon /></button>
       <p class="form-message" id="progress-message" role="status" aria-live="polite"></p>
     </form>}
   </article> : <section class="interior-hero wrap">
     <div class="section-label">404 / Nicht gefunden</div>
     <h1>Lerneinheit nicht <em>gefunden.</em></h1>
     <p>Diese Lerneinheit ist nicht verfügbar oder wurde noch nicht veröffentlicht.</p>
-    <a class="pill-link" href={root('account/')}>Zur Bibliothek <span>↗</span></a>
+    <a class="pill-link" href={root('account/')}>Zur Bibliothek <ArrowIcon /></a>
   </section>}
 </Base>
 

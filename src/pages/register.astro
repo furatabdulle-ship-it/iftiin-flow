@@ -1,4 +1,5 @@
 ---
+import ArrowIcon from '../components/ArrowIcon.astro';
 import AuthForm from '../components/AuthForm.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
@@ -12,7 +13,7 @@ if (account) return Astro.redirect(account.role === 'admin' ? '/admin/' : '/acco
     <h1>Ein Konto für <em>deinen Weg.</em></h1>
     <p>Erstelle ein Konto. Die Registrierung gibt dir noch keine zusätzlichen Inhaltsrechte.</p>
     <AuthForm mode="register" />
-    <p class="account-switch">Schon registriert? <a href="/login/">Anmelden ↗</a></p>
+    <p class="account-switch">Schon registriert? <a href="/login/">Anmelden <ArrowIcon /></a></p>
   </section>
 </Base>
 

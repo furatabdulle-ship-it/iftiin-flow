@@ -1,13 +1,25 @@
 ---
+import ArrowIcon from '../../components/ArrowIcon.astro';
 import Base from '../../layouts/Base.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
+import IftiinSun from '../../components/brand/IftiinSun.astro';
 import { pillars } from '../../config';
 import { publishedArticles } from '../../lib/content';
 import { getSessionAccount } from '../../lib/auth';
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
+const legacyTopicTargets: Record<string, string> = {
+  'knowledge-agency': 'explore/',
+  'ai-domain': 'explore/',
+  'institutions-work-power': 'topics/systems-power/',
+  'human-capability': 'topics/skills-agency/',
+  'culture-meaning': 'topics/systems-power/',
+};
 const pillar = pillars.find((item) => item.slug === Astro.params.slug);
-if (!pillar) return Astro.redirect('/explore/', 302);
+if (!pillar) {
+  const legacyTarget = legacyTopicTargets[Astro.params.slug ?? ''];
+  return Astro.redirect(root(legacyTarget ?? 'explore/'), legacyTarget ? 301 : 302);
+}
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 const articles = (await publishedArticles(Boolean(account))).filter(a => a.data.pillar === pillar.slug);
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
 ---
-<Base title={pillar.name} description={pillar.description}><section class="interior-hero wrap"><a class="breadcrumb" href={root('explore/')}>← Explore</a><div class="section-label">Topic / {pillar.number}</div><h1>{pillar.name}</h1><p>{pillar.question}</p></section><section class="section wrap compact-section"><p class="topic-intro">{pillar.description}</p><div class="section-heading tight"><h2>Ideas & <em>perspectives.</em></h2></div>{articles.length ? <div class="card-grid">{articles.map(a=><ArticleCard article={a}/>)}</div> : <div class="empty-state"><span class="empty-symbol">✳</span><h3>Thinking in progress.</h3><p>Hier erscheinen künftig Essays, Analysen und Modelle zu diesem Themenfeld.</p></div>}</section></Base>
+<Base title={pillar.name} description={pillar.description}><section class="interior-hero wrap"><a class="breadcrumb" href={root('explore/')}><ArrowIcon direction="left" /> Explore</a><div class="section-label">Topic / {pillar.number}</div><h1>{pillar.name}</h1><p>{pillar.question}</p></section><section class="section wrap compact-section"><p class="topic-intro">{pillar.description}</p><div class="section-heading tight"><h2>Visions & <em>perspectives.</em></h2></div>{articles.length ? <div class="card-grid">{articles.map(a=><ArticleCard article={a}/>)}</div> : <div class="empty-state"><IftiinSun class="empty-symbol" color="var(--violet)" /><h3>Thinking in progress.</h3><p>Hier erscheinen künftig Essays, Analysen und Modelle zu diesem Themenfeld.</p></div>}</section></Base>
