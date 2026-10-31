@@ -60,7 +60,8 @@ async function grantOrderEntitlements(client: PoolClient, orderId: string): Prom
      WHERE o.id = $1 AND o.status = 'paid' AND o.user_id IS NOT NULL
        AND (p.product_type <> 'membership' OR pr.billing_interval = 'one_time')
      ON CONFLICT (order_id, product_id) DO UPDATE
-       SET status = 'active', starts_at = NOW(), expires_at = NULL, revoked_at = NULL
+       SET status = 'active', starts_at = NOW(), expires_at = NULL,
+           revoked_at = NULL, revocation_reason = NULL
      RETURNING id, product_id`,
     [orderId],
   );
@@ -112,7 +113,7 @@ async function refreshSubscriptionEntitlement(client: PoolClient, subscriptionId
        ON CONFLICT (user_id, product_id)
        WHERE source = 'subscription' AND order_id IS NULL
        DO UPDATE SET status = 'active', starts_at = NOW(),
-         expires_at = EXCLUDED.expires_at, revoked_at = NULL
+         expires_at = EXCLUDED.expires_at, revoked_at = NULL, revocation_reason = NULL
        RETURNING id`,
       [subscription.user_id, subscription.product_id, subscription.current_period_end],
     );
@@ -127,7 +128,8 @@ async function refreshSubscriptionEntitlement(client: PoolClient, subscriptionId
   } else {
     await client.query(
       `UPDATE entitlements
-       SET status = 'revoked', revoked_at = COALESCE(revoked_at, NOW()), expires_at = NULL
+       SET status = 'revoked', revoked_at = COALESCE(revoked_at, NOW()),
+           expires_at = NULL, revocation_reason = 'subscription'
        WHERE user_id = $1 AND product_id = $2
          AND source = 'subscription' AND order_id IS NULL`,
       [subscription.user_id, subscription.product_id],
@@ -203,20 +205,28 @@ async function applyCheckoutSession(client: PoolClient, session: StripeRecord): 
     ? await client.query<{
       id: string; user_id: string | null; guest_email: string | null;
       total_cents: string; currency: string; status: string;
+      stripe_checkout_session_id: string | null;
     }>(
-      'SELECT id, user_id, guest_email, total_cents, currency, status FROM orders WHERE id = $1 FOR UPDATE',
+      `SELECT id, user_id, guest_email, total_cents, currency, status, stripe_checkout_session_id
+       FROM orders WHERE id = $1 FOR UPDATE`,
       [orderId],
     )
     : await client.query<{
       id: string; user_id: string | null; guest_email: string | null;
       total_cents: string; currency: string; status: string;
+      stripe_checkout_session_id: string | null;
     }>(
-      'SELECT id, user_id, guest_email, total_cents, currency, status FROM orders WHERE stripe_checkout_session_id = $1 FOR UPDATE',
+      `SELECT id, user_id, guest_email, total_cents, currency, status, stripe_checkout_session_id
+       FROM orders WHERE stripe_checkout_session_id = $1 FOR UPDATE`,
       [sessionId],
     );
   const order = orderResult.rows[0];
   if (!order) throw new Error('Zugehörige Bestellung nicht gefunden.');
-  if (order.status === 'refunded' || order.status === 'canceled') return;
+  if (order.stripe_checkout_session_id && order.stripe_checkout_session_id !== sessionId) {
+    throw new Error('Checkout-Session stimmt nicht mit der Bestellung überein.');
+  }
+  if (['refunded', 'canceled', 'failed', 'disputed'].includes(order.status)) return;
+  const alreadyPaid = order.status === 'paid';
 
   const sessionCurrency = text(session.currency);
   const sessionAmount = typeof session.amount_total === 'number' ? session.amount_total : null;
@@ -278,33 +288,236 @@ async function applyCheckoutSession(client: PoolClient, session: StripeRecord): 
     await refreshSubscriptionEntitlement(client, subscriptionId);
   }
   await grantOrderEntitlements(client, order.id);
-  if (guestEmail) {
+  if (guestEmail && !alreadyPaid) {
     const accessToken = await createGuestAccessToken(client, guestEmail);
     await sendGuestAccessEmail(guestEmail, accessToken);
   }
 }
 
+async function updatePendingCheckoutStatus(
+  client: PoolClient,
+  session: StripeRecord,
+  status: 'failed' | 'canceled',
+): Promise<void> {
+  const sessionId = text(session.id);
+  const metadataOrderId = metadataText(session, 'order_id');
+  const orderId = metadataOrderId && /^[0-9a-f-]{36}$/i.test(metadataOrderId) ? metadataOrderId : null;
+  if (!sessionId && !orderId) throw new Error('Checkout-Session ohne Bestellreferenz.');
+
+  const result = orderId
+    ? await client.query<{ id: string; status: string; stripe_checkout_session_id: string | null }>(
+      `SELECT id, status, stripe_checkout_session_id FROM orders
+       WHERE id = $1 FOR UPDATE`,
+      [orderId],
+    )
+    : await client.query<{ id: string; status: string; stripe_checkout_session_id: string | null }>(
+      `SELECT id, status, stripe_checkout_session_id FROM orders
+       WHERE stripe_checkout_session_id = $1 FOR UPDATE`,
+      [sessionId],
+    );
+  const order = result.rows[0];
+  if (!order) throw new Error('Zugehörige Bestellung nicht gefunden.');
+  if (order.stripe_checkout_session_id && sessionId && order.stripe_checkout_session_id !== sessionId) {
+    throw new Error('Checkout-Session stimmt nicht mit der Bestellung überein.');
+  }
+  if (order.status !== 'pending') return;
+
+  await client.query(
+    `UPDATE orders SET status = $2, updated_at = NOW()
+     WHERE id = $1 AND status = 'pending'`,
+    [order.id, status],
+  );
+}
+
 async function applyRefund(client: PoolClient, charge: StripeRecord): Promise<void> {
   const paymentIntentId = idFrom(charge.payment_intent);
-  if (!paymentIntentId) return;
+  const chargeId = text(charge.id);
+  if (!paymentIntentId && !chargeId) throw new Error('Stripe-Refund ohne Zahlungsreferenz.');
   const refunded = typeof charge.amount_refunded === 'number' ? charge.amount_refunded : 0;
   const total = typeof charge.amount === 'number' ? charge.amount : 0;
-  const paymentStatus = refunded >= total ? 'refunded' : 'partially_refunded';
-  const result = await client.query<{ order_id: string }>(
-    `UPDATE payments SET refunded_cents = $2, status = $3, provider_charge_id = $4, updated_at = NOW()
-     WHERE provider_payment_intent_id = $1 RETURNING order_id`,
-    [paymentIntentId, refunded, paymentStatus, text(charge.id)],
+  if (total <= 0 || refunded < 0 || refunded > total) {
+    throw new Error('Stripe-Refund enthält ungültige Beträge.');
+  }
+  const result = await client.query<{
+    id: string;
+    order_id: string;
+  }>(
+    `SELECT id, order_id FROM payments
+     WHERE ($1::text IS NOT NULL AND provider_payment_intent_id = $1)
+        OR ($2::text IS NOT NULL AND provider_charge_id = $2)
+     FOR UPDATE`,
+    [paymentIntentId, chargeId],
   );
-  if (result.rowCount && refunded >= total && total > 0) {
-    const orderId = result.rows[0].order_id;
+  const payment = result.rows[0];
+  if (!payment) throw new Error('Zugehörige Zahlung zum Refund nicht gefunden.');
+
+  const totalRefunded = Math.max(refunded, 0);
+  const fullRefund = totalRefunded >= total;
+  const activeDispute = await client.query<{ active: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1 FROM payment_disputes
+       WHERE payment_id = $1
+         AND status NOT IN ('won', 'lost', 'warning_closed')
+     ) AS active`,
+    [payment.id],
+  );
+  const paymentStatus = activeDispute.rows[0]?.active
+    ? 'disputed'
+    : fullRefund ? 'refunded' : 'partially_refunded';
+  await client.query(
+    `UPDATE payments
+     SET refunded_cents = $2, status = $3,
+         provider_charge_id = COALESCE($4, provider_charge_id), updated_at = NOW()
+     WHERE id = $1`,
+    [payment.id, totalRefunded, paymentStatus, chargeId],
+  );
+
+  if (fullRefund) {
     await client.query(
-      `UPDATE orders SET status = 'refunded', updated_at = NOW() WHERE id = $1`,
-      [orderId],
+      `UPDATE orders SET status = 'refunded', updated_at = NOW()
+       WHERE id = $1 AND status IN ('paid', 'disputed')`,
+      [payment.order_id],
     );
     await client.query(
-      `UPDATE entitlements SET status = 'revoked', revoked_at = NOW()
-       WHERE order_id = $1 AND status = 'active'`,
-      [orderId],
+      `UPDATE entitlements
+       SET status = 'revoked', revoked_at = COALESCE(revoked_at, NOW()),
+           revocation_reason = 'refund'
+       WHERE order_id = $1 AND status IN ('active', 'revoked')
+         AND (revocation_reason IS NULL OR revocation_reason = 'dispute')`,
+      [payment.order_id],
+    );
+  } else if (activeDispute.rows[0]?.active) {
+    await client.query(
+      `UPDATE orders SET status = 'disputed', updated_at = NOW()
+       WHERE id = $1 AND status = 'paid'`,
+      [payment.order_id],
+    );
+  }
+}
+
+async function applyDisputeCreated(client: PoolClient, dispute: StripeRecord): Promise<void> {
+  const disputeId = text(dispute.id);
+  const chargeId = idFrom(dispute.charge);
+  const paymentIntentId = idFrom(dispute.payment_intent);
+  if (!disputeId || (!chargeId && !paymentIntentId)) {
+    throw new Error('Stripe-Dispute ohne Zahlungsreferenz.');
+  }
+
+  const paymentResult = await client.query<{
+    id: string;
+    order_id: string;
+    status: string;
+  }>(
+    `SELECT id, order_id, status FROM payments
+     WHERE ($1::text IS NOT NULL AND provider_payment_intent_id = $1)
+        OR ($2::text IS NOT NULL AND provider_charge_id = $2)
+     FOR UPDATE`,
+    [paymentIntentId, chargeId],
+  );
+  const payment = paymentResult.rows[0];
+  if (!payment) throw new Error('Zugehörige Zahlung zum Dispute nicht gefunden.');
+
+  const disputeStatus = text(dispute.status);
+  if (!disputeStatus) throw new Error('Stripe-Dispute ohne Status.');
+  await client.query(
+    `INSERT INTO payment_disputes (stripe_dispute_id, payment_id, order_id, status)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (stripe_dispute_id) DO UPDATE SET
+       status = EXCLUDED.status, updated_at = NOW()`,
+    [disputeId, payment.id, payment.order_id, disputeStatus],
+  );
+  await client.query(
+    `UPDATE payments SET status = 'disputed',
+       provider_charge_id = COALESCE($2, provider_charge_id), updated_at = NOW()
+     WHERE id = $1 AND status <> 'refunded'`,
+    [payment.id, chargeId],
+  );
+  await client.query(
+    `UPDATE orders SET status = 'disputed', updated_at = NOW()
+     WHERE id = $1 AND status = 'paid'`,
+    [payment.order_id],
+  );
+  await client.query(
+    `UPDATE entitlements
+     SET status = 'revoked', revoked_at = NOW(), revocation_reason = 'dispute'
+     WHERE order_id = $1 AND status = 'active'`,
+    [payment.order_id],
+  );
+}
+
+async function applyDisputeClosed(client: PoolClient, dispute: StripeRecord): Promise<void> {
+  const disputeId = text(dispute.id);
+  const status = text(dispute.status);
+  if (!disputeId || !status) throw new Error('Abgeschlossener Stripe-Dispute ohne ID oder Status.');
+  const result = await client.query<{
+    payment_id: string;
+    order_id: string;
+    amount_cents: string;
+    refunded_cents: string;
+  }>(
+    `SELECT d.payment_id, d.order_id, p.amount_cents, p.refunded_cents
+     FROM payment_disputes d
+     JOIN payments p ON p.id = d.payment_id
+     WHERE d.stripe_dispute_id = $1
+     FOR UPDATE OF d, p`,
+    [disputeId],
+  );
+  const disputeRow = result.rows[0];
+  if (!disputeRow) throw new Error('Zugehöriger Stripe-Dispute nicht gefunden.');
+  await client.query(
+    `UPDATE payment_disputes SET status = $2, updated_at = NOW()
+     WHERE stripe_dispute_id = $1`,
+    [disputeId, status],
+  );
+
+  if (!['won', 'warning_closed', 'prevented'].includes(status)) return;
+
+  const otherDisputes = await client.query<{ unresolved: boolean; lost: boolean }>(
+    `SELECT
+       EXISTS (
+         SELECT 1 FROM payment_disputes
+         WHERE payment_id = $1
+           AND status NOT IN ('won', 'warning_closed', 'prevented', 'lost')
+       ) AS unresolved,
+       EXISTS (
+         SELECT 1 FROM payment_disputes
+         WHERE payment_id = $1 AND status = 'lost'
+       ) AS lost`,
+    [disputeRow.payment_id],
+  );
+  if (otherDisputes.rows[0]?.unresolved || otherDisputes.rows[0]?.lost) return;
+
+  const fullyRefunded = Number(disputeRow.refunded_cents) >= Number(disputeRow.amount_cents);
+  if (fullyRefunded) {
+    await client.query(
+      `UPDATE payments SET status = 'refunded', updated_at = NOW() WHERE id = $1`,
+      [disputeRow.payment_id],
+    );
+    await client.query(
+      `UPDATE orders SET status = 'refunded', updated_at = NOW()
+       WHERE id = $1 AND status = 'disputed'`,
+      [disputeRow.order_id],
+    );
+    return;
+  }
+
+  const paymentStatus = Number(disputeRow.refunded_cents) > 0 ? 'partially_refunded' : 'succeeded';
+  await client.query(
+    `UPDATE payments SET status = $2, updated_at = NOW() WHERE id = $1`,
+    [disputeRow.payment_id, paymentStatus],
+  );
+  const restored = await client.query(
+    `UPDATE orders SET status = 'paid', updated_at = NOW()
+     WHERE id = $1 AND status = 'disputed'`,
+    [disputeRow.order_id],
+  );
+  if (restored.rowCount) {
+    await client.query(
+      `UPDATE entitlements
+       SET status = 'active', starts_at = NOW(), expires_at = NULL,
+           revoked_at = NULL, revocation_reason = NULL
+       WHERE order_id = $1 AND status = 'revoked' AND revocation_reason = 'dispute'`,
+      [disputeRow.order_id],
     );
   }
 }
@@ -334,15 +547,11 @@ export async function processStripeWebhook(payload: string): Promise<'processed'
       case 'checkout.session.async_payment_succeeded':
         await applyCheckoutSession(client, object);
         break;
+      case 'checkout.session.async_payment_failed':
+        await updatePendingCheckoutStatus(client, object, 'failed');
+        break;
       case 'checkout.session.expired': {
-        const orderId = metadataText(object, 'order_id');
-        if (orderId && /^[0-9a-f-]{36}$/i.test(orderId)) {
-          await client.query(
-            `UPDATE orders SET status = 'canceled', updated_at = NOW()
-             WHERE id = $1 AND status = 'pending'`,
-            [orderId],
-          );
-        }
+        await updatePendingCheckoutStatus(client, object, 'canceled');
         break;
       }
       case 'customer.subscription.created':
@@ -376,6 +585,12 @@ export async function processStripeWebhook(payload: string): Promise<'processed'
       }
       case 'charge.refunded':
         await applyRefund(client, object);
+        break;
+      case 'charge.dispute.created':
+        await applyDisputeCreated(client, object);
+        break;
+      case 'charge.dispute.closed':
+        await applyDisputeClosed(client, object);
         break;
       default:
         break;

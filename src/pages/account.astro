@@ -12,6 +12,14 @@ const formatPrice = (amount: number | string, currency: string) => new Intl.Numb
   style: 'currency',
   currency: currency.toUpperCase(),
 }).format(Number(amount) / 100);
+const orderStatusNames: Record<string, string> = {
+  pending: 'Ausstehend',
+  paid: 'Bezahlt',
+  failed: 'Fehlgeschlagen',
+  refunded: 'Erstattet',
+  canceled: 'Abgebrochen',
+  disputed: 'Zahlung angefochten',
+};
 ---
 <Base title="Konto">
   <section class="interior-hero wrap account-hero">
@@ -59,7 +67,7 @@ const formatPrice = (amount: number | string, currency: string) => new Intl.Numb
     {orders.length ? <div class="orders-table">
       {orders.map((order) => <article class="order-row">
         <div><strong>{order.items.map((item) => `${item.name}${item.quantity > 1 ? ` × ${item.quantity}` : ''}`).join(', ')}</strong><span class="library-meta">{new Date(order.createdAt).toLocaleDateString('de-DE')}</span></div>
-        <div class="order-total">{formatPrice(order.totalCents, order.currency)}<span class="library-meta">{order.status === 'paid' ? 'Bezahlt' : order.status}</span></div>
+        <div class="order-total">{formatPrice(order.totalCents, order.currency)}<span class="library-meta">{orderStatusNames[order.status] ?? order.status}</span></div>
       </article>)}
     </div> : <p class="library-meta">Noch keine Bestellungen.</p>}
   </section>

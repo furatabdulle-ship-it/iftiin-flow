@@ -50,10 +50,14 @@ Die nummerierten Datenbankmigrationen werden beim App-Start ausgeführt. Vor dem
 
 - `checkout.session.completed`
 - `checkout.session.async_payment_succeeded`
+- `checkout.session.async_payment_failed`
 - `checkout.session.expired`
 - `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
 - `invoice.paid`, `invoice.payment_failed`
 - `charge.refunded`
+- `charge.dispute.created`, `charge.dispute.closed`
+
+Bestellungen werden erst nach einem erfolgreichen Checkout-Webhook freigeschaltet. Abgelaufene Sessions werden abgebrochen, fehlgeschlagene verzögerte Zahlungen als fehlgeschlagen markiert. Bei einer vollständigen Erstattung wird der Zugang entzogen; bei einer Teilerstattung bleibt er bestehen. Bei einem eröffneten Zahlungsstreit wird der Zugang vorsorglich gesperrt. Wird der Streit gewonnen, verhindert (`prevented`) oder als `warning_closed` geschlossen, wird der Zugang wiederhergestellt, sofern keine vollständige Erstattung vorliegt und kein anderer offener oder verlorener Streit für die Zahlung besteht. Bei verlorenem Streit bleibt er gesperrt. Webhook-Ereignisse werden anhand ihrer Stripe-Event-ID dedupliziert.
 
 In Railway beziehungsweise der lokalen `.env` sind folgende Werte erforderlich:
 
