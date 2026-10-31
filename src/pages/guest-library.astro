@@ -3,47 +3,50 @@ import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import { listGuestLibrary } from '../lib/commerce';
 import { getGuestAccessEmail } from '../lib/guest-access';
+import { localeHref, t } from '../lib/i18n';
 
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const email = await getGuestAccessEmail(Astro.cookies.get('iftiin_guest_access')?.value);
-if (!email) return Astro.redirect('/guest-access/', 302);
+if (!email) return Astro.redirect(localeHref('/guest-access/', locale), 302);
 Astro.response.headers.set('Cache-Control', 'private, no-store');
 const purchases = await listGuestLibrary(email);
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
 const typeNames: Record<string, string> = {
-  digital_download: 'Digitaler Download',
-  premium_article: 'Premium-Artikel',
-  online_course: 'Online-Kurs',
-  bundle: 'Bundle',
-  membership: 'Membership',
+  digital_download: copy('guest.digitalDownload'),
+  premium_article: copy('guest.premiumArticle'),
+  online_course: copy('guest.onlineCourse'),
+  bundle: copy('guest.bundle'),
+  membership: copy('guest.membership'),
 };
 ---
-<Base title="Deine Bibliothek">
+<Base title={copy('guest.libraryTitle')}>
   <section class="interior-hero wrap guest-library">
-    <div class="section-label">Dein Zugang / Bibliothek</div>
-    <h1>Deine <em>Bibliothek.</em></h1>
-    <p>Angemeldet mit {email}. Der sichere Zugang bleibt bis zu 30 Tage aktiv.</p>
+    <div class="section-label">{copy('guest.libraryLabel')}</div>
+    <h1>{copy('guest.yourLibrary')}</h1>
+    <p>{copy('guest.signedInWith')} {email}. {copy('guest.accessDuration')}</p>
     {purchases.length
       ? <div class="guest-purchases">
           {purchases.map((purchase) => <article class="guest-purchase">
-            <div class="section-label">{typeNames[purchase.productType]} · {new Date(purchase.createdAt).toLocaleDateString('de-DE')}</div>
-            <h2>{purchase.productName}</h2>
+            <div class="section-label">{typeNames[purchase.productType]} · {new Date(purchase.createdAt).toLocaleDateString(locale === 'en' ? 'en-IE' : 'de-DE')}</div>
+            <h2>{locale === 'en' ? purchase.productNameEn ?? purchase.productName : purchase.productName}</h2>
             {purchase.content.length
               ? <ul>
                   {purchase.content.map((item) => <li>
                     {item.contentType === 'download'
-                      ? <a href={root(`api/content/${item.id}/file/`)}>{item.title} herunterladen <ArrowIcon /></a>
+                      ? <a href={root(`api/content/${item.id}/file/`)}>{locale === 'en' ? item.titleEn ?? item.title : item.title} {copy('account.download')} <ArrowIcon /></a>
                       : item.contentType === 'lesson' || item.contentType === 'video'
-                        ? <a href={root(`learn/${item.slug}/`)}>{item.title} <ArrowIcon /></a>
-                        : <a href={root(`articles/${item.slug}/`)}>{item.title} <ArrowIcon /></a>}
+                        ? <a href={root(`learn/${item.slug}/`)}>{locale === 'en' ? item.titleEn ?? item.title : item.title} <ArrowIcon /></a>
+                        : <a href={root(`articles/${item.slug}/`)}>{locale === 'en' ? item.titleEn ?? item.title : item.title} <ArrowIcon /></a>}
                   </li>)}
                 </ul>
-              : <p>Für dieses Produkt sind noch keine digitalen Inhalte zugeordnet.</p>}
+              : <p>{copy('guest.noDigitalContent')}</p>}
           </article>)}
         </div>
-      : <p>Für diese E-Mail-Adresse sind derzeit keine aktiven Käufe verfügbar. <a href={root('store/')}>Zum Shop <ArrowIcon /></a></p>}
-    <p><a href={root('guest-access/')}>Neuen Zugangslink anfordern <ArrowIcon /></a></p>
+      : <p>{copy('guest.noPurchases')} <a href={root('store/')}>{copy('account.toShop')} <ArrowIcon /></a></p>}
+    <p><a href={root('guest-access/')}>{copy('guest.newAccessLink')} <ArrowIcon /></a></p>
     <form id="guest-logout-form">
-      <button class="text-link" type="submit">Auf diesem Gerät abmelden</button>
+      <button class="text-link" type="submit">{copy('guest.signOutDevice')}</button>
       <p class="form-message" id="guest-logout-message" role="status" aria-live="polite"></p>
     </form>
   </section>
@@ -52,16 +55,17 @@ const typeNames: Record<string, string> = {
 <script>
   const logoutForm = document.querySelector<HTMLFormElement>('#guest-logout-form');
   const logoutMessage = document.querySelector<HTMLElement>('#guest-logout-message');
+  const locale = document.documentElement.lang;
   logoutForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!logoutMessage) return;
     try {
       const response = await fetch('/api/guest-access/logout/', { method: 'POST' });
       const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error ?? 'Abmeldung fehlgeschlagen.');
-      window.location.assign('/guest-access/');
+      if (!response.ok) throw new Error(locale === 'en' ? 'Sign-out failed.' : result.error ?? 'Abmeldung fehlgeschlagen.');
+      window.location.assign(`/guest-access/?lang=${locale}`);
     } catch (error) {
-      logoutMessage.textContent = error instanceof Error ? error.message : 'Abmeldung fehlgeschlagen.';
+      logoutMessage.textContent = error instanceof Error ? error.message : locale === 'en' ? 'Sign-out failed.' : 'Abmeldung fehlgeschlagen.';
     }
   });
 </script>

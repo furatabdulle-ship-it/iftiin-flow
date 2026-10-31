@@ -6,8 +6,14 @@ import { getSessionAccount } from '../lib/auth';
 import { listPublicProducts } from '../lib/commerce';
 import { isGuestAccessEmailConfigured } from '../lib/password-reset-email';
 import { isCheckoutConfigured } from '../lib/stripe';
+import { localeHref, t } from '../lib/i18n';
 
-const products = await listPublicProducts();
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const availableProducts = await listPublicProducts();
+const products = locale === 'en'
+  ? availableProducts.filter((product) => product.nameEn && product.content.every((item) => item.titleEn))
+  : availableProducts;
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 const lockedSlug = Astro.url.searchParams.get('locked');
 const cancelled = Astro.url.searchParams.get('checkout') === 'cancelled';
@@ -16,54 +22,54 @@ const hasLockedProduct = lockedSlug
   : false;
 const checkoutReady = isCheckoutConfigured();
 const guestAccessReady = isGuestAccessEmailConfigured();
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
-const formatPrice = (amount: number, currency: string) => new Intl.NumberFormat('de-DE', {
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
+const formatPrice = (amount: number, currency: string) => new Intl.NumberFormat(locale === 'en' ? 'en-IE' : 'de-DE', {
   style: 'currency',
   currency: currency.toUpperCase(),
 }).format(amount / 100);
 const typeNames: Record<string, string> = {
-  digital_download: 'Digitaler Download',
-  premium_article: 'Premium-Artikel',
-  online_course: 'Online-Kurs',
-  bundle: 'Bundle',
-  membership: 'Membership',
+  digital_download: copy('store.digitalDownload'),
+  premium_article: copy('store.premiumArticle'),
+  online_course: copy('store.onlineCourse'),
+  bundle: copy('store.bundle'),
+  membership: copy('store.membership'),
 };
 ---
-<Base title="Shop" description="Downloads, Premium-Analysen und Kurse von iftiin flow.">
+<Base title={copy('common.shop')} description={copy('store.description')}>
   <section class="interior-hero wrap store-hero">
-    <div class="section-label">Shop / Wissen vertiefen</div>
+    <div class="section-label">{copy('store.label')}</div>
     <h1>Visions into <em>practice.</em></h1>
-    <p>Digitale Materialien, vertiefende Analysen und Lernformate. Du kannst mit oder ohne Konto kaufen.</p>
+    <p>{copy('store.description')}</p>
   </section>
-  <section class="section wrap store-content">
+  <section class="section wrap store-content" data-checkout-preparing={copy('store.checkoutPreparing')} data-checkout-error={copy('store.checkoutError')}>
     {lockedSlug && <aside class="store-notice" role="status">
       {hasLockedProduct
-        ? 'Dieser Premium-Inhalt wird nach dem Kauf eines passenden Produkts freigeschaltet.'
-        : 'Für diesen Premium-Inhalt ist derzeit noch kein Produkt verfügbar. Bitte schau später wieder vorbei.'}
+        ? copy('store.lockedAvailable')
+        : copy('store.lockedUnavailable')}
     </aside>}
-    {cancelled && <aside class="store-notice" role="status">Der Checkout wurde abgebrochen. Es wurde keine Zahlung ausgelöst.</aside>}
+    {cancelled && <aside class="store-notice" role="status">{copy('store.cancelled')}</aside>}
     {products.length ? <div class="store-grid">
       {products.map((product) => <article class="store-card">
         {product.coverAssetId && <img
           class="store-card-cover"
           src={root(`api/store/products/${encodeURIComponent(product.slug)}/cover/`)}
-          alt={`Cover: ${product.name}`}
+          alt={`${locale === 'en' ? 'Cover' : 'Cover'}: ${locale === 'en' ? product.nameEn : product.name}`}
           loading="lazy"
           decoding="async"
         />}
         <div class="store-card-top">
           <span class="section-label">{typeNames[product.productType]}</span>
         </div>
-        <h2>{product.name}</h2>
-        <p>{product.description}</p>
+        <h2>{locale === 'en' ? product.nameEn : product.name}</h2>
+        {(locale === 'en' ? product.descriptionEn : product.description) && <p>{locale === 'en' ? product.descriptionEn : product.description}</p>}
         {product.content.length > 0 && <ul>
-          {product.content.map((item) => <li>{item.title}</li>)}
+          {product.content.map((item) => <li>{locale === 'en' ? item.titleEn : item.title}</li>)}
         </ul>}
         <div class="store-price-options">
           {product.prices.map((price) => <div class="store-price-option">
-            <strong>{formatPrice(price.amountCents, price.currency)}{price.billingInterval !== 'one_time' ? ` / ${price.billingInterval === 'month' ? 'Monat' : 'Jahr'}` : ' einmalig'}</strong>
+            <strong>{formatPrice(price.amountCents, price.currency)}{price.billingInterval !== 'one_time' ? ` / ${price.billingInterval === 'month' ? copy('store.month') : copy('store.year')}` : ` ${copy('store.oneTime')}`}</strong>
             {!account && <label class="guest-email-label">
-              E-Mail für deinen Zugangslink
+              {copy('store.emailForAccess')}
               <input class="guest-email" type="email" autocomplete="email" maxlength="254" required />
             </label>}
             <button
@@ -75,23 +81,23 @@ const typeNames: Record<string, string> = {
             >
               {checkoutReady
                 ? (!account && !guestAccessReady
-                  ? 'E-Mail-Zugang nicht eingerichtet'
+                  ? copy('store.emailAccessUnavailable')
                   : account
-                  ? (price.billingInterval === 'one_time' ? 'Sicher kaufen' : 'Abo starten')
-                  : (price.billingInterval === 'one_time' ? 'Ohne Konto kaufen' : 'Abo ohne Konto starten'))
-                : 'Checkout noch nicht eingerichtet'} <ArrowIcon />
+                  ? (price.billingInterval === 'one_time' ? copy('store.buySecurely') : copy('store.startSubscription'))
+                  : (price.billingInterval === 'one_time' ? copy('store.buyWithoutAccount') : copy('store.startGuestSubscription')))
+                : copy('store.checkoutUnavailable')} <ArrowIcon />
             </button>
           </div>)}
         </div>
       </article>)}
     </div> : <div class="empty-state">
       <IftiinSun class="empty-symbol" color="var(--violet)" />
-      <h2>Der Shop wird vorbereitet.</h2>
-      <p>Produkte und Lernmaterialien werden hier verfügbar, sobald sie veröffentlicht sind.</p>
+      <h2>{copy('store.emptyTitle')}</h2>
+      <p>{copy('store.emptyDescription')}</p>
     </div>}
     {!account && checkoutReady && guestAccessReady && <p class="guest-access-note">
-      Nach bestätigter Zahlung erhältst du einen persönlichen E-Mail-Link zu deiner Bibliothek.
-      <a href={root('guest-access/')}>Bereits gekauft? Zugangslink erneut senden <ArrowIcon /></a>
+      {copy('store.accessAfterPurchase')}
+      <a href={root('guest-access/')}>{copy('store.resendAccess')} <ArrowIcon /></a>
     </p>}
     <p class="form-message" id="store-message" role="status" aria-live="polite"></p>
   </section>
@@ -99,12 +105,13 @@ const typeNames: Record<string, string> = {
 
 <script>
   const message = document.querySelector<HTMLElement>('#store-message');
+  const storeContent = document.querySelector<HTMLElement>('.store-content');
   document.querySelectorAll<HTMLButtonElement>('.checkout-button').forEach((button) => {
     button.addEventListener('click', async () => {
       if (!message || !button.dataset.productId || !button.dataset.priceId) return;
       const emailInput = button.closest('.store-card')?.querySelector<HTMLInputElement>('.guest-email');
       if (emailInput && !emailInput.reportValidity()) return;
-      message.textContent = 'Sicherer Checkout wird vorbereitet …';
+      message.textContent = storeContent?.dataset.checkoutPreparing ?? 'Preparing secure checkout …';
       button.disabled = true;
       try {
         const email = emailInput?.value.trim();
@@ -118,10 +125,10 @@ const typeNames: Record<string, string> = {
           }),
         });
         const result = await response.json() as { checkoutUrl?: string; error?: string };
-        if (!response.ok || !result.checkoutUrl) throw new Error(result.error ?? 'Checkout konnte nicht gestartet werden.');
+        if (!response.ok || !result.checkoutUrl) throw new Error(result.error ?? storeContent?.dataset.checkoutError ?? 'Checkout could not be started.');
         window.location.assign(result.checkoutUrl);
       } catch (error) {
-        message.textContent = error instanceof Error ? error.message : 'Checkout konnte nicht gestartet werden.';
+        message.textContent = error instanceof Error ? error.message : storeContent?.dataset.checkoutError ?? 'Checkout could not be started.';
         button.disabled = false;
       }
     });

@@ -294,7 +294,8 @@ async function applyCheckoutSession(client: PoolClient, session: StripeRecord): 
   await grantOrderEntitlements(client, order.id);
   if (guestEmail && !alreadyPaid) {
     const accessToken = await createGuestAccessToken(client, guestEmail);
-    await sendGuestAccessEmail(guestEmail, accessToken);
+    const locale = metadataText(session, 'locale') === 'en' ? 'en' : 'de';
+    await sendGuestAccessEmail(guestEmail, accessToken, locale);
   }
 }
 

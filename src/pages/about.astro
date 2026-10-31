@@ -1,6 +1,35 @@
 ---
 import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
+import { localeHref, t } from '../lib/i18n';
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,''), locale);
 ---
-<Base title="About"><section class="interior-hero wrap"><div class="section-label">About / Mission</div><h1>Knowledge.<br/><em>Judgement.</em><br/>Agency.</h1><p>Technologischer Wandel ist mehr als eine Frage neuer Werkzeuge. Er verändert, wie wir Wissen gewinnen, arbeiten, Entscheidungen treffen und miteinander leben.</p></section><section class="dark-section"><div class="wrap about-body"><div class="section-label light">Our purpose</div><div><h2>Think deeply.<br/><i>Act thoughtfully.</i></h2><p>iftiin flow. erkundet die Verbindungen zwischen Wissen, Technologie, Institutionen und menschlicher Handlungsfähigkeit. Die Plattform verbindet verständliche Erklärungen mit kritischer Analyse und praktischen Perspektiven.</p><p>Hier entstehen Essays, Research Notes, Maps und später Lernangebote. Veröffentlichte Analysen basieren auf öffentlichen Quellen und unabhängiger Einordnung.</p></div></div></section><section class="section wrap about-principles"><div class="section-label">How we work</div><h2>Editorial <em>principles.</em></h2><div class="principle-grid"><div><span>01</span><h3>Evidence before claims.</h3><p>Fakten und Interpretation werden getrennt. Starke Aussagen benötigen überprüfbare Quellen.</p></div><div><span>02</span><h3>Context over hype.</h3><p>Technologie wird im Zusammenspiel mit Menschen, Institutionen und realen Anwendungsfeldern betrachtet.</p></div><div><span>03</span><h3>Agency over dependency.</h3><p>Wissen soll die Fähigkeit stärken, selbstständig zu verstehen, zu entscheiden und zu handeln.</p></div></div><a class="pill-link" href={root('explore/')}>Themen entdecken <ArrowIcon /></a></section></Base>
+<Base title={locale === 'en' ? 'About' : 'About'}>
+  <section class="interior-hero wrap">
+    <div class="section-label">{copy('about.label')}</div>
+    <h1>Knowledge.<br/><em>Judgement.</em><br/>Agency.</h1>
+    <p>{copy('about.intro')}</p>
+  </section>
+  <section class="dark-section">
+    <div class="wrap about-body">
+      <div class="section-label light">{copy('about.purpose')}</div>
+      <div>
+        <h2>Think deeply.<br/><i>Act thoughtfully.</i></h2>
+        <p>{copy('about.bodyFirst')}</p>
+        <p>{copy('about.bodySecond')}</p>
+      </div>
+    </div>
+  </section>
+  <section class="section wrap about-principles">
+    <div class="section-label">{copy('about.principles')}</div>
+    <h2>Editorial <em>principles.</em></h2>
+    <div class="principle-grid">
+      <div><span>01</span><h3>Evidence before claims.</h3><p>{locale === 'en' ? 'Facts and interpretation are kept distinct. Strong claims need verifiable sources.' : 'Fakten und Interpretation werden getrennt. Starke Aussagen benötigen überprüfbare Quellen.'}</p></div>
+      <div><span>02</span><h3>Context over hype.</h3><p>{locale === 'en' ? 'Technology is considered alongside people, institutions and real-world contexts.' : 'Technologie wird im Zusammenspiel mit Menschen, Institutionen und realen Anwendungsfeldern betrachtet.'}</p></div>
+      <div><span>03</span><h3>Agency over dependency.</h3><p>{locale === 'en' ? 'Knowledge should strengthen our ability to understand, decide and act independently.' : 'Wissen soll die Fähigkeit stärken, selbstständig zu verstehen, zu entscheiden und zu handeln.'}</p></div>
+    </div>
+    <a class="pill-link" href={root('explore/')}>{copy('about.discoverTopics')} <ArrowIcon /></a>
+  </section>
+</Base>

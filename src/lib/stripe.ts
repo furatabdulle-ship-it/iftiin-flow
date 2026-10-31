@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { withTransaction, query } from './db';
 import type { CheckoutProduct } from './commerce';
+import type { Locale } from './i18n';
 
 type StripeCheckoutSession = { id: string; url: string | null };
 
@@ -66,6 +67,7 @@ export async function createCheckoutSession(
   userId: string | null,
   email: string,
   product: CheckoutProduct,
+  locale: Locale = 'de',
 ): Promise<{ checkoutUrl: string }> {
   if (!Number.isSafeInteger(product.amountCents) || product.amountCents < 50) {
     throw new Error('Für den Checkout ist ein aktiver Preis von mindestens 0,50 € erforderlich.');
@@ -106,20 +108,23 @@ export async function createCheckoutSession(
 
   const form = new URLSearchParams();
   form.set('mode', product.billingInterval === 'one_time' ? 'payment' : 'subscription');
-  form.set(
-    'success_url',
-    new URL(userId ? '/account/?checkout=success' : '/checkout/success/', origin).toString(),
-  );
-  form.set('cancel_url', new URL('/store/?checkout=cancelled', origin).toString());
+  const successUrl = new URL(userId ? '/account/?checkout=success' : '/checkout/success/', origin);
+  successUrl.searchParams.set('lang', locale);
+  const cancelUrl = new URL('/store/?checkout=cancelled', origin);
+  cancelUrl.searchParams.set('lang', locale);
+  form.set('success_url', successUrl.toString());
+  form.set('cancel_url', cancelUrl.toString());
+  form.set('locale', locale);
   form.set('customer_email', email);
   form.set('client_reference_id', orderId);
+  form.set('metadata[locale]', locale);
+  form.set('metadata[product_id]', product.id);
+  form.set('metadata[order_id]', orderId);
   form.set('line_items[0][quantity]', '1');
   form.set('line_items[0][price_data][currency]', product.currency);
   form.set('line_items[0][price_data][unit_amount]', String(product.amountCents));
-  form.set('line_items[0][price_data][product_data][name]', product.name);
+  form.set('line_items[0][price_data][product_data][name]', locale === 'en' ? product.nameEn ?? product.name : product.name);
   form.set('line_items[0][price_data][product_data][metadata][product_id]', product.id);
-  form.set('metadata[order_id]', orderId);
-  form.set('metadata[product_id]', product.id);
   if (userId) {
     form.set('metadata[user_id]', userId);
   } else {
@@ -129,6 +134,7 @@ export async function createCheckoutSession(
     form.set('line_items[0][price_data][recurring][interval]', product.billingInterval);
     form.set('subscription_data[metadata][order_id]', orderId);
     form.set('subscription_data[metadata][product_id]', product.id);
+    form.set('subscription_data[metadata][locale]', locale);
     if (userId) {
       form.set('subscription_data[metadata][user_id]', userId);
     } else {

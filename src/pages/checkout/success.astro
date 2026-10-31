@@ -1,13 +1,16 @@
 ---
 import ArrowIcon from '../../components/ArrowIcon.astro';
 import Base from '../../layouts/Base.astro';
+import { localeHref, t } from '../../lib/i18n';
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 ---
-<Base title="Kauf abgeschlossen">
+<Base title={copy('checkout.title')}>
   <section class="interior-hero wrap checkout-success">
-    <div class="section-label">Shop / Kauf abgeschlossen</div>
-    <h1>Vielen <em>Dank.</em></h1>
-    <p>Nach bestätigter Zahlung senden wir dir einen persönlichen Zugangslink an die beim Checkout angegebene E-Mail-Adresse. Prüfe auch deinen Spam-Ordner.</p>
-    <a class="pill-link" href="/store/">Zurück zum Shop <ArrowIcon /></a>
+    <div class="section-label">{copy('checkout.label')}</div>
+    <h1>{copy('checkout.thanks')}</h1>
+    <p>{copy('checkout.message')}</p>
+    <a class="pill-link" href={localeHref('/store/', locale)}>{copy('checkout.backToShop')} <ArrowIcon /></a>
   </section>
 </Base>
 

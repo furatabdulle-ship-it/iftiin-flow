@@ -1,16 +1,19 @@
 ---
 import ArrowIcon from './ArrowIcon.astro';
+import { localeHref, t } from '../lib/i18n';
 const { mode, redirectTo = '/account/' } = Astro.props as { mode: 'login' | 'register'; redirectTo?: string };
 const register = mode === 'register';
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 ---
-<form class="account-form" id="auth-form" data-endpoint={mode} data-redirect-to={redirectTo}>
+<form class="account-form" id="auth-form" data-endpoint={mode} data-redirect-to={localeHref(redirectTo, locale)} data-locale={locale} data-wait={copy('account.wait')} data-request-failed={copy('auth.requestFailed')} data-server-unavailable={copy('account.serverUnavailable')}>
   {register && <>
-    <label for="display-name">Name</label>
+    <label for="display-name">{copy('auth.name')}</label>
     <input id="display-name" name="displayName" type="text" autocomplete="name" maxlength="80" required />
   </>}
-  <label for="email">E-Mail-Adresse</label>
+  <label for="email">{copy('auth.email')}</label>
   <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required />
-  <label for="password">Passwort</label>
+  <label for="password">{copy('auth.password')}</label>
   <input
     id="password"
     name="password"
@@ -20,9 +23,9 @@ const register = mode === 'register';
     maxlength="128"
     required
   />
-  {register && <p class="form-hint">Mindestens 12 Zeichen. Verwende ein einzigartiges Passwort.</p>}
+  {register && <p class="form-hint">{copy('auth.passwordHint')}</p>}
   <p class="form-message" id="auth-message" role="status" aria-live="polite"></p>
-  <button class="pill-link" type="submit">{register ? 'Konto erstellen' : 'Anmelden'} <ArrowIcon /></button>
+  <button class="pill-link" type="submit">{register ? copy('auth.createAccount') : copy('auth.login')} <ArrowIcon /></button>
 </form>
 
 <script>
@@ -35,7 +38,7 @@ const register = mode === 'register';
 
     const endpoint = form.dataset.endpoint;
     const data = new FormData(form);
-    message.textContent = 'Bitte warten …';
+    message.textContent = form.dataset.wait ?? 'Please wait …';
     try {
       const response = await fetch(`/api/auth/${endpoint}/`, {
         method: 'POST',
@@ -48,12 +51,21 @@ const register = mode === 'register';
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) {
-        message.textContent = result.error ?? 'Die Anfrage ist fehlgeschlagen.';
+        const locale = form.dataset.locale ?? 'de';
+        message.textContent = locale === 'en'
+          ? (response.status === 401
+            ? 'The email or password is incorrect.'
+            : response.status === 409
+              ? 'An account with this email already exists.'
+              : response.status === 429
+                ? 'Too many attempts. Please wait a moment and try again.'
+                : form.dataset.requestFailed ?? 'The request failed.')
+          : result.error ?? 'Die Anfrage ist fehlgeschlagen.';
         return;
       }
       window.location.assign(form.dataset.redirectTo ?? '/account/');
     } catch {
-      message.textContent = 'Der Server ist momentan nicht erreichbar. Bitte versuche es erneut.';
+      message.textContent = form.dataset.serverUnavailable ?? 'The server is unavailable right now. Please try again.';
     }
   });
 </script>

@@ -4,10 +4,10 @@ import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '..
 import { rateLimit } from '../../../../lib/rate-limit';
 import { isPasswordResetEmailConfigured, sendPasswordResetEmail } from '../../../../lib/password-reset-email';
 import { passwordResetRequestSchema } from '../../../../lib/validation';
-
-const confirmationMessage = 'Falls die Adresse zu einem Konto gehört, erhältst du in Kürze eine E-Mail mit einem Link zum Zurücksetzen.';
+import { t } from '../../../../lib/i18n';
 
 export const POST: APIRoute = async (context) => {
+  const confirmationMessage = t(context.locals.locale, 'auth.resetRequestSent');
   const originError = rejectCrossOriginWrite(context);
   if (originError) return originError;
   const limitError = rateLimit(context, 'password-reset-request', 5, 15 * 60 * 1000);
@@ -22,7 +22,7 @@ export const POST: APIRoute = async (context) => {
 
     const reset = await issuePasswordReset(parsed.data.email);
     if (reset) {
-      void sendPasswordResetEmail(reset.email, reset.token)
+      void sendPasswordResetEmail(reset.email, reset.token, context.locals.locale)
         .then(() => console.info('Passwort-Reset-E-Mail von Gmail API angenommen.'))
         .catch(async (error: unknown) => {
           console.error(

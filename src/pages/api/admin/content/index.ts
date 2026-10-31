@@ -9,8 +9,9 @@ export const GET: APIRoute = async (context) => {
     const admin = await requireAdmin(context);
     if (isHttpResponse(admin)) return admin;
     const result = await query(
-      `SELECT ci.id, ci.content_type AS "contentType", ci.slug, ci.title, ci.description,
-              ci.body, ci.article_id AS "articleId", ci.storage_asset_id AS "storageAssetId",
+      `SELECT ci.id, ci.content_type AS "contentType", ci.slug, ci.title, ci.title_en AS "titleEn",
+              ci.description, ci.description_en AS "descriptionEn", ci.body, ci.body_en AS "bodyEn",
+              ci.article_id AS "articleId", ci.storage_asset_id AS "storageAssetId",
               sa.original_filename AS "originalFilename",
               ci.status, ci.position
        FROM content_items ci
@@ -52,12 +53,14 @@ export const POST: APIRoute = async (context) => {
       }
       const created = await client.query<{ id: string }>(
         `INSERT INTO content_items
-         (content_type, slug, title, description, body, storage_asset_id, status, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         (content_type, slug, title, title_en, description, description_en, body, body_en,
+          storage_asset_id, status, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING id`,
         [
-          item.contentType, item.slug, item.title, item.description, item.body,
-          item.storageAssetId, item.status, item.position,
+          item.contentType, item.slug, item.title, item.titleEn, item.description,
+          item.descriptionEn, item.body, item.bodyEn, item.storageAssetId, item.status,
+          item.position,
         ],
       );
       return { id: created.rows[0].id };

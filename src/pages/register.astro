@@ -3,17 +3,20 @@ import ArrowIcon from '../components/ArrowIcon.astro';
 import AuthForm from '../components/AuthForm.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
+import { localeHref, t } from '../lib/i18n';
 
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
-if (account) return Astro.redirect(account.role === 'admin' ? '/admin/' : '/account/', 302);
+if (account) return Astro.redirect(localeHref(account.role === 'admin' ? '/admin/' : '/account/', locale), 302);
 ---
-<Base title="Registrieren" description="Erstelle ein iftiin flow. Konto.">
+<Base title={copy('auth.registerTitle')} description={copy('auth.registerDescription')}>
   <section class="interior-hero wrap account-hero">
-    <div class="section-label">Konto / Registrierung</div>
-    <h1>Ein Konto für <em>deinen Weg.</em></h1>
-    <p>Erstelle ein Konto. Die Registrierung gibt dir noch keine zusätzlichen Inhaltsrechte.</p>
+    <div class="section-label">{copy('auth.registerLabel')}</div>
+    <h1>{copy('auth.registerHeading')}</h1>
+    <p>{copy('auth.registerPrompt')}</p>
     <AuthForm mode="register" />
-    <p class="account-switch">Schon registriert? <a href="/login/">Anmelden <ArrowIcon /></a></p>
+    <p class="account-switch">{copy('auth.alreadyRegistered')} <a href={localeHref('/login/', locale)}>{copy('auth.login')} <ArrowIcon /></a></p>
   </section>
 </Base>
 

@@ -1,3 +1,5 @@
+import type { Locale } from './i18n';
+
 const GMAIL_API_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
@@ -103,38 +105,70 @@ async function sendPlainTextEmail(
   if (!response.ok) throw new Error(`Gmail API rejected the email (HTTP ${response.status}).`);
 }
 
-export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+export async function sendPasswordResetEmail(email: string, token: string, locale: Locale = 'de'): Promise<void> {
   const config = getPasswordResetEmailConfig();
   if (!config) throw new Error('Gmail API password reset settings are missing or invalid.');
 
   const resetUrl = new URL('/reset-password/', config.siteUrl);
   resetUrl.searchParams.set('token', token);
-  await sendPlainTextEmail(config, email, 'Passwort zurücksetzen – iftiin flow.', [
-    'Du hast das Zurücksetzen deines Passworts angefordert.',
-    'Öffne diesen Link innerhalb von 30 Minuten:',
-    '',
-    resetUrl.toString(),
-    '',
-    'Wenn du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren.',
-  ]);
+  resetUrl.searchParams.set('lang', locale);
+  const content = locale === 'en'
+    ? [
+        'You requested a password reset.',
+        'Open this link within 30 minutes:',
+        '',
+        resetUrl.toString(),
+        '',
+        'If you did not make this request, you can ignore this email.',
+      ]
+    : [
+        'Du hast das Zurücksetzen deines Passworts angefordert.',
+        'Öffne diesen Link innerhalb von 30 Minuten:',
+        '',
+        resetUrl.toString(),
+        '',
+        'Wenn du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren.',
+      ];
+  await sendPlainTextEmail(
+    config,
+    email,
+    locale === 'en' ? 'Reset your password – iftiin flow.' : 'Passwort zurücksetzen – iftiin flow.',
+    content,
+  );
 }
 
 export function isGuestAccessEmailConfigured(): boolean {
   return getPasswordResetEmailConfig() !== null;
 }
 
-export async function sendGuestAccessEmail(email: string, token: string): Promise<void> {
+export async function sendGuestAccessEmail(email: string, token: string, locale: Locale = 'de'): Promise<void> {
   const config = getPasswordResetEmailConfig();
   if (!config) throw new Error('Gmail API guest access settings are missing or invalid.');
 
   const accessUrl = new URL('/guest-access/', config.siteUrl);
   accessUrl.searchParams.set('token', token);
-  await sendPlainTextEmail(config, email, 'Dein iftiin flow. Zugang', [
-    'Dein Kauf ist bestätigt. Öffne diesen persönlichen Zugangslink innerhalb von 30 Minuten:',
-    '',
-    accessUrl.toString(),
-    '',
-    'Der Link ist einmalig. Danach bleibt deine konto-freie Bibliothek bis zu 30 Tage angemeldet.',
-    'Über die Shopseite kannst du jederzeit einen neuen Zugangslink anfordern.',
-  ]);
+  accessUrl.searchParams.set('lang', locale);
+  const content = locale === 'en'
+    ? [
+        'Your purchase is confirmed. Open this personal access link within 30 minutes:',
+        '',
+        accessUrl.toString(),
+        '',
+        'The link can only be used once. Your guest library will then stay signed in for up to 30 days.',
+        'You can request a new access link from the shop at any time.',
+      ]
+    : [
+        'Dein Kauf ist bestätigt. Öffne diesen persönlichen Zugangslink innerhalb von 30 Minuten:',
+        '',
+        accessUrl.toString(),
+        '',
+        'Der Link ist einmalig. Danach bleibt deine konto-freie Bibliothek bis zu 30 Tage angemeldet.',
+        'Über die Shopseite kannst du jederzeit einen neuen Zugangslink anfordern.',
+      ];
+  await sendPlainTextEmail(
+    config,
+    email,
+    locale === 'en' ? 'Your iftiin flow. access' : 'Dein iftiin flow. Zugang',
+    content,
+  );
 }

@@ -3,10 +3,13 @@ import ArrowIcon from '../../components/ArrowIcon.astro';
 import Base from '../../layouts/Base.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
 import IftiinSun from '../../components/brand/IftiinSun.astro';
-import { pillars } from '../../config';
+import { localeHref, localizedPillars, t } from '../../lib/i18n';
 import { publishedArticles } from '../../lib/content';
 import { getSessionAccount } from '../../lib/auth';
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const pillars = localizedPillars(locale);
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,''), locale);
 const legacyTopicTargets: Record<string, string> = {
   'knowledge-agency': 'explore/',
   'ai-domain': 'explore/',
@@ -20,6 +23,24 @@ if (!pillar) {
   return Astro.redirect(root(legacyTarget ?? 'explore/'), legacyTarget ? 301 : 302);
 }
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
-const articles = (await publishedArticles(Boolean(account))).filter(a => a.data.pillar === pillar.slug);
+const articles = (await publishedArticles(Boolean(account), locale)).filter(a => a.data.pillar === pillar.slug);
 ---
-<Base title={pillar.name} description={pillar.description}><section class="interior-hero wrap"><a class="breadcrumb" href={root('explore/')}><ArrowIcon direction="left" /> Explore</a><div class="section-label">Topic / {pillar.number}</div><h1>{pillar.name}</h1><p>{pillar.question}</p></section><section class="section wrap compact-section"><p class="topic-intro">{pillar.description}</p><div class="section-heading tight"><h2>Visions & <em>perspectives.</em></h2></div>{articles.length ? <div class="card-grid">{articles.map(a=><ArticleCard article={a}/>)}</div> : <div class="empty-state"><IftiinSun class="empty-symbol" color="var(--violet)" /><h3>Thinking in progress.</h3><p>Hier erscheinen künftig Essays, Analysen und Modelle zu diesem Themenfeld.</p></div>}</section></Base>
+<Base title={pillar.name} description={pillar.description}>
+  <section class="interior-hero wrap">
+    <a class="breadcrumb" href={root('explore/')}><ArrowIcon direction="left" /> {copy('topic.breadcrumb')}</a>
+    <div class="section-label">{copy('topic.label')} / {pillar.number}</div>
+    <h1>{pillar.name}</h1>
+    <p>{pillar.question}</p>
+  </section>
+  <section class="section wrap compact-section">
+    <p class="topic-intro">{pillar.description}</p>
+    <div class="section-heading tight"><h2>{copy('topic.perspectives')}</h2></div>
+    {articles.length
+      ? <div class="card-grid">{articles.map(a => <ArticleCard article={a} />)}</div>
+      : <div class="empty-state">
+        <IftiinSun class="empty-symbol" color="var(--violet)" />
+        <h3>{copy('topic.emptyTitle')}</h3>
+        <p>{copy('topic.emptyDescription')}</p>
+      </div>}
+  </section>
+</Base>

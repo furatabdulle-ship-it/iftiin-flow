@@ -1,15 +1,19 @@
 ---
 import Base from '../layouts/Base.astro';
 import { site } from '../config';
+import { t } from '../lib/i18n';
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 ---
-<Base title="Impressum" description="Impressum und Anbieterkennzeichnung von iftiin flow.">
+<Base title={copy('legal.title')} description={copy('legal.description')}>
   <section class="interior-hero wrap legal-hero">
-    <div class="section-label">Rechtliches / Anbieterkennzeichnung</div>
-    <h1>Impressum</h1>
-    <p>Angaben gemäß § 5 DDG.</p>
+    <div class="section-label">{copy('legal.label')}</div>
+    <h1>{copy('legal.title')}</h1>
+    <p>{copy('legal.statement')}</p>
   </section>
   <section class="section wrap legal-content">
-    <h2>Diensteanbieter</h2>
+    {locale === 'en' && <p class="legal-translation-note">{copy('legal.translationNotice')}</p>}
+    <h2>{copy('legal.provider')}</h2>
     <p>
       Furat Abdulle<br />
       Gärtnerweg 62<br />
@@ -17,12 +21,12 @@ import { site } from '../config';
       Deutschland
     </p>
 
-    <h2>Kontakt</h2>
+    <h2>{copy('legal.contact')}</h2>
     <p>E-Mail: <a href={`mailto:${site.email}`}>{site.email}</a></p>
 
-    <h2>Verantwortlich für den Inhalt</h2>
+    <h2>{copy('legal.responsible')}</h2>
     <p>
-      Verantwortlich nach § 18 Abs. 2 MStV:<br />
+      {copy('legal.responsibility')}<br />
       Furat Abdulle<br />
       Gärtnerweg 62<br />
       60322 Frankfurt am Main (Innenstadt II)<br />

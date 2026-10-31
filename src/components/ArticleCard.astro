@@ -1,14 +1,20 @@
 ---
 import ArrowIcon from './ArrowIcon.astro';
-import { pillars, formatNames } from '../config';
+import { localizedFormatNames, localizedPillars } from '../lib/i18n';
 import { formatDate } from '../lib/content';
 const { article } = Astro.props;
-const pillar = pillars.find(p => p.slug === article.data.pillar);
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,'');
+const locale = Astro.locals.locale;
+const pillar = localizedPillars(locale).find(p => p.slug === article.data.pillar);
+const formatNames = localizedFormatNames(locale);
+const root = (path = '') => {
+  const url = new URL(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,''), Astro.url);
+  url.searchParams.set('lang', locale);
+  return `${url.pathname}${url.search}`;
+};
 ---
 <a class="article-card" href={root(`articles/${article.slug}/`)}>
   <div class="article-card-top"><span>{formatNames[article.data.format] || 'Artikel'}</span><ArrowIcon class="arrow" /></div>
   <h3>{article.data.title}</h3>
   <p>{article.data.description}</p>
-  <div class="article-card-bottom"><span>{pillar?.name}</span><span>{formatDate(article.data.date)}</span></div>
+  <div class="article-card-bottom"><span>{pillar?.name}</span><span>{formatDate(article.data.date, locale)}</span></div>
 </a>

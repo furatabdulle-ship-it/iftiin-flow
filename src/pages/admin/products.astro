@@ -107,7 +107,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
           <section class="cms-form-section">
             <h3>Grunddaten</h3>
             <div class="cms-form-grid">
-              <label>Titel<input name="title" maxlength="180" required /></label>
+              <label>Titel (Deutsch)<input name="title" maxlength="180" required /></label>
+              <label>Title (English)<input name="titleEn" maxlength="180" /></label>
               <label>Inhaltstyp
                 <select name="contentType">
                   <option value="download">Digitaler Download</option>
@@ -115,12 +116,14 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
                   <option value="video">Video</option>
                 </select>
               </label>
-              <label class="cms-field-wide">Kurzbeschreibung<textarea name="description" maxlength="1000" rows="2"></textarea></label>
+              <label class="cms-field-wide">Kurzbeschreibung (Deutsch)<textarea name="description" maxlength="1000" rows="2"></textarea></label>
+              <label class="cms-field-wide">Short description (English)<textarea name="descriptionEn" maxlength="1000" rows="2"></textarea></label>
             </div>
           </section>
           <section class="cms-form-section">
             <h3>Inhalt &amp; Datei</h3>
-            <label>Inhalt / Lerntext<textarea name="body" maxlength="100000" rows="8"></textarea></label>
+            <label>Inhalt / Lerntext (Deutsch)<textarea name="body" maxlength="100000" rows="8"></textarea></label>
+            <label>Content / lesson text (English)<textarea name="bodyEn" maxlength="100000" rows="8"></textarea></label>
             <label>Datei (PDF, ZIP, MP4, WebM oder MOV; max. 500 MB)
               <input name="file" type="file" accept=".pdf,.zip,.mp4,.webm,.mov,application/pdf,application/zip,video/mp4,video/webm,video/quicktime" />
             </label>
@@ -160,7 +163,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
           <section class="cms-form-section">
             <h3>Grunddaten</h3>
             <div class="cms-form-grid">
-              <label>Name<input name="name" maxlength="180" required /></label>
+              <label>Name (Deutsch)<input name="name" maxlength="180" required /></label>
+              <label>Name (English)<input name="nameEn" maxlength="180" /></label>
               <label>Produkttyp
                 <select name="productType">
                   <option value="digital_download">Digitaler Download</option>
@@ -170,7 +174,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
                   <option value="membership">Membership</option>
                 </select>
               </label>
-              <label class="cms-field-wide">Beschreibung<textarea name="description" maxlength="2000" rows="3"></textarea></label>
+              <label class="cms-field-wide">Beschreibung (Deutsch)<textarea name="description" maxlength="2000" rows="3"></textarea></label>
+              <label class="cms-field-wide">Description (English)<textarea name="descriptionEn" maxlength="2000" rows="3"></textarea></label>
             </div>
           </section>
           <section class="cms-form-section">
@@ -227,16 +232,18 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
 
 <script>
   type ContentRecord = {
-    id: string; slug: string; title: string; description: string; body: string;
+    id: string; slug: string; title: string; titleEn: string | null;
+    description: string; descriptionEn: string | null; body: string; bodyEn: string | null;
     contentType: string; status: string; storageAssetId: string | null;
     originalFilename: string | null; articleId: string | null; position: number;
   };
   type ProductRecord = {
-    id: string; slug: string; name: string; description: string; productType: string;
+    id: string; slug: string; name: string; nameEn: string | null;
+    description: string; descriptionEn: string | null; productType: string;
     status: string;
     prices: { priceId: string; amountCents: number; currency: string; billingInterval: 'one_time' | 'month' | 'year' }[];
     coverAssetId: string | null;
-    content: Pick<ContentRecord, 'id' | 'title' | 'contentType' | 'status'>[];
+    content: Pick<ContentRecord, 'id' | 'title' | 'titleEn' | 'contentType' | 'status'>[];
   };
   type UploadResponse = { id: string; uploadUrl: string; headers: Record<string, string> };
   type ApiError = Error & { products?: string[] };
@@ -601,10 +608,13 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       formField<HTMLInputElement>(contentForm, 'storageAssetId')!.value = item.storageAssetId ?? '';
       formField<HTMLSelectElement>(contentForm, 'contentType')!.value = item.contentType;
       formField<HTMLInputElement>(contentForm, 'title')!.value = item.title;
+      formField<HTMLInputElement>(contentForm, 'titleEn')!.value = item.titleEn ?? '';
       formField<HTMLInputElement>(contentForm, 'slug')!.value = item.slug;
       formField<HTMLInputElement>(contentForm, 'slug')!.dataset.manual = 'true';
       formField<HTMLTextAreaElement>(contentForm, 'description')!.value = item.description;
+      formField<HTMLTextAreaElement>(contentForm, 'descriptionEn')!.value = item.descriptionEn ?? '';
       formField<HTMLTextAreaElement>(contentForm, 'body')!.value = item.body;
+      formField<HTMLTextAreaElement>(contentForm, 'bodyEn')!.value = item.bodyEn ?? '';
       formField<HTMLSelectElement>(contentForm, 'status')!.value = item.status;
       formField<HTMLInputElement>(contentForm, 'position')!.value = String(item.position);
       if (contentUploadStatus) contentUploadStatus.textContent = item.originalFilename
@@ -619,10 +629,12 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     if (item) {
       formField<HTMLInputElement>(productForm, 'id')!.value = item.id;
       formField<HTMLInputElement>(productForm, 'name')!.value = item.name;
+      formField<HTMLInputElement>(productForm, 'nameEn')!.value = item.nameEn ?? '';
       formField<HTMLInputElement>(productForm, 'slug')!.value = item.slug;
       formField<HTMLInputElement>(productForm, 'slug')!.dataset.manual = 'true';
       formField<HTMLSelectElement>(productForm, 'productType')!.value = item.productType;
       formField<HTMLTextAreaElement>(productForm, 'description')!.value = item.description;
+      formField<HTMLTextAreaElement>(productForm, 'descriptionEn')!.value = item.descriptionEn ?? '';
       const priceFields: Record<string, string> = {
         one_time: 'priceOneTime',
         month: 'priceMonthly',
@@ -798,9 +810,12 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       const payload = {
         contentType: data.get('contentType'),
         title: data.get('title'),
+        titleEn: data.get('titleEn'),
         slug: data.get('slug'),
         description: data.get('description'),
+        descriptionEn: data.get('descriptionEn'),
         body: data.get('body'),
+        bodyEn: data.get('bodyEn'),
         storageAssetId,
         status: data.get('status'),
         position: Number(data.get('position')),
@@ -859,7 +874,9 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
         slug: data.get('slug'),
         productType,
         name: data.get('name'),
+        nameEn: data.get('nameEn'),
         description: data.get('description'),
+        descriptionEn: data.get('descriptionEn'),
         status: data.get('status'),
         currency: 'eur',
         prices,

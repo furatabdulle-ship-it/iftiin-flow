@@ -7,9 +7,11 @@ import { getSessionAccount } from '../../lib/auth';
 import { hasArticleAccess, hasGuestArticleAccess } from '../../lib/commerce';
 import { getGuestAccessEmail } from '../../lib/guest-access';
 import { getVideoEmbedUrl } from '../../lib/validation';
-import { pillars, formatNames } from '../../config';
+import { localeHref, localizedFormatNames, localizedPillars, t } from '../../lib/i18n';
 
-const article = Astro.params.slug ? await getPublishedArticle(Astro.params.slug) : null;
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const article = Astro.params.slug ? await getPublishedArticle(Astro.params.slug, locale) : null;
 if (article?.data.loginRequired || article?.data.requiresPurchase) {
   Astro.response.headers.set('Cache-Control', 'private, no-store');
   const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
@@ -26,30 +28,31 @@ if (article?.data.loginRequired || article?.data.requiresPurchase) {
   );
   if (!accountAllowed && !guestAllowed) {
     if (article.data.requiresPurchase) {
-      return Astro.redirect(`/store/?locked=${encodeURIComponent(article.slug)}`, 302);
+      return Astro.redirect(localeHref(`/store/?locked=${encodeURIComponent(article.slug)}`, locale), 302);
     }
-    return Astro.redirect(`/login/?next=${encodeURIComponent(Astro.url.pathname)}`, 302);
+    return Astro.redirect(localeHref(`/login/?next=${encodeURIComponent(Astro.url.pathname)}`, locale), 302);
   }
 }
 if (!article) Astro.response.status = 404;
 const html = article ? await renderArticleMarkdown(article.body) : '';
-const pillar = article && pillars.find((item) => item.slug === article.data.pillar);
+const pillar = article && localizedPillars(locale).find((item) => item.slug === article.data.pillar);
+const formatNames = localizedFormatNames(locale);
 const videoEmbedUrl = article?.data.videoUrl ? getVideoEmbedUrl(article.data.videoUrl) : null;
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
 ---
-<Base title={article?.data.title ?? 'Beitrag nicht gefunden'} description={article?.data.description ?? 'Der gesuchte Beitrag ist nicht verfügbar.'}>
+<Base title={article?.data.title ?? copy('article.notFoundTitle')} description={article?.data.description ?? copy('article.notFoundDescription')}>
   {article ? <>
   <article>
     <header class="article-header wrap">
       <a class="breadcrumb" href={root(`topics/${pillar?.slug}/`)}><ArrowIcon direction="left" /> {pillar?.name}</a>
-      <div class="section-label">{formatNames[article.data.format]} / {pillar?.name}</div>
+      <div class="section-label">{formatNames[article.data.format] ?? (locale === 'en' ? 'Article' : 'Artikel')} / {pillar?.name}</div>
       <h1>{article.data.title}</h1>
       <p>{article.data.description}</p>
       <div class="article-meta">
-        <span>{formatDate(article.data.date)}</span>
-        {article.data.updated && <span>Aktualisiert: {formatDate(article.data.updated)}</span>}
-        {article.data.requiresPurchase && <span>Premium-Inhalt</span>}
-        {article.data.loginRequired && !article.data.requiresPurchase && <span>Nur für angemeldete Konten</span>}
+        <span>{formatDate(article.data.date, locale)}</span>
+        {article.data.updated && <span>{copy('article.updated')} {formatDate(article.data.updated, locale)}</span>}
+        {article.data.requiresPurchase && <span>{copy('article.premium')}</span>}
+        {article.data.loginRequired && !article.data.requiresPurchase && <span>{copy('article.loginRequired')}</span>}
       </div>
     </header>
     {videoEmbedUrl && <div class="video-player wrap">
@@ -61,19 +64,19 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen
       ></iframe>
-      <p class="video-disclaimer">Das Video wird bei einem externen Anbieter abgespielt. Die Anmeldung schützt diese Seite, nicht den Video-Link beim Anbieter.</p>
+      <p class="video-disclaimer">{copy('article.videoDisclaimer')}</p>
     </div>}
     <div class="prose" set:html={html}></div>
     {article.data.sources.length > 0 && <section class="sources wrap">
-      <h2>Quellen</h2>
+      <h2>{copy('article.sources')}</h2>
       <ol>{article.data.sources.map((source) => <li><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ArrowIcon /></a></li>)}</ol>
     </section>}
   </article>
   </> : <section class="interior-hero wrap">
-    <div class="section-label">404 / Nicht gefunden</div>
-    <h1>Beitrag nicht <em>gefunden.</em></h1>
-    <p>Dieser Beitrag ist nicht verfügbar oder wurde noch nicht veröffentlicht.</p>
-    <a class="pill-link" href={root('explore/')}>Zur Explore-Seite <ArrowIcon /></a>
+    <div class="section-label">{copy('article.notFoundLabel')}</div>
+    <h1>{copy('article.notFoundTitle')}</h1>
+    <p>{copy('article.notFoundDescription')}</p>
+    <a class="pill-link" href={root('explore/')}>{copy('article.backToExplore')} <ArrowIcon /></a>
   </section>}
 </Base>
 

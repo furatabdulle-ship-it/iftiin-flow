@@ -4,13 +4,13 @@ import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '..
 import { sendGuestAccessEmail } from '../../../lib/password-reset-email';
 import { rateLimit } from '../../../lib/rate-limit';
 import { z } from 'astro/zod';
+import { t } from '../../../lib/i18n';
 
 const requestSchema = z.object({
   email: z.string().trim().max(254).pipe(z.email()).transform((email) => email.toLowerCase()),
 });
-const confirmationMessage = 'Wenn zu dieser Adresse ein Kauf gehört, erhältst du in Kürze einen Zugangslink.';
-
 export const POST: APIRoute = async (context) => {
+  const confirmationMessage = t(context.locals.locale, 'guest.accessLinkSent');
   const originError = rejectCrossOriginWrite(context);
   if (originError) return originError;
   const limited = rateLimit(context, 'guest-access-request', 5, 15 * 60_000);
@@ -24,7 +24,7 @@ export const POST: APIRoute = async (context) => {
     const token = await sendGuestAccessToken(parsed.data.email);
     if (token) {
       try {
-        await sendGuestAccessEmail(parsed.data.email, token);
+        await sendGuestAccessEmail(parsed.data.email, token, context.locals.locale);
       } catch (error) {
         await discardGuestAccessToken(token);
         throw error;

@@ -24,9 +24,11 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
         <h2 id="editor-heading">Neuer Beitrag</h2>
         <form class="article-editor" id="article-editor">
           <input type="hidden" name="id" />
-          <label>Titel<input name="title" maxlength="180" required /></label>
+          <label>Titel (Deutsch)<input name="title" maxlength="180" required /></label>
+          <label>Title (English)<input name="titleEn" maxlength="180" /></label>
           <label>URL-Slug<input name="slug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" required /></label>
-          <label>Teaser<textarea name="description" maxlength="500" rows="3" required></textarea></label>
+          <label>Teaser (Deutsch)<textarea name="description" maxlength="500" rows="3" required></textarea></label>
+          <label>Teaser (English)<textarea name="descriptionEn" maxlength="500" rows="3"></textarea></label>
           <div class="editor-meta">
             <label>Datum<input name="date" type="date" required /></label>
             <label>Aktualisiert (optional)<input name="updated" type="date" /></label>
@@ -65,7 +67,8 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
           <label>Status
             <select name="status"><option value="draft">Entwurf</option><option value="published">Veröffentlicht</option></select>
           </label>
-          <label><span>Beitragsinhalt (Markdown)</span><textarea name="body" rows="16"></textarea></label>
+          <label><span>Beitragsinhalt (Deutsch, Markdown)</span><textarea name="body" rows="16"></textarea></label>
+          <label><span>Article content (English, Markdown)</span><textarea name="bodyEn" rows="16"></textarea></label>
           <label>Tags (durch Komma trennen)<input name="tags" /></label>
           <label>Quellen (eine pro Zeile: Titel | https://…)
             <textarea name="sources" rows="4"></textarea>
@@ -86,9 +89,12 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
     id: string;
     slug: string;
     body: string;
+    bodyEn: string | null;
     data: {
       title: string;
+      titleEn: string | null;
       description: string;
+      descriptionEn: string | null;
       date: string;
       updated: string | null;
       pillar: string;
@@ -172,8 +178,10 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
     const source = (name: string) => field(name);
     if (source('id')) source('id')!.value = article.id;
     if (source('title')) source('title')!.value = article.data.title;
+    if (source('titleEn')) source('titleEn')!.value = article.data.titleEn ?? '';
     if (source('slug')) source('slug')!.value = article.slug;
     if (source('description')) source('description')!.value = article.data.description;
+    if (source('descriptionEn')) source('descriptionEn')!.value = article.data.descriptionEn ?? '';
     if (source('date')) source('date')!.value = article.data.date.slice(0, 10);
     if (source('updated')) source('updated')!.value = article.data.updated?.slice(0, 10) ?? '';
     if (source('pillar')) source('pillar')!.value = article.data.pillar;
@@ -181,6 +189,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
     if (source('status')) source('status')!.value = article.data.status;
     if (source('videoUrl')) source('videoUrl')!.value = article.data.videoUrl ?? '';
     if (source('body')) source('body')!.value = article.body;
+    if (source('bodyEn')) source('bodyEn')!.value = article.bodyEn ?? '';
     if (source('tags')) source('tags')!.value = article.data.tags.join(', ');
     if (source('sources')) {
       source('sources')!.value = article.data.sources.map((item) => `${item.label} | ${item.url}`).join('\n');
@@ -207,8 +216,11 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
     return {
       slug: get('slug'),
       title: get('title'),
+      titleEn: get('titleEn'),
       description: get('description'),
+      descriptionEn: get('descriptionEn'),
       body: get('body'),
+      bodyEn: get('bodyEn'),
       date: get('date'),
       updated: get('updated') || null,
       pillar: get('pillar'),

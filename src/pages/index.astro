@@ -3,21 +3,25 @@ import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import IftiinSun from '../components/brand/IftiinSun.astro';
-import { site, pillars, formatNames } from '../config';
+import { localeHref, localizedFormatNames, localizedPillars, t } from '../lib/i18n';
 import { featuredArticles } from '../lib/content';
 import { getSessionAccount } from '../lib/auth';
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
-const highlighted = await featuredArticles(3, Boolean(account));
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const pillars = localizedPillars(locale);
+const formatNames = localizedFormatNames(locale);
+const highlighted = await featuredArticles(3, Boolean(account), locale);
 const feature = highlighted[0];
 const featurePillar = feature ? pillars.find((pillar) => pillar.slug === feature.data.pillar) : undefined;
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
 ---
-<Base home>
-  <nav class="home-section-nav" aria-label="Seitennavigation">
-    <a href={highlighted.length > 1 ? '#ideas' : '#top'}><span>01</span> Visions</a>
-    <a href="#perspective"><span>02</span> Perspective</a>
-    <a href="#explore"><span>03</span> Explore</a>
-    <a href="#invitation"><span>04</span> Invitation</a>
+<Base home description={copy('home.metaDescription')}>
+  <nav class="home-section-nav" aria-label={copy('home.navLabel')}>
+    <a href={highlighted.length > 1 ? '#ideas' : '#top'}><span>01</span> {copy('home.visions')}</a>
+    <a href="#perspective"><span>02</span> {copy('home.perspective')}</a>
+    <a href="#explore"><span>03</span> {copy('common.explore')}</a>
+    <a href="#invitation"><span>04</span> {copy('home.invitation')}</a>
   </nav>
 
   <section class="hero" id="top" data-parallax>
@@ -53,12 +57,12 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
             <span>noise.</span><span>AI.</span><span>power.</span><span>change.</span><span>Future Skills.</span>
           </span></span></span>
         </h1>
-        <p class="hero-description">Ideen, Analysen und Lernräume an der Schnittstelle von Wissen, Technologie und Handlungsfähigkeit – und der Frage, wer gestalten darf.</p>
+        <p class="hero-description">{copy('home.heroDescription')}</p>
         <div class="hero-ctas">
-          <a class="pill-link hero-cta-primary" href={root('explore/')}>Magazin entdecken <ArrowIcon /></a>
-          <a class="hero-cta-secondary" href={root('store/')}>Zum Shop <ArrowIcon /></a>
+          <a class="pill-link hero-cta-primary" href={root('explore/')}>{copy('home.magazineCta')} <ArrowIcon /></a>
+          <a class="hero-cta-secondary" href={root('store/')}>{copy('home.shopCta')} <ArrowIcon /></a>
         </div>
-        <ul class="hero-topics" aria-label="Themen">
+        <ul class="hero-topics" aria-label={copy('home.topicsLabel')}>
           {pillars.map((pillar) => <li>{pillar.name}</li>)}
         </ul>
       </div>
@@ -73,7 +77,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
           <div class="hero-feature-body">
             <div class="hero-feature-meta">{formatNames[feature.data.format] || 'Artikel'}{featurePillar ? ` · ${featurePillar.name}` : ''}</div>
             <p>{feature.data.description}</p>
-            <span class="hero-feature-link">Artikel lesen <ArrowIcon /></span>
+            <span class="hero-feature-link">{copy('home.articleRead')} <ArrowIcon /></span>
           </div>
         </a> : <a class="hero-feature-card" href={root(`topics/${pillars[0].slug}/`)}>
           <div class="hero-feature-art">
@@ -84,7 +88,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
           <div class="hero-feature-body">
             <div class="hero-feature-meta">Visions / Themes</div>
             <p>{pillars[0].question}</p>
-            <span class="hero-feature-link">Themen entdecken <ArrowIcon /></span>
+            <span class="hero-feature-link">{copy('home.discoverTopics')} <ArrowIcon /></span>
           </div>
         </a>}
 
@@ -92,8 +96,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
           <div class="hero-shop-copy">
             <div class="section-label">Shop / Wissen vertiefen</div>
             <h2>Visions into<br /><em>practice.</em></h2>
-            <p>Digitale Materialien, vertiefende Analysen und Lernformate.</p>
-            <span>Entdecken <ArrowIcon /></span>
+            <p>{copy('home.shopDescription')}</p>
+            <span>{copy('home.discover')} <ArrowIcon /></span>
           </div>
           <div class="hero-workbook" aria-hidden="true">
             <span>iftiin flow.</span>
@@ -105,31 +109,31 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     </div>
 
     <div class="hero-foot">
-      <span class="hero-foot-side">Wissen · Urteilskraft · Handlungsfähigkeit</span>
-      <a class="badge" href="#explore" aria-label="Zu den Themenwelten">
+      <span class="hero-foot-side">{copy('common.announcement')}</span>
+      <a class="badge" href="#explore" aria-label={copy('home.discoverTopics')}>
         <svg viewBox="0 0 140 140" aria-hidden="true">
           <defs><path id="badge-circle" d="M70,70 m-54,0 a54,54 0 1,1 108,0 a54,54 0 1,1 -108,0" /></defs>
           <text><textPath href="#badge-circle">UNDERSTAND · QUESTION · ACT · </textPath></text>
         </svg>
         <span class="badge-arrow" aria-hidden="true"><ArrowIcon direction="down" /></span>
       </a>
-      <span class="hero-foot-side hero-foot-side--right">Understand · Question · Act</span>
+      <span class="hero-foot-side hero-foot-side--right">{copy('home.understand')}</span>
     </div>
   </section>
 
   {highlighted.length > 1 && <section class="section articles-section" id="ideas"><div class="wrap">
-    <div class="section-heading"><div><div class="section-label">01 / Visions</div><h2>Thoughts worth<br /><em>exploring.</em></h2></div><a href={root('explore/')} class="text-link">Alle Beiträge <ArrowIcon /></a></div>
+    <div class="section-heading"><div><div class="section-label">01 / {copy('home.visions')}</div><h2>Thoughts worth<br /><em>exploring.</em></h2></div><a href={root('explore/')} class="text-link">{copy('home.allArticles')} <ArrowIcon /></a></div>
     <div class="card-grid">{highlighted.slice(1).map(article => <ArticleCard article={article} />)}</div>
   </div></section>}
 
   <section class="dark-section" id="perspective"><div class="wrap intro-layout">
     <div class="section-label light">02 / Our perspective</div>
-    <div><h2>Understand.<br /><i>Question.</i> Act.</h2><p>{site.mission}</p><a class="text-link light" href={root('about/')}>Mehr über unsere Perspektive <ArrowIcon /></a></div>
+    <div><h2>Understand.<br /><i>Question.</i> Act.</h2><p>{copy('home.mission')}</p><a class="text-link light" href={root('about/')}>{copy('home.perspectiveLink')} <ArrowIcon /></a></div>
   </div></section>
 
   <section class="worlds" id="explore">
-    <div class="worlds-head"><div><div class="section-label">03 / Explore</div><h2>Zwei Welten.<br /><span>Ein Denken.</span></h2></div>
-      <p>Zwei Perspektiven auf die Frage, wie wir eine komplexer werdende Welt verstehen und gestalten können.</p>
+    <div class="worlds-head"><div><div class="section-label">03 / {copy('common.explore')}</div><h2>{copy('home.worldsTitle')}<br /><span>{copy('home.worldsTitleSecond')}</span></h2></div>
+      <p>{copy('home.worldsDescription')}</p>
     </div>
     <ul class="world-list">
       {pillars.map(p => <li><a class="world" href={root(`topics/${p.slug}/`)}>
@@ -140,9 +144,9 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     </ul>
   </section>
 
-  <section class="manifesto wrap" id="invitation"><div class="section-label">04 / An invitation</div><div>
+  <section class="manifesto wrap" id="invitation"><div class="section-label">04 / {copy('home.invitation')}</div><div>
     <IftiinSun size={56} class="manifesto-sun" /><h2>Better questions.<br />Clearer thinking.<br /><em>More agency.</em></h2>
-    <p>Hier entsteht Schritt für Schritt eine Wissensplattform mit Essays, Research Maps, Lernformaten und Werkzeugen.</p>
-    <a class="pill-link" href={root('explore/')}>Themen entdecken <ArrowIcon /></a>
+    <p>{copy('home.manifestoDescription')}</p>
+    <a class="pill-link" href={root('explore/')}>{copy('home.discoverTopics')} <ArrowIcon /></a>
   </div></section>
 </Base>

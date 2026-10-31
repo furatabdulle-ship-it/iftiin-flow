@@ -2,18 +2,25 @@
 import ArrowIcon from '../components/ArrowIcon.astro';
 import { site } from '../config';
 import IftiinSun from '../components/brand/IftiinSun.astro';
+import { localeHref, t } from '../lib/i18n';
 import '../styles/global.css';
 import '../styles/fonts.css';
 import '../styles/home.css';
 import '../styles/brand.css';
-const { title, description = site.shortDescription, home = false } = Astro.props;
-const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — Wissen. Urteilskraft. Handlungsfähigkeit.`;
+import '../styles/language.css';
+const locale = Astro.locals.locale;
+const { title, home = false } = Astro.props;
+const description = Astro.props.description ?? t(locale, 'home.metaDescription');
+const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — ${t(locale, 'home.metaTitle')}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+canonical.searchParams.set('lang', locale);
 const prefix = import.meta.env.BASE_URL;
-const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
+const root = (path = '') => localeHref(prefix.replace(/\/$/, '/') + path.replace(/^\//,''), locale);
+const languageHref = (language: 'de' | 'en') => localeHref(`${Astro.url.pathname}${Astro.url.search}`, language);
+const showLanguageSwitch = !Astro.url.pathname.startsWith('/admin/');
 ---
 <!doctype html>
-<html lang="de">
+<html lang={locale}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -23,54 +30,61 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="de" href={localeHref(Astro.url.pathname, 'de')} />
+    <link rel="alternate" hreflang="en" href={localeHref(Astro.url.pathname, 'en')} />
     <link rel="icon" href={root('favicon.svg')} type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="180x180" href={root('apple-touch-icon.png')} />
     <title>{pageTitle}</title>
   </head>
   <body class:list={{ 'home-page': home }}>
-    <a class="skip" href="#content">Zum Inhalt springen</a>
-    {!home && <div class="announcement">Wissen · Urteilskraft · Handlungsfähigkeit <span aria-hidden="true"><ArrowIcon /></span></div>}
+    <a class="skip" href="#content">{t(locale, 'common.skip')}</a>
+    {!home && <div class="announcement">{t(locale, 'common.announcement')} <span aria-hidden="true"><ArrowIcon /></span></div>}
     <header class="site-header wrap">
-      <a class="wordmark" href={root('')} aria-label="iftiin flow. Startseite"><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a>
+      <a class="wordmark" href={root('')} aria-label={locale === 'en' ? 'iftiin flow. Home' : 'iftiin flow. Startseite'}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a>
         {home ? <>
-          <nav class="home-nav" aria-label="Hauptnavigation">
-            <a href={root('explore/')}>Magazin</a>
-            <a href={root('store/')}>Shop <ArrowIcon /></a>
-            <a href={root('about/')}>Über IFTIIN</a>
+          <nav class="home-nav" aria-label={locale === 'en' ? 'Main navigation' : 'Hauptnavigation'}>
+            <a href={root('explore/')}>{t(locale, 'common.magazine')}</a>
+            <a href={root('store/')}>{t(locale, 'common.shop')} <ArrowIcon /></a>
+            <a href={root('about/')}>{t(locale, 'common.aboutIftiin')}</a>
           </nav>
-          <a class="home-account" href={root('account/')}>Mein Konto</a>
+          <a class="home-account" href={root('account/')}>{t(locale, 'common.myAccount')}</a>
           <div class="header-actions">
-          <button class="pill pill--solid" type="button" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
-            <span data-menu-label>Menü</span><span class="burger" aria-hidden="true"><i></i><i></i></span>
+          <button class="pill pill--solid" type="button" aria-expanded="false" aria-controls="site-menu" data-menu-toggle data-open-label={t(locale, 'common.menu')} data-close-label={t(locale, 'common.close')}>
+            <span data-menu-label>{t(locale, 'common.menu')}</span><span class="burger" aria-hidden="true"><i></i><i></i></span>
           </button>
           </div>
-        </> : <nav aria-label="Hauptnavigation">
-          <a href={root('explore/')}>Explore</a>
-          <a href={root('about/')}>About</a>
-          <a href={root('account/')}>Konto</a>
-          <a href={root('store/')}>Shop</a>
+        </> : <nav aria-label={locale === 'en' ? 'Main navigation' : 'Hauptnavigation'}>
+          <a href={root('explore/')}>{t(locale, 'common.explore')}</a>
+          <a href={root('about/')}>{t(locale, 'common.about')}</a>
+          <a href={root('account/')}>{t(locale, 'common.account')}</a>
+          <a href={root('store/')}>{t(locale, 'common.shop')}</a>
           {site.showResearch && <a href={root('research/')}>Research</a>}
           {site.showLearning && <a href={root('learning/')}>Learning</a>}
           {site.showTools && <a href={root('tools/')}>Tools</a>}
-          {site.showBooking && site.bookingUrl && <a class="nav-cta" href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen <ArrowIcon /></a>}
+          {site.showBooking && site.bookingUrl && <a class="nav-cta" href={site.bookingUrl} target="_blank" rel="noopener noreferrer">{t(locale, 'common.booking')} <ArrowIcon /></a>}
         </nav>}
+      {showLanguageSwitch && <div class="language-switch" role="group" aria-label={t(locale, 'common.language')}>
+        <a href={languageHref('de')} aria-current={locale === 'de' ? 'page' : undefined}>DE</a>
+        <span aria-hidden="true">/</span>
+        <a href={languageHref('en')} aria-current={locale === 'en' ? 'page' : undefined}>EN</a>
+      </div>}
     </header>
-    {home && <nav class="site-menu" id="site-menu" aria-label="Hauptmenü" inert>
-      <a href={root('explore/')}>Magazin</a>
-      <a href={root('store/')}>Shop</a>
-      <a href={root('about/')}>Über IFTIIN</a>
-      <a href={root('account/')}>Mein Konto</a>
+    {home && <nav class="site-menu" id="site-menu" aria-label={locale === 'en' ? 'Main menu' : 'Hauptmenü'} inert>
+      <a href={root('explore/')}>{t(locale, 'common.magazine')}</a>
+      <a href={root('store/')}>{t(locale, 'common.shop')}</a>
+      <a href={root('about/')}>{t(locale, 'common.aboutIftiin')}</a>
+      <a href={root('account/')}>{t(locale, 'common.myAccount')}</a>
       {site.showResearch && <a href={root('research/')}>Research</a>}
       {site.showLearning && <a href={root('learning/')}>Learning</a>}
       {site.showTools && <a href={root('tools/')}>Tools</a>}
-      {site.showBooking && site.bookingUrl && <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer">Buchen <ArrowIcon /></a>}
+      {site.showBooking && site.bookingUrl && <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer">{t(locale, 'common.booking')} <ArrowIcon /></a>}
     </nav>}
     <main id="content"><slot /></main>
     <footer class="footer">
       <div class="wrap footer-grid">
-        <div><a class="wordmark" href={root('')}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a><p>Understand complexity.<br/>Think with clarity. Act with agency.</p></div>
-        <div class="footer-links"><a href={root('explore/')}>Explore</a><a href={root('store/')}>Shop</a><a href={root('about/')}>About</a><a href={root('impressum/')}>Impressum</a>{site.email && <a href={`mailto:${site.email}`}>Kontakt</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter <ArrowIcon /></a>}</div>
-        <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · Unabhängige Wissensplattform</div>
+        <div><a class="wordmark" href={root('')}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a><p>{t(locale, 'common.footerLine1')}<br/>{t(locale, 'common.footerLine2')}</p></div>
+        <div class="footer-links"><a href={root('explore/')}>{t(locale, 'common.explore')}</a><a href={root('store/')}>{t(locale, 'common.shop')}</a><a href={root('about/')}>{t(locale, 'common.about')}</a><a href={root('impressum/')}>{t(locale, 'common.legal')}</a>{site.email && <a href={`mailto:${site.email}`}>{t(locale, 'common.contact')}</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter <ArrowIcon /></a>}</div>
+        <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · {locale === 'en' ? 'Independent knowledge platform' : 'Unabhängige Wissensplattform'}</div>
       </div>
     </footer>
     {home && <script>
@@ -82,7 +96,9 @@ const root = (path = '') => prefix.replace(/\/$/, '/') + path.replace(/^\//,'');
         const setMenuOpen = (open: boolean) => {
           document.body.classList.toggle('menu-open', open);
           menuToggle.setAttribute('aria-expanded', String(open));
-          menuToggle.querySelector('[data-menu-label]')!.textContent = open ? 'Schließen' : 'Menü';
+          menuToggle.querySelector('[data-menu-label]')!.textContent = open
+            ? menuToggle.dataset.closeLabel ?? 'Close'
+            : menuToggle.dataset.openLabel ?? 'Menu';
           menu.inert = !open;
         };
 

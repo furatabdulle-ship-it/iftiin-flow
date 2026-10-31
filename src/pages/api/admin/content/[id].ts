@@ -149,13 +149,14 @@ export const PUT: APIRoute = async (context) => {
         if (asset.rows[0].status !== 'ready') return { error: 'file-not-ready' as const };
       }
       await client.query(
-        `UPDATE content_items SET content_type = $2, slug = $3, title = $4,
-           description = $5, body = $6, storage_asset_id = $7,
-           status = $8, position = $9, updated_at = NOW()
+        `UPDATE content_items SET content_type = $2, slug = $3, title = $4, title_en = $5,
+           description = $6, description_en = $7, body = $8, body_en = $9,
+           storage_asset_id = $10, status = $11, position = $12, updated_at = NOW()
          WHERE id = $1`,
         [
-          id, item.contentType, item.slug, item.title, item.description, item.body,
-          item.storageAssetId, item.status, item.position,
+          id, item.contentType, item.slug, item.title, item.titleEn, item.description,
+          item.descriptionEn, item.body, item.bodyEn, item.storageAssetId, item.status,
+          item.position,
         ],
       );
       return { success: true as const };

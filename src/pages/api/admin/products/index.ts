@@ -54,10 +54,12 @@ export const POST: APIRoute = async (context) => {
       );
       if (referenceError) throw new ProductReferenceChangedError(referenceError);
       const created = await client.query<{ id: string }>(
-        `INSERT INTO products (slug, product_type, name, description, status, cover_asset_id, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO products
+         (slug, product_type, name, name_en, description, description_en, status, cover_asset_id, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING id`,
-        [product.slug, product.productType, product.name, product.description, product.status, product.coverAssetId, admin.id],
+        [product.slug, product.productType, product.name, product.nameEn, product.description,
+          product.descriptionEn, product.status, product.coverAssetId, admin.id],
       );
       const productId = created.rows[0].id;
       for (const price of product.prices) {

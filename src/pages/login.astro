@@ -4,23 +4,26 @@ import AuthForm from '../components/AuthForm.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
 import { isPasswordResetEmailConfigured } from '../lib/password-reset-email';
+import { localeHref, t } from '../lib/i18n';
 
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
-if (account) return Astro.redirect(account.role === 'admin' ? '/admin/' : '/account/', 302);
+if (account) return Astro.redirect(localeHref(account.role === 'admin' ? '/admin/' : '/account/', locale), 302);
 const requestedNext = Astro.url.searchParams.get('next');
 const redirectTo = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\')
   ? requestedNext
-  : '/account/';
+  : localeHref('/account/', locale);
 const passwordResetEnabled = isPasswordResetEmailConfigured();
 ---
-<Base title="Anmelden" description="Melde dich bei iftiin flow. an.">
+<Base title={copy('auth.loginTitle')} description={copy('auth.loginDescription')}>
   <section class="interior-hero wrap account-hero">
-    <div class="section-label">Konto / Login</div>
-    <h1>Willkommen <em>zurück.</em></h1>
-    <p>Melde dich mit deinem Konto an.</p>
+    <div class="section-label">{copy('auth.loginLabel')}</div>
+    <h1>{copy('auth.welcomeBack')}</h1>
+    <p>{copy('auth.loginPrompt')}</p>
     <AuthForm mode="login" redirectTo={redirectTo} />
-    {passwordResetEnabled && <p class="account-switch"><a href="/forgot-password/">Passwort vergessen? <ArrowIcon /></a></p>}
-    <p class="account-switch">Noch kein Konto? <a href="/register/">Jetzt registrieren <ArrowIcon /></a></p>
+    {passwordResetEnabled && <p class="account-switch"><a href={localeHref('/forgot-password/', locale)}>{copy('auth.forgotPassword')} <ArrowIcon /></a></p>}
+    <p class="account-switch">{copy('auth.noAccount')} <a href={localeHref('/register/', locale)}>{copy('auth.registerNow')} <ArrowIcon /></a></p>
   </section>
 </Base>
 

@@ -22,11 +22,13 @@ export type ProductRecord = {
   slug: string;
   productType: ProductType;
   name: string;
+  nameEn: string | null;
   description: string;
+  descriptionEn: string | null;
   status: 'draft' | 'active' | 'archived';
   coverAssetId: string | null;
   prices: ProductPrice[];
-  content: { id: string; slug: string; title: string; contentType: string }[];
+  content: { id: string; slug: string; title: string; titleEn: string | null; contentType: string }[];
 };
 
 export type CheckoutProduct = Omit<ProductRecord, 'prices'> & ProductPrice;
@@ -35,6 +37,7 @@ export type AccountContent = {
   id: string;
   slug: string;
   title: string;
+  titleEn: string | null;
   contentType: string;
   progressPercent: number | null;
   completedAt: Date | string | null;
@@ -44,6 +47,7 @@ export type AccountEntitlement = {
   id: string;
   productId: string;
   productName: string;
+  productNameEn: string | null;
   source: string;
   startsAt: Date | string;
   expiresAt: Date | string | null;
@@ -55,7 +59,9 @@ type ProductRow = QueryResultRow & {
   slug: string;
   product_type: ProductType;
   name: string;
+  name_en: string | null;
   description: string;
+  description_en: string | null;
   status: ProductRecord['status'];
   cover_asset_id: string | null;
   prices: ProductRecord['prices'];
@@ -63,7 +69,7 @@ type ProductRow = QueryResultRow & {
 };
 
 const productSelection = `
-  SELECT p.id, p.slug, p.product_type, p.name, p.description, p.status,
+  SELECT p.id, p.slug, p.product_type, p.name, p.name_en, p.description, p.description_en, p.status,
          p.cover_asset_id,
          COALESCE((
            SELECT json_agg(json_build_object(
@@ -89,7 +95,8 @@ const productSelection = `
          ), '[]'::json) AS prices,
          COALESCE((
            SELECT json_agg(json_build_object(
-             'id', ci.id, 'slug', ci.slug, 'title', ci.title, 'contentType', ci.content_type
+             'id', ci.id, 'slug', ci.slug, 'title', ci.title, 'titleEn', ci.title_en,
+             'contentType', ci.content_type
            ) ORDER BY ci.position, ci.title)
            FROM product_content pc
            JOIN content_items ci ON ci.id = pc.content_item_id
@@ -104,7 +111,9 @@ function mapProduct(row: ProductRow): ProductRecord {
     slug: row.slug,
     productType: row.product_type,
     name: row.name,
+    nameEn: row.name_en,
     description: row.description,
+    descriptionEn: row.description_en,
     status: row.status,
     coverAssetId: row.cover_asset_id,
     prices: (row.prices ?? []).map((price) => ({
@@ -254,14 +263,16 @@ export async function listGuestLibrary(email: string) {
   const result = await query<{
     orderId: string;
     productName: string;
+    productNameEn: string | null;
     productType: ProductType;
     createdAt: Date;
     content: AccountContent[];
   }>(
     `SELECT o.id AS "orderId", oi.product_name AS "productName",
+            p.name_en AS "productNameEn",
             p.product_type AS "productType", o.created_at AS "createdAt",
             COALESCE(json_agg(json_build_object(
-              'id', ci.id, 'slug', ci.slug, 'title', ci.title,
+              'id', ci.id, 'slug', ci.slug, 'title', ci.title, 'titleEn', ci.title_en,
               'contentType', ci.content_type, 'progressPercent', NULL,
               'completedAt', NULL
             ) ORDER BY ci.position, ci.title) FILTER (WHERE ci.id IS NOT NULL), '[]'::json) AS content
@@ -281,7 +292,7 @@ export async function listGuestLibrary(email: string) {
              AND (s.current_period_end IS NULL OR s.current_period_end > NOW())
          )
        )
-     GROUP BY o.id, oi.id, p.product_type
+     GROUP BY o.id, oi.id, p.product_type, p.name_en
      ORDER BY o.created_at DESC`,
     [email],
   );
@@ -291,9 +302,10 @@ export async function listGuestLibrary(email: string) {
 export async function listAccountEntitlements(userId: string): Promise<AccountEntitlement[]> {
   const result = await query<AccountEntitlement>(
     `SELECT e.id, e.product_id AS "productId", p.name AS "productName",
+            p.name_en AS "productNameEn",
             e.source, e.starts_at AS "startsAt", e.expires_at AS "expiresAt",
             COALESCE(json_agg(json_build_object(
-              'id', ci.id, 'slug', ci.slug, 'title', ci.title,
+              'id', ci.id, 'slug', ci.slug, 'title', ci.title, 'titleEn', ci.title_en,
               'contentType', ci.content_type, 'progressPercent', lp.progress_percent,
               'completedAt', lp.completed_at
             )) FILTER (WHERE ci.id IS NOT NULL), '[]'::json) AS content
@@ -305,7 +317,7 @@ export async function listAccountEntitlements(userId: string): Promise<AccountEn
      WHERE e.user_id = $1 AND e.status = 'active'
        AND e.starts_at <= NOW()
        AND (e.expires_at IS NULL OR e.expires_at > NOW())
-     GROUP BY e.id, p.name
+     GROUP BY e.id, p.name, p.name_en
      ORDER BY e.created_at DESC`,
     [userId],
   );
@@ -319,15 +331,16 @@ export async function listAccountOrders(userId: string) {
     currency: string;
     totalCents: string;
     createdAt: Date;
-    items: { name: string; quantity: number }[];
+    items: { name: string; nameEn: string | null; quantity: number }[];
   }>(
     `SELECT o.id, o.status, o.currency, o.total_cents AS "totalCents",
             o.created_at AS "createdAt",
             json_agg(json_build_object(
-              'name', oi.product_name, 'quantity', oi.quantity
+              'name', oi.product_name, 'nameEn', p.name_en, 'quantity', oi.quantity
             )) AS items
      FROM orders o
      JOIN order_items oi ON oi.order_id = o.id
+     JOIN products p ON p.id = oi.product_id
      WHERE o.user_id = $1
      GROUP BY o.id
      ORDER BY o.created_at DESC

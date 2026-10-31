@@ -6,22 +6,29 @@ import { hasContentAccess, hasGuestContentAccess } from '../../lib/commerce';
 import { getGuestAccessEmail } from '../../lib/guest-access';
 import { query } from '../../lib/db';
 import { renderArticleMarkdown } from '../../lib/articles';
+import { localeHref, t } from '../../lib/i18n';
 
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const slug = Astro.params.slug;
 Astro.response.headers.set('Cache-Control', 'private, no-store');
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 const guestEmail = await getGuestAccessEmail(Astro.cookies.get('iftiin_guest_access')?.value);
-if (!account && !guestEmail) return Astro.redirect('/guest-access/', 302);
+if (!account && !guestEmail) return Astro.redirect(localeHref('/guest-access/', locale), 302);
 const result = slug ? await query<{
   id: string;
   title: string;
+  title_en: string | null;
   description: string;
+  description_en: string | null;
   body: string;
+  body_en: string | null;
   contentType: 'lesson' | 'video';
   storageAssetId: string | null;
   progressPercent: number | null;
   lastPositionSeconds: number | null;
-}>(`SELECT ci.id, ci.title, ci.description, ci.body, ci.content_type AS "contentType",
+}>(`SELECT ci.id, ci.title, ci.title_en, ci.description, ci.description_en, ci.body, ci.body_en,
+           ci.content_type AS "contentType",
            ci.storage_asset_id AS "storageAssetId",
            lp.progress_percent AS "progressPercent",
            lp.last_position_seconds AS "lastPositionSeconds"
@@ -30,34 +37,40 @@ const result = slug ? await query<{
     WHERE ci.slug = $1 AND ci.status = 'published' AND ci.content_type IN ('lesson', 'video')`,
   [slug, account?.id ?? null]) : null;
 const lesson = result?.rows[0];
+const englishAvailable = Boolean(lesson?.title_en && (!lesson.body.trim() || lesson.body_en?.trim()));
 const allowed = lesson && (
   (account && (account.role === 'admin' || await hasContentAccess(account.id, lesson.id))) ||
   (guestEmail && await hasGuestContentAccess(guestEmail, lesson.id))
 );
-if (lesson && !allowed) return Astro.redirect(guestEmail ? '/guest-library/' : '/store/', 302);
+if (lesson && !allowed) return Astro.redirect(localeHref(guestEmail ? '/guest-library/' : '/store/', locale), 302);
 if (!lesson) Astro.response.status = 404;
-const lessonHtml = lesson ? await renderArticleMarkdown(lesson.body) : '';
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const lessonTitle = lesson && locale === 'en' ? lesson.title_en ?? copy('learn.translationUnavailable') : lesson?.title;
+const lessonDescription = lesson && locale === 'en' ? lesson.description_en ?? '' : lesson?.description;
+const lessonBody = lesson && locale === 'en' ? lesson.body_en ?? '' : lesson?.body;
+const lessonHtml = lesson && (locale === 'de' || englishAvailable) ? await renderArticleMarkdown(lessonBody ?? '') : '';
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
 ---
-<Base title={lesson?.title ?? 'Lerneinheit nicht gefunden'} description={lesson?.description ?? 'Diese Lerneinheit ist nicht verfügbar.'}>
+<Base title={lessonTitle ?? copy('learn.notFound')} description={lessonDescription ?? copy('learn.unavailable')}>
   {lesson ? <article class="section wrap lesson-page">
-    <a class="breadcrumb" href={root(account ? 'account/' : 'guest-library/')}><ArrowIcon direction="left" /> Zur Bibliothek</a>
-    <div class="section-label">Lernen / Lerneinheit</div>
-    <h1>{lesson.title}</h1>
-    <p>{lesson.description}</p>
+    <a class="breadcrumb" href={root(account ? 'account/' : 'guest-library/')}><ArrowIcon direction="left" /> {copy('learn.backToLibrary')}</a>
+    <div class="section-label">{copy('learn.label')}</div>
+    <h1>{lessonTitle}</h1>
+    {lessonDescription && <p>{lessonDescription}</p>}
     {lesson.contentType === 'video' && lesson.storageAssetId && <video class="lesson-video" controls preload="metadata" src={root(`api/content/${lesson.id}/file/`)}></video>}
-    <div class="prose" set:html={lessonHtml}></div>
+    {locale === 'en' && !englishAvailable
+      ? <p class="translation-notice">{copy('learn.translationUnavailable')} <a href={localeHref(`${Astro.url.pathname}`, 'de')}>{copy('learn.viewGerman')}</a></p>
+      : <div class="prose" set:html={lessonHtml}></div>}
     {account && <form id="progress-form" data-content-id={lesson.id} data-progress={lesson.progressPercent ?? 0}>
-      <label for="progress-percent">Dein Fortschritt: <output id="progress-value">{lesson.progressPercent ?? 0}%</output></label>
+      <label for="progress-percent">{copy('learn.progress')} <output id="progress-value">{lesson.progressPercent ?? 0}%</output></label>
       <input id="progress-percent" type="range" min="0" max="100" step="10" value={lesson.progressPercent ?? 0} />
-      <button class="pill-link" type="submit">Fortschritt speichern <ArrowIcon /></button>
+      <button class="pill-link" type="submit">{copy('learn.saveProgress')} <ArrowIcon /></button>
       <p class="form-message" id="progress-message" role="status" aria-live="polite"></p>
     </form>}
   </article> : <section class="interior-hero wrap">
-    <div class="section-label">404 / Nicht gefunden</div>
-    <h1>Lerneinheit nicht <em>gefunden.</em></h1>
-    <p>Diese Lerneinheit ist nicht verfügbar oder wurde noch nicht veröffentlicht.</p>
-    <a class="pill-link" href={root('account/')}>Zur Bibliothek <ArrowIcon /></a>
+    <div class="section-label">{copy('article.notFoundLabel')}</div>
+    <h1>{copy('learn.notFound')}</h1>
+    <p>{copy('learn.unavailable')}</p>
+    <a class="pill-link" href={root('account/')}>{copy('learn.backToLibrary')} <ArrowIcon /></a>
   </section>}
 </Base>
 
@@ -66,13 +79,14 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   const range = document.querySelector<HTMLInputElement>('#progress-percent');
   const output = document.querySelector<HTMLOutputElement>('#progress-value');
   const message = document.querySelector<HTMLElement>('#progress-message');
+  const locale = document.documentElement.lang;
   range?.addEventListener('input', () => {
     if (output && range) output.value = `${range.value}%`;
   });
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!range || !message || !form.dataset.contentId) return;
-    message.textContent = 'Fortschritt wird gespeichert …';
+    message.textContent = locale === 'en' ? 'Saving progress …' : 'Fortschritt wird gespeichert …';
     try {
       const response = await fetch(`/api/learning/progress/${encodeURIComponent(form.dataset.contentId)}/`, {
         method: 'PUT',
@@ -80,10 +94,10 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
         body: JSON.stringify({ progressPercent: Number(range.value), lastPositionSeconds: 0 }),
       });
       const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error ?? 'Der Lernfortschritt konnte nicht gespeichert werden.');
-      message.textContent = 'Fortschritt gespeichert.';
+      if (!response.ok) throw new Error(locale === 'en' ? 'Could not save your learning progress. Please try again.' : result.error ?? 'Der Lernfortschritt konnte nicht gespeichert werden.');
+      message.textContent = locale === 'en' ? 'Progress saved.' : 'Fortschritt gespeichert.';
     } catch (error) {
-      message.textContent = error instanceof Error ? error.message : 'Der Lernfortschritt konnte nicht gespeichert werden.';
+      message.textContent = error instanceof Error ? error.message : locale === 'en' ? 'Could not save your learning progress.' : 'Der Lernfortschritt konnte nicht gespeichert werden.';
     }
   });
 </script>

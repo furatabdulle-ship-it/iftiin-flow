@@ -28,7 +28,9 @@ export const productInputSchema = z.object({
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   productType: z.enum(['digital_download', 'premium_article', 'online_course', 'bundle', 'membership']),
   name: z.string().trim().min(1).max(180),
+  nameEn: z.string().trim().max(180).default(''),
   description: z.string().trim().max(2000),
+  descriptionEn: z.string().trim().max(2000).default(''),
   status: z.enum(['draft', 'active', 'archived']),
   currency: z.literal('eur'),
   prices: z.array(productPriceInputSchema).min(1).max(3)
@@ -41,17 +43,30 @@ export const productInputSchema = z.object({
   || (product.prices.length === 1 && product.prices[0].billingInterval === 'one_time'), {
   path: ['prices'],
   message: 'Nur Membership-Produkte können mehrere oder wiederkehrende Preise haben.',
+}).refine((product) => product.status !== 'active'
+  || (product.nameEn.length > 0 && (!product.description || product.descriptionEn.length > 0)), {
+  path: ['nameEn'],
+  message: 'Aktive Produkte benötigen einen englischen Namen und eine englische Beschreibung, falls eine deutsche Beschreibung vorhanden ist.',
 });
 
 export const contentItemInputSchema = z.object({
   contentType: z.enum(['download', 'lesson', 'video']),
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   title: z.string().trim().min(1).max(180),
+  titleEn: z.string().trim().max(180).default(''),
   description: z.string().trim().max(1000),
+  descriptionEn: z.string().trim().max(1000).default(''),
   body: z.string().max(100_000),
+  bodyEn: z.string().max(100_000).default(''),
   storageAssetId: z.uuid().nullable(),
   status: z.enum(['draft', 'published', 'archived']),
   position: z.number().int().min(0).max(10_000),
+}).refine((item) => item.status !== 'published'
+  || (item.titleEn.length > 0
+    && (!item.description || item.descriptionEn.length > 0)
+    && (!item.body.trim() || item.bodyEn.trim().length > 0)), {
+  path: ['titleEn'],
+  message: 'Veröffentlichte Inhalte benötigen englische Übersetzungen für alle gefüllten Textfelder.',
 });
 
 export const learningProgressSchema = z.object({
@@ -65,8 +80,11 @@ const articleFormats = Object.keys(formatNames) as [string, ...string[]];
 export const articleInputSchema = z.object({
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   title: z.string().trim().min(1).max(180),
+  titleEn: z.string().trim().max(180).default(''),
   description: z.string().trim().min(1).max(500),
+  descriptionEn: z.string().trim().max(500).default(''),
   body: z.string().max(300_000),
+  bodyEn: z.string().max(300_000).default(''),
   date: z.string().refine(isCalendarDate),
   updated: z.string().refine(isCalendarDate).nullable(),
   pillar: z.enum(pillarSlugs),
@@ -89,6 +107,12 @@ export const articleInputSchema = z.object({
 }, {
   path: ['videoUrl'],
   message: 'Video-Beiträge brauchen einen gültigen YouTube- oder Vimeo-Link. Video-Felder sind bei anderen Formaten nicht erlaubt.',
+}).refine((article) => article.status !== 'published'
+  || (article.titleEn.length > 0
+    && article.descriptionEn.length > 0
+    && (!article.body.trim() || article.bodyEn.trim().length > 0)), {
+  path: ['titleEn'],
+  message: 'Veröffentlichte Artikel benötigen eine englische Übersetzung für Titel, Teaser und Inhalt.',
 });
 
 function isSupportedVideoUrl(value: string): boolean {

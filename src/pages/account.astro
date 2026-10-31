@@ -3,74 +3,77 @@ import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
 import { listAccountEntitlements, listAccountOrders } from '../lib/commerce';
+import { localeHref, t } from '../lib/i18n';
 
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
-if (!account) return Astro.redirect('/login/', 302);
+if (!account) return Astro.redirect(localeHref('/login/', locale), 302);
 const entitlements = await listAccountEntitlements(account.id);
 const orders = await listAccountOrders(account.id);
-const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
-const formatPrice = (amount: number | string, currency: string) => new Intl.NumberFormat('de-DE', {
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
+const formatPrice = (amount: number | string, currency: string) => new Intl.NumberFormat(locale === 'en' ? 'en-IE' : 'de-DE', {
   style: 'currency',
   currency: currency.toUpperCase(),
 }).format(Number(amount) / 100);
 const orderStatusNames: Record<string, string> = {
-  pending: 'Ausstehend',
-  paid: 'Bezahlt',
-  failed: 'Fehlgeschlagen',
-  refunded: 'Erstattet',
-  canceled: 'Abgebrochen',
-  disputed: 'Zahlung angefochten',
+  pending: copy('account.pending'),
+  paid: copy('account.paid'),
+  failed: copy('account.failed'),
+  refunded: copy('account.refunded'),
+  canceled: copy('account.canceled'),
+  disputed: copy('account.disputed'),
 };
 ---
-<Base title="Konto">
-  <section class="interior-hero wrap account-hero">
-    <div class="section-label">Konto / Übersicht</div>
-    <h1><em>{account.displayName || 'Dein Name'}</em></h1>
-    <p>Angemeldet als <strong>{account.email}</strong></p>
-    <p class="account-role">Rolle: {account.role === 'admin' ? 'Administrator' : 'Besucher'}</p>
-    {account.role === 'admin' && <a class="pill-link" href={root('admin/')}>Artikel verwalten <ArrowIcon /></a>}
+<Base title={copy('account.title')}>
+  <section class="interior-hero wrap account-hero" data-locale={locale} data-wait={copy('account.wait')} data-name-saved={copy('account.nameSaved')} data-name-error={copy('account.nameSaveError')} data-server-error={copy('account.serverUnavailable')} data-logout-error={copy('account.logoutFailed')}>
+    <div class="section-label">{copy('account.overview')}</div>
+    <h1><em>{account.displayName || copy('account.yourName')}</em></h1>
+    <p>{copy('account.signedInAs')} <strong>{account.email}</strong></p>
+    <p class="account-role">{copy('account.role')} {account.role === 'admin' ? copy('account.admin') : copy('account.visitor')}</p>
+    {account.role === 'admin' && <a class="pill-link" href={root('admin/')}>{copy('account.manageArticles')} <ArrowIcon /></a>}
     <form class="account-form" id="profile-form">
-      <label for="profile-name">Anzeigename</label>
+      <label for="profile-name">{copy('account.displayName')}</label>
       <input id="profile-name" name="displayName" type="text" autocomplete="name" maxlength="80" value={account.displayName} required />
       <p class="form-message" id="profile-message" role="status" aria-live="polite"></p>
-      <button class="pill-link" type="submit">Namen speichern <ArrowIcon /></button>
+      <button class="pill-link" type="submit">{copy('account.saveName')} <ArrowIcon /></button>
     </form>
     <form id="logout-form">
-      <button class="text-link logout-button" type="submit">Abmelden <ArrowIcon /></button>
+      <button class="text-link logout-button" type="submit">{copy('account.signOut')} <ArrowIcon /></button>
     </form>
     <p class="form-message" id="logout-message" role="status" aria-live="polite"></p>
   </section>
   <section class="section wrap account-library">
-    <div class="section-label">Dein Konto / Bibliothek</div>
-    <h2>Deine Inhalte</h2>
+    <div class="section-label">{copy('account.library')}</div>
+    <h2>{copy('account.yourContent')}</h2>
     {entitlements.length ? <div class="library-list">
       {entitlements.map((entitlement) => <article class="library-card">
         <div class="library-heading">
-          <div><h3>{entitlement.productName}</h3><span class="library-meta">Freigeschaltet {new Date(entitlement.startsAt).toLocaleDateString('de-DE')}</span></div>
-          {entitlement.expiresAt && <span class="library-meta">Gültig bis {new Date(entitlement.expiresAt).toLocaleDateString('de-DE')}</span>}
+          <div><h3>{locale === 'en' ? entitlement.productNameEn ?? entitlement.productName : entitlement.productName}</h3><span class="library-meta">{copy('account.unlocked')} {new Date(entitlement.startsAt).toLocaleDateString(locale === 'en' ? 'en-IE' : 'de-DE')}</span></div>
+          {entitlement.expiresAt && <span class="library-meta">{copy('account.validUntil')} {new Date(entitlement.expiresAt).toLocaleDateString(locale === 'en' ? 'en-IE' : 'de-DE')}</span>}
         </div>
         {entitlement.content.length ? <ul>
           {entitlement.content.map((item) => <li>
             {item.contentType === 'download'
-              ? <a href={root(`api/content/${item.id}/file/`)}>{item.title} herunterladen <ArrowIcon /></a>
+              ? <a href={root(`api/content/${item.id}/file/`)}>{locale === 'en' ? item.titleEn ?? item.title : item.title} {copy('account.download')} <ArrowIcon /></a>
               : item.contentType === 'lesson' || item.contentType === 'video'
-                ? <a href={root(`learn/${item.slug}/`)}>{item.title} <ArrowIcon /></a>
-                : <a href={root(`articles/${item.slug}/`)}>{item.title} <ArrowIcon /></a>}
-            {(item.contentType === 'lesson' || item.contentType === 'video') && <span class="library-progress">{item.progressPercent ?? 0}% abgeschlossen</span>}
+                ? <a href={root(`learn/${item.slug}/`)}>{locale === 'en' ? item.titleEn ?? item.title : item.title} <ArrowIcon /></a>
+                : <a href={root(`articles/${item.slug}/`)}>{locale === 'en' ? item.titleEn ?? item.title : item.title} <ArrowIcon /></a>}
+            {(item.contentType === 'lesson' || item.contentType === 'video') && <span class="library-progress">{item.progressPercent ?? 0}% {copy('account.progress')}</span>}
           </li>)}
-        </ul> : <p class="library-meta">Für dieses Produkt sind noch keine Inhalte zugeordnet.</p>}
+        </ul> : <p class="library-meta">{copy('account.noContentAssigned')}</p>}
       </article>)}
-    </div> : <p class="library-meta">Deine freigeschalteten Inhalte erscheinen hier. <a href={root('store/')}>Zum Shop <ArrowIcon /></a></p>}
+    </div> : <p class="library-meta">{copy('account.contentAppears')} <a href={root('store/')}>{copy('account.toShop')} <ArrowIcon /></a></p>}
   </section>
   <section class="section wrap account-library">
-    <div class="section-label">Dein Konto / Bestellungen</div>
-    <h2>Bestellverlauf</h2>
+    <div class="section-label">{copy('account.orders')}</div>
+    <h2>{copy('account.orderHistory')}</h2>
     {orders.length ? <div class="orders-table">
       {orders.map((order) => <article class="order-row">
-        <div><strong>{order.items.map((item) => `${item.name}${item.quantity > 1 ? ` × ${item.quantity}` : ''}`).join(', ')}</strong><span class="library-meta">{new Date(order.createdAt).toLocaleDateString('de-DE')}</span></div>
+        <div><strong>{order.items.map((item) => `${locale === 'en' ? item.nameEn ?? item.name : item.name}${item.quantity > 1 ? ` × ${item.quantity}` : ''}`).join(', ')}</strong><span class="library-meta">{new Date(order.createdAt).toLocaleDateString(locale === 'en' ? 'en-IE' : 'de-DE')}</span></div>
         <div class="order-total">{formatPrice(order.totalCents, order.currency)}<span class="library-meta">{orderStatusNames[order.status] ?? order.status}</span></div>
       </article>)}
-    </div> : <p class="library-meta">Noch keine Bestellungen.</p>}
+    </div> : <p class="library-meta">{copy('account.noOrders')}</p>}
   </section>
 </Base>
 
@@ -79,11 +82,13 @@ const orderStatusNames: Record<string, string> = {
   const logoutMessage = document.querySelector<HTMLElement>('#logout-message');
   const profileForm = document.querySelector<HTMLFormElement>('#profile-form');
   const profileMessage = document.querySelector<HTMLElement>('#profile-message');
+  const accountSection = document.querySelector<HTMLElement>('.account-hero');
+  const locale = accountSection?.dataset.locale ?? 'de';
 
   profileForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!profileForm || !profileMessage) return;
-    profileMessage.textContent = 'Bitte warten …';
+    profileMessage.textContent = accountSection?.dataset.wait ?? 'Please wait …';
     try {
       const response = await fetch('/api/auth/profile/', {
         method: 'PUT',
@@ -92,25 +97,27 @@ const orderStatusNames: Record<string, string> = {
       });
       const result = await response.json() as { account?: { displayName: string }; error?: string };
       if (!response.ok || !result.account) {
-        throw new Error(result.error ?? 'Der Name konnte nicht gespeichert werden.');
+        throw new Error(locale === 'en' ? 'Could not save your name. Please try again.' : result.error ?? 'Der Name konnte nicht gespeichert werden.');
       }
-      profileMessage.textContent = 'Name gespeichert.';
+      profileMessage.textContent = accountSection?.dataset.nameSaved ?? 'Name saved.';
       window.location.reload();
     } catch (error) {
-      profileMessage.textContent = error instanceof Error ? error.message : 'Der Name konnte nicht gespeichert werden.';
+      profileMessage.textContent = locale === 'en'
+        ? error instanceof Error ? error.message : accountSection?.dataset.nameError ?? 'Could not save your name.'
+        : error instanceof Error ? error.message : accountSection?.dataset.nameError ?? 'Der Name konnte nicht gespeichert werden.';
     }
   });
 
   logoutForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!logoutMessage) return;
-    logoutMessage.textContent = 'Bitte warten …';
+    logoutMessage.textContent = accountSection?.dataset.wait ?? 'Please wait …';
     try {
       const response = await fetch('/api/auth/logout/', { method: 'POST' });
-      if (!response.ok) throw new Error('Abmeldung fehlgeschlagen.');
-      window.location.assign('/');
+      if (!response.ok) throw new Error(locale === 'en' ? 'Sign-out failed.' : 'Abmeldung fehlgeschlagen.');
+      window.location.assign(`/?lang=${locale}`);
     } catch {
-      logoutMessage.textContent = 'Die Abmeldung ist fehlgeschlagen. Bitte versuche es erneut.';
+      logoutMessage.textContent = accountSection?.dataset.logoutError ?? 'Sign-out failed. Please try again.';
     }
   });
 </script>
