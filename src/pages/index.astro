@@ -128,7 +128,13 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
 
   <section class="dark-section" id="perspective"><div class="wrap intro-layout">
     <div class="section-label light">02 / Our perspective</div>
-    <div><h2>Understand.<br /><i>Question.</i> Act.</h2><p>{copy('home.mission')}</p><a class="text-link light" href={root('about/')}>{copy('home.perspectiveLink')} <ArrowIcon /></a></div>
+    <div>
+      <h2>Think deeply.<br /><i>Create what’s next.</i></h2>
+      <p>{copy('home.perspectiveCopyFirst')}</p>
+      <p>{copy('home.perspectiveCopySecond')}</p>
+      <p>{copy('home.perspectiveCopyThird')}</p>
+      <a class="text-link light" href={root('about/')}>{copy('home.perspectiveLink')} <ArrowIcon /></a>
+    </div>
   </div></section>
 
   <section class="worlds" id="explore">

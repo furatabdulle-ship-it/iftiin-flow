@@ -49,6 +49,7 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
       <h1>{article.data.title}</h1>
       <p>{article.data.description}</p>
       <div class="article-meta">
+        <span>{copy('article.author')}</span>
         <span>{formatDate(article.data.date, locale)}</span>
         {article.data.updated && <span>{copy('article.updated')} {formatDate(article.data.updated, locale)}</span>}
         {article.data.requiresPurchase && <span>{copy('article.premium')}</span>}

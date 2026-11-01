@@ -14,26 +14,127 @@ const articles = await publishedArticles(Boolean(account), locale);
 const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,''), locale);
 ---
 <Base title={copy('explore.title')} description={copy('explore.description')}>
-<section class="interior-hero wrap"><div class="section-label">{copy('explore.topicLabel')}</div><h1>{copy('explore.title')} <em>the thinking.</em></h1><p>{copy('explore.description')}</p></section>
-<section class="section articles-section">
-  <div class="wrap">
-    <div class="section-heading">
-      <div><div class="section-label">{copy('explore.library')}</div><h2>{copy('explore.allArticles')}</h2></div>
+  <section class="explore-opening wrap">
+    <div class="explore-intro">
+      <div class="section-label">{copy('explore.topicLabel')}</div>
+      <h1>{copy('explore.title')} <em>the thinking.</em></h1>
+      <p>{copy('explore.description')}</p>
     </div>
-    {articles.length > 0
-      ? <div class="card-grid">{articles.map(article => <ArticleCard article={article} />)}</div>
-      : <div class="empty-state">
+    <section class="explore-library" aria-labelledby="explore-articles-title">
+      <div class="explore-library-heading">
+        <div>
+          <div class="section-label">{copy('explore.library')}</div>
+          <h2 id="explore-articles-title">{copy('explore.allArticles')}</h2>
+        </div>
+        {articles.length > 0 && <span class="explore-article-count">{String(articles.length).padStart(2, '0')}</span>}
+      </div>
+      {articles.length > 0
+        ? <div class="explore-article-list">{articles.map(article => <ArticleCard article={article} />)}</div>
+        : <div class="empty-state">
         <IftiinSun class="empty-symbol" color="var(--violet)" />
         <h3>{copy('explore.emptyTitle')}</h3>
         <p>{copy('explore.emptyDescription')}</p>
       </div>}
-  </div>
-</section>
-<section class="section wrap compact-section">
-  <div class="pillars">{pillars.map(p => <a class="pillar-row" href={root(`topics/${p.slug}/`)}>
-    <span class="pillar-number">{p.number}</span>
-    <span class="pillar-main"><strong>{p.name}</strong><small>{p.description}</small></span>
-    <ArrowIcon class="pillar-arrow" />
-  </a>)}</div>
-</section>
+    </section>
+  </section>
+  <section class="section wrap compact-section explore-topics">
+    <div class="pillars">{pillars.map(p => <a class="pillar-row" href={root(`topics/${p.slug}/`)}>
+      <span class="pillar-number">{p.number}</span>
+      <span class="pillar-main"><strong>{p.name}</strong><small>{p.description}</small></span>
+      <ArrowIcon class="pillar-arrow" />
+    </a>)}</div>
+  </section>
 </Base>
+
+<style>
+  .explore-opening {
+    display: grid;
+    grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+    align-items: start;
+    gap: clamp(2rem, 5vw, 5rem);
+    padding-top: clamp(3rem, 6vw, 5.5rem);
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .explore-intro { padding-top: .5rem; }
+  .explore-intro h1 {
+    max-width: 12ch;
+    margin: 1.5rem 0 1.25rem;
+    font-size: clamp(3.25rem, 6.7vw, 6rem);
+    line-height: .98;
+  }
+  .explore-intro > p {
+    max-width: 36rem;
+    margin: 0;
+    font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  }
+
+  .explore-library {
+    border-top: 1px solid var(--ink);
+    padding-top: 1rem;
+  }
+  .explore-library-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .explore-library-heading h2 {
+    margin: .45rem 0 0;
+    font-size: clamp(2rem, 3.4vw, 3rem);
+    letter-spacing: -.07em;
+    line-height: 1;
+  }
+  .explore-article-count {
+    padding-bottom: .2rem;
+    color: var(--muted);
+    font-size: .75rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .12em;
+  }
+  .explore-article-list { display: grid; gap: .75rem; }
+  .explore-article-list :global(.article-card) {
+    min-height: 330px;
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .explore-article-list :global(.article-card-top),
+  .explore-article-list :global(.article-card-bottom) { color: var(--yellow); }
+  .explore-article-list :global(.article-card-top .arrow) { color: var(--paper); }
+  .explore-article-list :global(.article-card h3) {
+    margin: 2.75rem 0 1rem;
+    color: var(--paper);
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+  }
+  .explore-article-list :global(.article-card p) { color: rgba(255, 255, 255, .72); }
+  .explore-article-list :global(.article-card-byline) { color: var(--paper); }
+  .explore-article-list :global(.article-card-bottom) { border-color: rgba(255, 255, 255, .22); }
+  .explore-article-list :global(.article-card:not(:first-child)) {
+    min-height: 270px;
+    border-color: var(--line);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .explore-article-list :global(.article-card:not(:first-child) h3),
+  .explore-article-list :global(.article-card:not(:first-child) .article-card-byline) { color: var(--ink); }
+  .explore-article-list :global(.article-card:not(:first-child) p) { color: var(--muted); }
+  .explore-article-list :global(.article-card:not(:first-child) .article-card-top),
+  .explore-article-list :global(.article-card:not(:first-child) .article-card-bottom) { color: var(--violet); }
+  .explore-article-list :global(.article-card:not(:first-child) .article-card-top .arrow) { color: var(--ink); }
+  .explore-article-list :global(.article-card:not(:first-child) .article-card-bottom) { border-color: var(--line); }
+  .explore-topics { padding-top: clamp(3rem, 6vw, 5rem); }
+
+  @media (max-width: 800px) {
+    .explore-opening { grid-template-columns: 1fr; gap: 2.5rem; }
+    .explore-intro h1 { max-width: 11ch; }
+  }
+
+  @media (max-width: 480px) {
+    .explore-opening { gap: 2rem; }
+    .explore-article-list :global(.article-card) { min-height: 300px; }
+  }
+</style>

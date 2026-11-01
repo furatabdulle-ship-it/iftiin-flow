@@ -1,35 +1,483 @@
 ---
 import ArrowIcon from '../components/ArrowIcon.astro';
+import IftiinSun from '../components/brand/IftiinSun.astro';
 import Base from '../layouts/Base.astro';
 import { localeHref, t } from '../lib/i18n';
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,''), locale);
+const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/about/${file}`;
 ---
 <Base title={locale === 'en' ? 'About' : 'About'}>
-  <section class="interior-hero wrap">
-    <div class="section-label">{copy('about.label')}</div>
-    <h1>Knowledge.<br/><em>Judgement.</em><br/>Agency.</h1>
-    <p>{copy('about.intro')}</p>
+  <nav class="about-section-nav" aria-label={copy('about.sectionNav')}>
+    <div class="wrap about-section-nav-inner">
+      <a href="#mission"><span>01</span>{copy('about.label')}</a>
+      <a href="#purpose"><span>02</span>{copy('about.purpose')}</a>
+      <a href="#behind"><span>03</span>{copy('about.behind')}</a>
+    </div>
+  </nav>
+  <section class="about-hero" id="mission">
+    <div class="about-hero-orbit" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <IftiinSun size={154} class="about-hero-sun" />
+    </div>
+    <div class="wrap about-hero-inner">
+      <div class="section-label">{copy('about.label')}</div>
+      <div class="about-hero-grid">
+        <h1>Understand more.<br/><em>Imagine further.</em><br/>Create what’s next.</h1>
+        <div class="about-hero-copy">
+          <p>{copy('about.intro')}</p>
+          <div class="about-hero-signoff" aria-hidden="true"><span>Understand</span><i></i><span>Imagine</span><i></i><span>Create</span></div>
+        </div>
+      </div>
+      <nav class="about-work-nav" aria-label={copy('about.workTitle')}>
+        <p>{copy('about.workTitle')}</p>
+        <div class="about-work-links">
+          <a href={root('explore/')}>
+            <span class="about-work-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 5h9l5 5v17H9z" /><path d="M18 5v6h5M13 17h6M13 21h6" />
+              </svg>
+            </span>
+            <span>{copy('about.articlesLink')}</span>
+            <ArrowIcon size={14} />
+          </a>
+          <a href={root('store/')}>
+            <span class="about-work-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 12V9a6 6 0 0 1 12 0v3" /><path d="M7 12h18l2 15H5z" />
+              </svg>
+            </span>
+            <span>{copy('common.shop')}</span>
+            <ArrowIcon size={14} />
+          </a>
+        </div>
+      </nav>
+    </div>
   </section>
-  <section class="dark-section">
+  <section class="dark-section about-purpose" id="purpose">
     <div class="wrap about-body">
-      <div class="section-label light">{copy('about.purpose')}</div>
+      <div class="about-purpose-meta">
+        <div class="section-label light">{copy('about.purpose')}</div>
+        <span aria-hidden="true">02</span>
+      </div>
       <div>
-        <h2>Think deeply.<br/><i>Act thoughtfully.</i></h2>
+        <h2>Think deeply.<br/><i>Create with vision.</i></h2>
         <p>{copy('about.bodyFirst')}</p>
-        <p>{copy('about.bodySecond')}</p>
       </div>
     </div>
   </section>
-  <section class="section wrap about-principles">
-    <div class="section-label">{copy('about.principles')}</div>
-    <h2>Editorial <em>principles.</em></h2>
-    <div class="principle-grid">
-      <div><span>01</span><h3>Evidence before claims.</h3><p>{locale === 'en' ? 'Facts and interpretation are kept distinct. Strong claims need verifiable sources.' : 'Fakten und Interpretation werden getrennt. Starke Aussagen benötigen überprüfbare Quellen.'}</p></div>
-      <div><span>02</span><h3>Context over hype.</h3><p>{locale === 'en' ? 'Technology is considered alongside people, institutions and real-world contexts.' : 'Technologie wird im Zusammenspiel mit Menschen, Institutionen und realen Anwendungsfeldern betrachtet.'}</p></div>
-      <div><span>03</span><h3>Agency over dependency.</h3><p>{locale === 'en' ? 'Knowledge should strengthen our ability to understand, decide and act independently.' : 'Wissen soll die Fähigkeit stärken, selbstständig zu verstehen, zu entscheiden und zu handeln.'}</p></div>
+  <section class="section wrap about-bio" id="behind">
+    <div class="about-profile">
+      <figure class="about-profile-feature">
+        <img
+          src={media('furat-summit.jpg')}
+          alt={locale === 'en' ? 'Furat Abdulle at the Black Girls Tech Summit 2025' : 'Furat Abdulle beim Black Girls Tech Summit 2025'}
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>
+          <div class="section-label light"><span aria-hidden="true">03 / </span>{copy('about.behind')}</div>
+          <h2>{copy('about.bioHeading')}</h2>
+          <span>Black Girls Tech Summit 2025</span>
+        </figcaption>
+      </figure>
     </div>
-    <a class="pill-link" href={root('explore/')}>{copy('about.discoverTopics')} <ArrowIcon /></a>
+    <div class="about-bio-copy">
+      <p>{copy('about.bioFirst')}</p>
+      <p>{copy('about.bioSecond')}</p>
+      <p>{copy('about.bioThird')}</p>
+      <a class="text-link about-bio-link" href={root('explore/')}>{copy('about.discoverTopics')} <ArrowIcon /></a>
+    </div>
   </section>
 </Base>
+
+<style>
+  .about-section-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255, 255, 255, .94);
+    backdrop-filter: blur(14px);
+  }
+  .about-section-nav-inner {
+    display: flex;
+    min-height: 52px;
+    align-items: center;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .about-section-nav-inner::-webkit-scrollbar {
+    display: none;
+  }
+  .about-section-nav a {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: .55rem;
+    color: var(--muted);
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    transition: color .2s ease;
+  }
+  .about-section-nav a:hover {
+    color: var(--ink);
+  }
+  .about-section-nav a span {
+    color: var(--violet);
+    font-size: .6rem;
+  }
+  .about-hero,
+  .about-purpose,
+  .about-bio {
+    scroll-margin-top: 60px;
+  }
+  .about-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: #f3f0e9;
+  }
+  .about-hero-inner {
+    position: relative;
+    z-index: 1;
+    padding-top: clamp(4rem, 8vw, 7rem);
+    padding-bottom: clamp(3.25rem, 5vw, 5rem);
+  }
+  .about-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(230px, .7fr);
+    gap: clamp(2rem, 4vw, 4rem);
+    align-items: start;
+  }
+  .about-hero h1 {
+    max-width: 1000px;
+    margin: 3.5rem 0 0;
+    font: 700 clamp(3.5rem, 5.8vw, 6.25rem)/.99 Manrope, Arial, sans-serif;
+    letter-spacing: -.09em;
+  }
+  .about-hero h1 em {
+    color: var(--violet);
+    font-weight: 500;
+    font-style: normal;
+  }
+  .about-hero-copy {
+    position: relative;
+    z-index: 1;
+    padding-top: clamp(5.5rem, 6vw, 6.25rem);
+  }
+  .about-work-nav {
+    position: absolute;
+    z-index: 2;
+    top: clamp(2.5rem, 4vw, 4rem);
+    right: 0;
+    width: min(380px, 34vw);
+  }
+  .about-work-nav > p {
+    margin-bottom: .75rem;
+    color: var(--ink);
+    font-size: .82rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  .about-work-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .55rem;
+  }
+  .about-work-links a {
+    display: flex;
+    min-width: 0;
+    min-height: 64px;
+    align-items: center;
+    gap: .6rem;
+    padding: .65rem;
+    border: 1px solid rgba(24, 25, 24, .12);
+    background: rgba(255, 255, 255, .76);
+    font-size: .78rem;
+    font-weight: 700;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .about-work-links a:hover {
+    transform: translateY(-2px);
+    border-color: var(--violet);
+    background: var(--cream);
+  }
+  .about-work-icon {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    place-items: center;
+    background: var(--yellow);
+  }
+  .about-work-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+  .about-work-links a > span:nth-child(2) {
+    flex: 1;
+  }
+  .about-hero-copy p {
+    margin: 0;
+    font-size: clamp(1rem, 1.25vw, 1.2rem);
+    line-height: 1.75;
+    color: #55564f;
+  }
+  .about-hero-signoff {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin-top: 2rem;
+    color: var(--violet);
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .about-hero-signoff i {
+    width: 1.2rem;
+    height: 1px;
+    background: var(--yellow);
+  }
+  .about-hero-orbit {
+    position: absolute;
+    z-index: 0;
+    top: 4%;
+    right: -3%;
+    width: clamp(300px, 39vw, 550px);
+    aspect-ratio: 1;
+    opacity: .8;
+    pointer-events: none;
+    animation: about-orbit 45s linear infinite;
+  }
+  .about-hero-orbit span,
+  .about-profile-orbit span {
+    position: absolute;
+    inset: 3%;
+    border: 1px solid rgba(112, 83, 186, .2);
+    border-radius: 50%;
+  }
+  .about-hero-orbit span:nth-child(2) {
+    inset: 15% 0;
+    transform: rotate(45deg);
+  }
+  .about-hero-orbit span:nth-child(3) {
+    inset: 0 15%;
+    transform: rotate(-45deg);
+  }
+  .about-hero-sun {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 31%;
+    height: auto;
+    transform: translate(-50%, -50%);
+  }
+  .about-purpose {
+    position: relative;
+    overflow: hidden;
+  }
+  .about-purpose::after {
+    position: absolute;
+    right: -7rem;
+    bottom: -16rem;
+    width: 31rem;
+    height: 31rem;
+    border: 1px solid rgba(243, 216, 91, .2);
+    border-radius: 50%;
+    content: "";
+    pointer-events: none;
+  }
+  .about-purpose .about-body {
+    position: relative;
+    z-index: 1;
+    grid-template-columns: minmax(180px, .8fr) minmax(0, 2fr);
+    gap: clamp(2rem, 8vw, 8rem);
+    padding: clamp(5rem, 10vw, 9rem) 0;
+  }
+  .about-purpose-meta {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    align-items: start;
+  }
+  .about-purpose-meta > span {
+    align-self: center;
+    justify-self: center;
+    color: rgba(255, 255, 255, .16);
+    font: 700 clamp(8rem, 16vw, 14rem)/.8 Manrope, Arial, sans-serif;
+    letter-spacing: -.1em;
+  }
+  .about-purpose .about-body h2 {
+    max-width: 800px;
+    font-size: clamp(3.5rem, 7.3vw, 6.8rem);
+    line-height: 1.02;
+  }
+  .about-purpose .about-body p {
+    max-width: 680px;
+  }
+  .about-bio {
+    display: grid;
+    grid-template-columns: minmax(260px, .9fr) minmax(0, 1.4fr);
+    gap: clamp(2.5rem, 8vw, 8rem);
+    align-items: center;
+    padding-top: clamp(5rem, 9vw, 8rem);
+    padding-bottom: clamp(5rem, 9vw, 8rem);
+    border-bottom: 1px solid var(--line);
+  }
+  .about-profile {
+    display: grid;
+    align-self: start;
+    gap: .85rem;
+  }
+  .about-profile-feature {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    margin: 0;
+    background: var(--ink);
+    color: var(--cream);
+  }
+  .about-profile-feature::after {
+    position: absolute;
+    inset: 30% 0 0;
+    background: linear-gradient(180deg, transparent, rgba(24, 25, 24, .84));
+    content: "";
+  }
+  .about-profile-feature img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .about-profile-feature img {
+    object-position: center 54%;
+  }
+  .about-profile-feature figcaption {
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: clamp(1.25rem, 3vw, 2rem);
+  }
+  .about-profile-feature .section-label {
+    color: #f3e99e;
+  }
+  .about-profile-feature h2 {
+    margin: .8rem 0 .45rem;
+    font: 700 clamp(2.2rem, 3.4vw, 3.4rem)/1 Manrope, Arial, sans-serif;
+    letter-spacing: -.08em;
+  }
+  .about-profile-feature figcaption > span {
+    color: rgba(255, 255, 255, .8);
+    font-size: .75rem;
+    letter-spacing: .04em;
+  }
+  .about-bio-copy {
+    padding: 1rem 0;
+  }
+  .about-bio-copy p {
+    max-width: 680px;
+    font-size: clamp(1rem, 1.25vw, 1.15rem);
+    line-height: 1.8;
+  }
+  .about-bio-copy p:last-of-type {
+    margin-bottom: 0;
+    color: var(--violet);
+    font-weight: 600;
+  }
+  .about-bio-link {
+    margin-top: .5rem;
+    color: var(--ink);
+    transition: color .2s ease;
+  }
+  .about-bio-link:hover {
+    color: var(--violet);
+  }
+  @keyframes about-orbit {
+    to { transform: rotate(360deg); }
+  }
+  @media (max-width: 760px) {
+    .about-section-nav-inner {
+      gap: .55rem;
+    }
+    .about-section-nav a {
+      gap: .3rem;
+      font-size: .52rem;
+      letter-spacing: .06em;
+    }
+    .about-section-nav a span {
+      font-size: .5rem;
+    }
+    .about-hero-inner {
+      padding-top: 3.5rem;
+      padding-bottom: 3.5rem;
+    }
+    .about-hero-grid {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .about-hero h1 {
+      margin-top: 2.5rem;
+      font-size: clamp(2.65rem, 10.6vw, 4.5rem);
+      line-height: 1;
+      letter-spacing: -.085em;
+    }
+    .about-hero-copy {
+      max-width: 540px;
+      padding-top: 0;
+    }
+    .about-work-nav {
+      position: relative;
+      top: auto;
+      right: auto;
+      width: 100%;
+      max-width: 540px;
+      margin-top: 2rem;
+    }
+    .about-hero-orbit {
+      top: 2%;
+      right: -30%;
+      width: 78vw;
+      opacity: .45;
+    }
+    .about-purpose .about-body {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      padding: 4.5rem 0;
+    }
+    .about-purpose-meta {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+    .about-purpose-meta > span {
+      margin-top: 0;
+      font-size: 5rem;
+    }
+    .about-purpose .about-body h2 {
+      font-size: clamp(3rem, 10vw, 4.5rem);
+    }
+    .about-bio {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .about-profile-feature h2 {
+      font-size: clamp(3rem, 11vw, 4.25rem);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .about-hero-orbit {
+      animation: none;
+    }
+    .about-bio-link {
+      transition: none;
+    }
+  }
+</style>
