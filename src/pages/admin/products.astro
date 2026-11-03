@@ -16,6 +16,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       <nav aria-label="Admin-Navigation">
         <a href={root('admin/')}>Redaktion</a>
         <a href={root('admin/products/')} aria-current="page">Inhalte &amp; Produkte</a>
+        <a href={root('admin/studio-inquiries/')}>Studio-Anfragen</a>
         <a href={root('')}>Website ansehen <ArrowIcon /></a>
       </nav>
     </header>

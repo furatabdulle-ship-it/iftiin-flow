@@ -1,7 +1,12 @@
 import type { APIContext } from 'astro';
 import { sessionLifetimeSeconds } from './auth';
 
-export class RequestInputError extends Error {}
+export class RequestInputError extends Error {
+  constructor(message: string, readonly status = 400) {
+    super(message);
+    this.name = 'RequestInputError';
+  }
+}
 
 export function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -61,12 +66,44 @@ export function clearGuestAccessCookie(context: APIContext): void {
   context.cookies.delete('iftiin_guest_access', { path: '/' });
 }
 
-export async function requestJson(request: Request): Promise<unknown> {
+export async function requestJson(request: Request, maxBytes = 512_000): Promise<unknown> {
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
     throw new RequestInputError('Die Anfrage muss JSON enthalten.');
   }
-  const body = await request.text();
-  if (body.length > 512_000) throw new RequestInputError('Die Anfrage ist zu groß.');
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > maxBytes) {
+    throw new RequestInputError('Die Anfrage ist zu groß.', 413);
+  }
+
+  const reader = request.body?.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  if (reader) {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        totalBytes += value.byteLength;
+        if (totalBytes > maxBytes) {
+          reader.cancel().catch((error: unknown) => {
+            console.error('Übergroßer Request-Body konnte nicht abgebrochen werden:', error instanceof Error ? error.name : 'unknown');
+          });
+          throw new RequestInputError('Die Anfrage ist zu groß.', 413);
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const body = new TextDecoder().decode(bytes);
   try {
     return JSON.parse(body) as unknown;
   } catch {

@@ -74,6 +74,46 @@ export const learningProgressSchema = z.object({
   lastPositionSeconds: z.number().int().min(0).max(604_800),
 });
 
+export const studioInquirySchema = z.object({
+  submissionId: z.uuid(),
+  professionalBackground: z.enum([
+    'independent_professional',
+    'founder',
+    'small_business',
+    'creator_educator',
+    'other',
+  ]),
+  challengeCategory: z.enum([
+    'communication_content',
+    'research_knowledge',
+    'planning_organization',
+    'creativity_ideas',
+    'business_reinvention',
+    'other_unsure',
+  ]),
+  desiredOutcome: z.enum([
+    'redesign_work',
+    'create_ai_assistant',
+    'reduce_repetitive_work',
+    'develop_ai_skills',
+    'explore_possibilities',
+  ]),
+  aiExperience: z.enum(['beginner', 'occasional', 'regular']),
+  timeline: z.enum(['within_2_weeks', 'within_1_month', 'within_3_months', 'exploring']).nullable(),
+  budgetRange: z.enum(['under_500', '500_1500', '1500_3000', 'over_3000', 'unsure']).nullable(),
+  additionalDetails: z.string().trim().max(2000).nullable(),
+  fullName: z.string().trim().min(1).max(120)
+    .transform((name) => name.replace(/\s+/g, ' ')),
+  email: z.string().trim().max(254).pipe(z.email()).transform((email) => email.toLowerCase()),
+  companyWebsite: z.string().max(0).optional(),
+});
+
+export const studioInquiryUpdateSchema = z.object({
+  status: z.enum(['new', 'contacted', 'qualified', 'closed']),
+  internalNotes: z.string().trim().max(4000),
+  lastContactedAt: z.iso.datetime().nullable(),
+});
+
 const pillarSlugs = pillars.map((pillar) => pillar.slug) as [string, ...string[]];
 const articleFormats = Object.keys(formatNames) as [string, ...string[]];
 

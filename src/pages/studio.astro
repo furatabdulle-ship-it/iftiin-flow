@@ -1,0 +1,1149 @@
+---
+import ArrowIcon from '../components/ArrowIcon.astro';
+import Base from '../layouts/Base.astro';
+import { randomUUID } from 'node:crypto';
+import { localeHref, t } from '../lib/i18n';
+
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const inquiryHref = '#studio-inquiry-form';
+const siteRoot = import.meta.env.BASE_URL.replace(/\/$/, '/');
+const privacyHref = localeHref(`${siteRoot}datenschutz/`, locale);
+const steps = [
+  { title: copy('studio.stepDiscover'), body: copy('studio.stepDiscoverBody') },
+  { title: copy('studio.stepReimagine'), body: copy('studio.stepReimagineBody') },
+  { title: copy('studio.stepCreate'), body: copy('studio.stepCreateBody') },
+  { title: copy('studio.stepOwn'), body: copy('studio.stepOwnBody') },
+];
+const takeaways = [
+  copy('studio.takeaway1'),
+  copy('studio.takeaway2'),
+  copy('studio.takeaway3'),
+  copy('studio.takeaway4'),
+  copy('studio.takeaway5'),
+];
+const experiences = [
+  {
+    id: 'content',
+    title: copy('studio.exampleContentTitle'),
+    tools: ['ChatGPT', 'Claude', 'Notion', 'Canva'],
+    outcome: copy('studio.exampleContentOutcome'),
+    challenge: copy('studio.exampleContentChallenge'),
+    explore: copy('studio.exampleContentExplore'),
+    create: copy('studio.exampleContentCreate'),
+    workflow: [
+      copy('studio.workflowIdeas'),
+      copy('studio.workflowAI'),
+      copy('studio.workflowContent'),
+    ],
+  },
+  {
+    id: 'research',
+    title: copy('studio.exampleResearchTitle'),
+    tools: ['NotebookLM', 'Perplexity', 'ChatGPT', 'Obsidian'],
+    outcome: copy('studio.exampleResearchOutcome'),
+    challenge: copy('studio.exampleResearchChallenge'),
+    explore: copy('studio.exampleResearchExplore'),
+    create: copy('studio.exampleResearchCreate'),
+    workflow: [
+      copy('studio.workflowSources'),
+      copy('studio.workflowSynthesis'),
+      copy('studio.workflowInsights'),
+    ],
+  },
+  {
+    id: 'business',
+    title: copy('studio.exampleBusinessTitle'),
+    tools: ['ChatGPT', 'Claude', 'Canva'],
+    outcome: copy('studio.exampleBusinessOutcome'),
+    challenge: copy('studio.exampleBusinessChallenge'),
+    explore: copy('studio.exampleBusinessExplore'),
+    create: copy('studio.exampleBusinessCreate'),
+    workflow: [
+      copy('studio.workflowBusiness'),
+      copy('studio.workflowReimagine'),
+      copy('studio.workflowNewValue'),
+    ],
+  },
+];
+const format = [
+  copy('studio.format1'),
+  copy('studio.format2'),
+  copy('studio.format3'),
+  copy('studio.format4'),
+  copy('studio.format5'),
+];
+const backgroundOptions = [
+  ['independent_professional', 'studioInquiry.backgroundIndependent'],
+  ['founder', 'studioInquiry.backgroundFounder'],
+  ['small_business', 'studioInquiry.backgroundSmallBusiness'],
+  ['creator_educator', 'studioInquiry.backgroundCreator'],
+  ['other', 'studioInquiry.backgroundOther'],
+] as const;
+const challengeOptions = [
+  ['communication_content', 'studioInquiry.challengeCommunication'],
+  ['research_knowledge', 'studioInquiry.challengeResearch'],
+  ['planning_organization', 'studioInquiry.challengePlanning'],
+  ['creativity_ideas', 'studioInquiry.challengeCreativity'],
+  ['business_reinvention', 'studioInquiry.challengeReinvention'],
+  ['other_unsure', 'studioInquiry.challengeOther'],
+] as const;
+const outcomeOptions = [
+  ['redesign_work', 'studioInquiry.outcomeRedesign'],
+  ['create_ai_assistant', 'studioInquiry.outcomeAssistant'],
+  ['reduce_repetitive_work', 'studioInquiry.outcomeRepetitive'],
+  ['develop_ai_skills', 'studioInquiry.outcomeSkills'],
+  ['explore_possibilities', 'studioInquiry.outcomeExplore'],
+] as const;
+const aiExperienceOptions = [
+  ['beginner', 'studioInquiry.aiBeginner'],
+  ['occasional', 'studioInquiry.aiOccasional'],
+  ['regular', 'studioInquiry.aiRegular'],
+] as const;
+---
+
+<Base title={copy('studio.metaTitle')} description={copy('studio.metaDescription')}>
+  <nav class="studio-page-nav" aria-label={copy('home.navLabel')}>
+    <a href="#studio-process"><span>01</span> {copy('studio.navProcess')}</a>
+    <a href="#studio-outcomes"><span>02</span> {copy('studio.navOutcomes')}</a>
+    <a href="#studio-experiences"><span>03</span> {copy('studio.navExperiences')}</a>
+    <a href="#studio-format"><span>04</span> {copy('studio.navFormat')}</a>
+    <a href="#studio-inquiry"><span>05</span> {copy('studio.navInquiry')}</a>
+  </nav>
+
+  <section class="studio-hero wrap" aria-labelledby="studio-title">
+    <div class="section-label">{copy('studio.eyebrow')}</div>
+    <h1 id="studio-title">{copy('studio.title')}</h1>
+    <p class="studio-subtitle">{copy('studio.subtitle')}</p>
+    <p class="studio-intro">{copy('studio.description')}</p>
+    <a class="pill-link" href={inquiryHref}>{copy('studio.cta')} <ArrowIcon /></a>
+  </section>
+
+  <section class="studio-experience dark-section" id="studio-process" aria-labelledby="studio-experience-title">
+    <div class="wrap">
+      <div class="section-label light">{copy('studio.eyebrow')}</div>
+      <h2 id="studio-experience-title">{copy('studio.experienceTitle')}</h2>
+      <ol class="studio-steps" aria-label={copy('studio.stepsLabel')}>
+        {steps.map((step, index) => <li>
+          <span class="studio-step-number">{String(index + 1).padStart(2, '0')}</span>
+          <h3>{step.title}</h3>
+          <p>{step.body}</p>
+        </li>)}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section wrap studio-takeaways" id="studio-outcomes" aria-labelledby="studio-takeaways-title">
+    <div class="section-label">{copy('studio.eyebrow')}</div>
+    <h2 id="studio-takeaways-title">{copy('studio.takeawaysTitle')}</h2>
+    <ul>
+      {takeaways.map((item) => <li><ArrowIcon size={16} />{item}</li>)}
+    </ul>
+  </section>
+
+  <section class="studio-examples" id="studio-experiences" aria-labelledby="studio-examples-title">
+    <div class="wrap">
+      <header class="studio-experiences-header">
+        <div>
+          <div class="section-label">{copy('studio.eyebrow')}</div>
+          <h2 id="studio-examples-title">{copy('studio.examplesTitle')}</h2>
+        </div>
+      </header>
+      <div class="studio-examples-grid">
+        {experiences.map((experience, index) => <article
+          class:list={['studio-experience-card', `studio-experience-card--${experience.id}`]}
+          aria-label={experience.title}
+          data-experience-card
+        >
+          <div class="studio-experience-card-inner">
+            <div
+              class="studio-experience-face studio-experience-card-front"
+              id={`studio-experience-${experience.id}-front`}
+              data-experience-front
+              aria-hidden="false"
+            >
+              <div class="studio-experience-card-topline">
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <span>{copy('studio.experienceLabel')}</span>
+              </div>
+              <h3 id={`studio-experience-${experience.id}-title`}>{experience.title}</h3>
+              <div class="studio-experience-tools">
+                <span class="studio-experience-card-label">{copy('studio.toolsLabel')}</span>
+                <ul>{experience.tools.map((tool) => <li>{tool}</li>)}</ul>
+              </div>
+              <div class="studio-experience-workflow">
+                <span class="studio-experience-card-label">{copy('studio.workflowLabel')}</span>
+                <ol aria-label={copy('studio.workflowLabel')}>
+                  {experience.workflow.map((step) => <li>{step}</li>)}
+                </ol>
+              </div>
+              <div class="studio-experience-outcome">
+                <span>{copy('studio.outcomeLabel')}</span>
+                <strong>{experience.outcome}</strong>
+              </div>
+              <button
+                class="studio-experience-flip-button"
+                type="button"
+                data-flip-to-back
+                aria-controls={`studio-experience-${experience.id}-back`}
+                aria-expanded="false"
+              >
+                <span>{copy('studio.flipOpen')}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M4 7v5h5M20 17v-5h-5M5 12a7 7 0 0 1 12-4l2 2M19 12a7 7 0 0 1-12 4l-2-2" />
+                </svg>
+              </button>
+            </div>
+            <div
+              class="studio-experience-face studio-experience-card-back"
+              id={`studio-experience-${experience.id}-back`}
+              data-experience-back
+              aria-hidden="true"
+              inert
+            >
+              <div class="studio-experience-card-topline">
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <span>{copy('studio.experienceLabel')}</span>
+              </div>
+              <h3>{experience.title}</h3>
+              <dl class="studio-experience-details">
+                <div>
+                  <dt>{copy('studio.flipChallenge')}</dt>
+                  <dd>{experience.challenge}</dd>
+                </div>
+                <div>
+                  <dt>{copy('studio.flipExplore')}</dt>
+                  <dd>{experience.explore}</dd>
+                </div>
+                <div>
+                  <dt>{copy('studio.flipCreate')}</dt>
+                  <dd>{experience.create}</dd>
+                </div>
+              </dl>
+              <button
+                class="studio-experience-flip-button studio-experience-flip-button--back"
+                type="button"
+                data-flip-to-front
+                aria-controls={`studio-experience-${experience.id}-front`}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                <span>{copy('studio.flipClose')}</span>
+              </button>
+            </div>
+          </div>
+        </article>)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap studio-details" id="studio-format">
+    <div>
+      <h2 class="section-label">{copy('studio.formatTitle')}</h2>
+      <ul class="studio-format-list">
+        {format.map((item) => <li>{item}</li>)}
+      </ul>
+    </div>
+    <div class="studio-scope">
+      <h2 class="section-label">{copy('studio.scopeTitle')}</h2>
+      <p>{copy('studio.scopeIntro')}</p>
+      <p>{copy('studio.scopeLimitations')}</p>
+    </div>
+  </section>
+
+  <section class="studio-final dark-section" aria-labelledby="studio-final-title">
+    <div class="wrap">
+      <div class="section-label light">{copy('studio.eyebrow')}</div>
+      <h2 id="studio-final-title">{copy('studio.ctaTitle')}</h2>
+      <p>{copy('studio.ctaDescription')}</p>
+      <a class="pill-link" href={inquiryHref}>{copy('studio.cta')} <ArrowIcon /></a>
+    </div>
+  </section>
+
+  <section class="studio-inquiry" id="studio-inquiry" aria-labelledby="studio-inquiry-title">
+    <div class="wrap studio-inquiry-grid">
+      <div class="studio-inquiry-intro">
+        <div class="section-label">{copy('studioInquiry.eyebrow')}</div>
+        <h2 id="studio-inquiry-title">{copy('studioInquiry.title')}</h2>
+        <p>{copy('studioInquiry.intro')}</p>
+      </div>
+      <form
+        class="studio-inquiry-form"
+        id="studio-inquiry-form"
+        data-endpoint={`${siteRoot}api/studio-inquiries/`}
+        data-required-message={copy('studioInquiry.requiredError')}
+        data-email-message={copy('studioInquiry.emailError')}
+        data-invalid-message={copy('studioInquiry.invalid')}
+        data-network-message={copy('studioInquiry.networkError')}
+        data-success-message={copy('studioInquiry.success')}
+        data-storage-message={copy('studioInquiry.storageError')}
+        data-saved-but-draft-remains={copy('studioInquiry.savedButDraftRemains')}
+        data-sending-label={copy('studioInquiry.sending')}
+        data-submit-label={copy('studioInquiry.submit')}
+        novalidate
+      >
+        <input type="hidden" name="submissionId" value={randomUUID()} />
+        <label class="studio-honeypot" aria-hidden="true">
+          {copy('studioInquiry.honeypot')}
+          <input name="companyWebsite" tabindex="-1" autocomplete="off" />
+        </label>
+
+        <fieldset>
+          <legend>{copy('studioInquiry.background')} <span>{copy('studioInquiry.required')}</span></legend>
+          <select name="professionalBackground" required aria-describedby="studio-inquiry-error-professionalBackground">
+            <option value="">—</option>
+            {backgroundOptions.map(([value, key]) => <option value={value}>{copy(key)}</option>)}
+          </select>
+          <span class="studio-field-error" id="studio-inquiry-error-professionalBackground"></span>
+        </fieldset>
+
+        <fieldset>
+          <legend>{copy('studioInquiry.challenge')} <span>{copy('studioInquiry.required')}</span></legend>
+          <select name="challengeCategory" required aria-describedby="studio-inquiry-error-challengeCategory">
+            <option value="">—</option>
+            {challengeOptions.map(([value, key]) => <option value={value}>{copy(key)}</option>)}
+          </select>
+          <span class="studio-field-error" id="studio-inquiry-error-challengeCategory"></span>
+        </fieldset>
+
+        <fieldset>
+          <legend>{copy('studioInquiry.outcome')} <span>{copy('studioInquiry.required')}</span></legend>
+          <select name="desiredOutcome" required aria-describedby="studio-inquiry-error-desiredOutcome">
+            <option value="">—</option>
+            {outcomeOptions.map(([value, key]) => <option value={value}>{copy(key)}</option>)}
+          </select>
+          <span class="studio-field-error" id="studio-inquiry-error-desiredOutcome"></span>
+        </fieldset>
+
+        <fieldset>
+          <legend>{copy('studioInquiry.aiExperience')} <span>{copy('studioInquiry.required')}</span></legend>
+          <div class="studio-option-list">
+            {aiExperienceOptions.map(([value, key]) => <label>
+              <input type="radio" name="aiExperience" value={value} required aria-describedby="studio-inquiry-error-aiExperience" />
+              <span>{copy(key)}</span>
+            </label>)}
+          </div>
+          <span class="studio-field-error" id="studio-inquiry-error-aiExperience"></span>
+        </fieldset>
+
+        <div class="studio-inquiry-columns">
+          <label>
+            {copy('studioInquiry.timeline')}<span class="studio-field-meta">{copy('studioInquiry.optional')}</span>
+            <select name="timeline">
+              <option value="">—</option>
+              <option value="within_2_weeks">{copy('studioInquiry.timelineTwoWeeks')}</option>
+              <option value="within_1_month">{copy('studioInquiry.timelineMonth')}</option>
+              <option value="within_3_months">{copy('studioInquiry.timelineQuarter')}</option>
+              <option value="exploring">{copy('studioInquiry.timelineExplore')}</option>
+            </select>
+          </label>
+          <label>
+            {copy('studioInquiry.budget')}<span class="studio-field-meta">{copy('studioInquiry.optional')}</span>
+            <select name="budgetRange">
+              <option value="">—</option>
+              <option value="under_500">{copy('studioInquiry.budgetUnder500')}</option>
+              <option value="500_1500">{copy('studioInquiry.budget5001500')}</option>
+              <option value="1500_3000">{copy('studioInquiry.budget15003000')}</option>
+              <option value="over_3000">{copy('studioInquiry.budgetOver3000')}</option>
+              <option value="unsure">{copy('studioInquiry.budgetUnsure')}</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          {copy('studioInquiry.details')}<span class="studio-field-meta">{copy('studioInquiry.optional')}</span>
+          <textarea name="additionalDetails" maxlength="2000" rows="5" placeholder={copy('studioInquiry.detailsPlaceholder')}></textarea>
+        </label>
+        <div class="studio-inquiry-columns">
+          <label>
+            {copy('studioInquiry.name')}<span class="studio-field-meta">{copy('studioInquiry.required')}</span>
+            <input name="fullName" type="text" maxlength="120" autocomplete="name" required aria-describedby="studio-inquiry-error-fullName" />
+            <span class="studio-field-error" id="studio-inquiry-error-fullName"></span>
+          </label>
+          <label>
+            {copy('studioInquiry.email')}<span class="studio-field-meta">{copy('studioInquiry.required')}</span>
+            <input name="email" type="email" maxlength="254" autocomplete="email" required aria-describedby="studio-inquiry-error-email" />
+            <span class="studio-field-error" id="studio-inquiry-error-email"></span>
+          </label>
+        </div>
+        <p class="studio-inquiry-privacy">{copy('studioInquiry.privacyBefore')} <a href={privacyHref}>{copy('studioInquiry.privacyLink')}</a>.</p>
+        <p id="studio-inquiry-status" class="studio-inquiry-status" role="status" aria-live="polite" tabindex="-1"></p>
+        <button class="pill-link" type="submit">{copy('studioInquiry.submit')} <ArrowIcon /></button>
+      </form>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const experienceCards = Array.from(document.querySelectorAll<HTMLElement>('[data-experience-card]'));
+
+  function setExperienceCardFlipped(card: HTMLElement, flipped: boolean) {
+    const front = card.querySelector<HTMLElement>('[data-experience-front]');
+    const back = card.querySelector<HTMLElement>('[data-experience-back]');
+    const frontButton = front?.querySelector<HTMLButtonElement>('[data-flip-to-back]');
+    if (!front || !back || !frontButton) {
+      throw new Error('Studio experience card is missing required flip controls.');
+    }
+
+    card.classList.toggle('is-flipped', flipped);
+    front.setAttribute('aria-hidden', String(flipped));
+    front.toggleAttribute('inert', flipped);
+    back.setAttribute('aria-hidden', String(!flipped));
+    back.toggleAttribute('inert', !flipped);
+    frontButton.setAttribute('aria-expanded', String(flipped));
+  }
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest<HTMLButtonElement>('[data-flip-to-back], [data-flip-to-front]');
+    const card = button?.closest<HTMLElement>('[data-experience-card]');
+    if (!button || !card || !experienceCards.includes(card)) return;
+
+    const flipped = button.hasAttribute('data-flip-to-back');
+    if (flipped) experienceCards.forEach((item) => setExperienceCardFlipped(item, item === card));
+    else setExperienceCardFlipped(card, false);
+
+    const focusTarget = card.querySelector<HTMLButtonElement>(
+      flipped ? '[data-flip-to-front]' : '[data-flip-to-back]',
+    );
+    if (!focusTarget) throw new Error('Studio experience card is missing its focus target.');
+    focusTarget.focus();
+  });
+
+  const form = document.querySelector<HTMLFormElement>('#studio-inquiry-form');
+  const status = document.querySelector<HTMLElement>('#studio-inquiry-status');
+  const submitButton = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  const submissionId = form?.querySelector<HTMLInputElement>('input[name="submissionId"]');
+  const submitLabelMarkup = submitButton?.innerHTML ?? '';
+  const draftKey = 'iftiin-studio-inquiry-draft';
+  const draftFieldNames = [
+    'professionalBackground',
+    'challengeCategory',
+    'desiredOutcome',
+    'aiExperience',
+    'timeline',
+    'budgetRange',
+    'additionalDetails',
+    'fullName',
+    'email',
+  ];
+  const requiredNames = ['professionalBackground', 'challengeCategory', 'desiredOutcome', 'aiExperience', 'fullName', 'email'];
+
+  function showStatus(message: string, isError = false) {
+    if (!status) return;
+    status.textContent = message;
+    status.setAttribute('role', isError ? 'alert' : 'status');
+  }
+
+  function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+  }
+
+  function saveDraft(): boolean {
+    if (!form) return false;
+    const data: Record<string, string> = {};
+    for (const name of draftFieldNames) {
+      const selectedRadio = form.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`);
+      if (selectedRadio) {
+        data[name] = selectedRadio.value;
+        continue;
+      }
+      const field = form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${name}"]`);
+      if (field) data[name] = field.value;
+    }
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({ savedAt: Date.now(), data }));
+      return true;
+    } catch {
+      showStatus(form.dataset.storageMessage ?? '', true);
+      return false;
+    }
+  }
+
+  function restoreDraft() {
+    if (!form) return;
+    try {
+      const rawDraft = sessionStorage.getItem(draftKey);
+      if (!rawDraft) return;
+      const draft: unknown = JSON.parse(rawDraft);
+      if (!isRecord(draft) || typeof draft.savedAt !== 'number' || !isRecord(draft.data)) return;
+      if (Date.now() - draft.savedAt > 60 * 60 * 1000) {
+        sessionStorage.removeItem(draftKey);
+        return;
+      }
+      for (const name of draftFieldNames) {
+        const value = draft.data[name];
+        if (typeof value !== 'string') continue;
+        const radios = form.querySelectorAll<HTMLInputElement>(`input[type="radio"][name="${name}"]`);
+        if (radios.length) {
+          radios.forEach((radio) => { radio.checked = radio.value === value; });
+        } else {
+          const field = form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${name}"]`);
+          if (field) field.value = value;
+        }
+      }
+    } catch {
+      showStatus(form.dataset.storageMessage ?? '', true);
+    }
+  }
+
+  function clearFieldError(name: string) {
+    const error = document.getElementById(`studio-inquiry-error-${name}`);
+    if (error) error.textContent = '';
+    form?.querySelectorAll(`[name="${name}"]`).forEach((field) => field.removeAttribute('aria-invalid'));
+  }
+
+  function showFieldError(name: string, message: string) {
+    const error = document.getElementById(`studio-inquiry-error-${name}`);
+    if (error) error.textContent = message;
+    form?.querySelectorAll(`[name="${name}"]`).forEach((field) => field.setAttribute('aria-invalid', 'true'));
+  }
+
+  function validateForm(): boolean {
+    if (!form) return false;
+    for (const name of requiredNames) clearFieldError(name);
+    let firstInvalid: HTMLElement | null = null;
+    for (const name of requiredNames) {
+      const selectedRadio = form.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`);
+      const field = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
+      const value = selectedRadio?.value ?? field?.value.trim() ?? '';
+      if (!value) {
+        showFieldError(name, form.dataset.requiredMessage ?? '');
+        firstInvalid ??= selectedRadio ?? field;
+      } else if (name === 'email' && field instanceof HTMLInputElement && field.validity.typeMismatch) {
+        showFieldError(name, form.dataset.emailMessage ?? '');
+        firstInvalid ??= field;
+      }
+    }
+    if (firstInvalid) {
+      showStatus(form.dataset.invalidMessage ?? '', true);
+      firstInvalid.focus();
+      return false;
+    }
+    return true;
+  }
+
+  restoreDraft();
+  form?.addEventListener('input', () => { saveDraft(); });
+  form?.addEventListener('change', () => { saveDraft(); });
+  document.querySelectorAll<HTMLAnchorElement>('.language-switch a').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      if (!saveDraft()) event.preventDefault();
+    });
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!validateForm() || !form || !submitButton) return;
+
+    const data = new FormData(form);
+    const payload = {
+      submissionId: String(data.get('submissionId') ?? ''),
+      professionalBackground: String(data.get('professionalBackground') ?? ''),
+      challengeCategory: String(data.get('challengeCategory') ?? ''),
+      desiredOutcome: String(data.get('desiredOutcome') ?? ''),
+      aiExperience: String(data.get('aiExperience') ?? ''),
+      timeline: String(data.get('timeline') ?? '') || null,
+      budgetRange: String(data.get('budgetRange') ?? '') || null,
+      additionalDetails: String(data.get('additionalDetails') ?? '').trim() || null,
+      fullName: String(data.get('fullName') ?? '').trim(),
+      email: String(data.get('email') ?? '').trim(),
+      companyWebsite: String(data.get('companyWebsite') ?? ''),
+    };
+
+    form.setAttribute('aria-busy', 'true');
+    submitButton.disabled = true;
+    submitButton.textContent = form.dataset.sendingLabel ?? '';
+    showStatus('');
+    try {
+      const response = await fetch(form.dataset.endpoint ?? '', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json() as { success?: boolean; error?: string; fields?: string[] };
+      if (!response.ok || !result.success) {
+        if (result.fields) {
+          for (const name of result.fields) {
+            if (draftFieldNames.includes(name)) showFieldError(name, form.dataset.invalidMessage ?? '');
+          }
+        }
+        showStatus(result.error ?? form.dataset.networkMessage ?? '', true);
+        return;
+      }
+      form.reset();
+      if (submissionId) submissionId.value = crypto.randomUUID();
+      let draftCleared = true;
+      try {
+        sessionStorage.removeItem(draftKey);
+      } catch {
+        draftCleared = false;
+      }
+      showStatus(`${form.dataset.successMessage ?? ''}${draftCleared ? '' : form.dataset.savedButDraftRemains ?? ''}`, !draftCleared);
+      status?.focus();
+    } catch {
+      showStatus(form.dataset.networkMessage ?? '', true);
+    } finally {
+      form.removeAttribute('aria-busy');
+      submitButton.disabled = false;
+      submitButton.innerHTML = submitLabelMarkup;
+    }
+  });
+</script>
+
+<style>
+  .studio-page-nav {
+    --gutter: 40px;
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: flex;
+    width: min(1440px, calc(100% - 2 * var(--gutter)));
+    height: 40px;
+    align-items: center;
+    gap: clamp(12px, 2.4vw, 32px);
+    overflow-x: auto;
+    margin: 0 auto;
+    border-bottom: 1px solid rgba(24, 25, 24, .12);
+    background: rgba(255, 255, 255, .94);
+    backdrop-filter: blur(12px);
+    scrollbar-width: none;
+  }
+  .studio-page-nav::-webkit-scrollbar { display: none; }
+  .studio-page-nav a {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 7px;
+    color: rgba(24, 25, 24, .66);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-decoration: none;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .studio-page-nav a:hover { color: var(--ink); }
+  .studio-page-nav a span { color: var(--violet); font-size: 9px; }
+  .studio-page-nav a:focus-visible { outline: 2px solid var(--violet); outline-offset: 3px; }
+  #studio-process,
+  #studio-outcomes,
+  #studio-experiences,
+  #studio-format,
+  #studio-inquiry { scroll-margin-top: 56px; }
+  .studio-hero {
+    padding-top: clamp(4.5rem, 9vw, 8rem);
+    padding-bottom: clamp(4rem, 7vw, 6rem);
+  }
+  .studio-hero h1 {
+    max-width: 13ch;
+    margin: 1.5rem 0 1rem;
+    font: 800 clamp(3.5rem, 8vw, 7rem)/.98 Manrope, Arial, sans-serif;
+    letter-spacing: -.075em;
+  }
+  .studio-subtitle {
+    margin-bottom: 1.25rem;
+    color: var(--violet);
+    font: 600 clamp(1.25rem, 2.4vw, 1.75rem)/1.3 Manrope, Arial, sans-serif;
+  }
+  .studio-intro {
+    max-width: 760px;
+    margin-bottom: 1.75rem;
+    color: var(--muted);
+    font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+    line-height: 1.7;
+  }
+  .studio-experience {
+    padding: clamp(4rem, 8vw, 7rem) 0;
+  }
+  .studio-experience h2,
+  .studio-takeaways h2,
+  .studio-examples h2,
+  .studio-final h2 {
+    max-width: 18ch;
+    margin: 1.25rem 0 2.5rem;
+    font: 700 clamp(2.75rem, 5.8vw, 5rem)/1.02 Manrope, Arial, sans-serif;
+    letter-spacing: -.065em;
+  }
+  .studio-experience h2 { color: var(--paper); }
+  .studio-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid rgba(255, 255, 255, .25);
+    list-style: none;
+  }
+  .studio-steps li {
+    min-width: 0;
+    padding: 1.5rem 1.25rem 0 0;
+  }
+  .studio-step-number {
+    color: var(--yellow);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+  }
+  .studio-steps h3 {
+    margin: 1.5rem 0 .75rem;
+    color: var(--paper);
+    font: 700 clamp(1.25rem, 2vw, 1.7rem)/1.15 Manrope, Arial, sans-serif;
+    letter-spacing: -.04em;
+  }
+  .studio-steps p {
+    max-width: 270px;
+    margin: 0;
+    color: rgba(255, 255, 255, .72);
+    line-height: 1.65;
+  }
+  .studio-takeaways h2 { margin-bottom: 1.75rem; }
+  .studio-takeaways > ul {
+    display: grid;
+    max-width: 900px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 2rem;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+    list-style: none;
+  }
+  .studio-takeaways li {
+    display: flex;
+    align-items: flex-start;
+    gap: .85rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--line);
+    line-height: 1.5;
+  }
+  .studio-takeaways li :global(.arrow) {
+    flex: none;
+    margin-top: .15rem;
+    color: var(--violet);
+  }
+  .studio-examples {
+    padding: clamp(4rem, 8vw, 7rem) 0;
+    background:
+      radial-gradient(ellipse at 86% 4%, rgba(112, 81, 153, .08), transparent 30rem),
+      #f1ece2;
+  }
+  .studio-experiences-header {
+    margin-bottom: 2.25rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(24, 25, 24, .18);
+  }
+  .studio-examples h2 { margin: 1.1rem 0 0; }
+  .studio-examples-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(35rem, 1fr);
+    gap: 1rem;
+    align-items: stretch;
+  }
+  .studio-experience-card {
+    --experience-accent: var(--violet);
+    --experience-tint: #eee8f5;
+    min-width: 0;
+    perspective: 1300px;
+  }
+  .studio-experience-card-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "face";
+    height: 100%;
+    min-height: 35rem;
+    transform-style: preserve-3d;
+    transition: transform 460ms cubic-bezier(.2, .7, .2, 1);
+  }
+  .studio-experience-card.is-flipped .studio-experience-card-inner {
+    transform: rotateY(180deg);
+  }
+  .studio-experience-face {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1.25rem;
+    grid-area: face;
+    padding: clamp(1.25rem, 2vw, 2rem);
+    border: 1px solid rgba(24, 25, 24, .1);
+    border-top: 3px solid var(--experience-accent);
+    border-radius: .85rem;
+    box-shadow: 0 12px 36px rgba(24, 25, 24, .055);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .studio-experience-card-front {
+    background: rgba(255, 255, 255, .9);
+  }
+  .studio-experience-card-back {
+    background: linear-gradient(145deg, rgba(255, 255, 255, .96), var(--experience-tint));
+    transform: rotateY(180deg);
+  }
+  .studio-experience-card--research {
+    --experience-accent: #56806c;
+    --experience-tint: #e8f0ea;
+  }
+  .studio-experience-card--business {
+    --experience-accent: #bd9d28;
+    --experience-tint: #f6f0d7;
+  }
+  .studio-experience-card-topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--muted);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .studio-experience-card-topline span:first-child {
+    display: grid;
+    width: 2.15rem;
+    height: 2.15rem;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--experience-tint);
+    color: var(--experience-accent);
+  }
+  .studio-experience-card-topline span:last-child { align-self: center; }
+  .studio-experience-face h3 {
+    min-height: 2.4em;
+    margin: 0;
+    font: 700 clamp(1.35rem, 1.8vw, 1.7rem)/1.15 Manrope, Arial, sans-serif;
+    letter-spacing: -.045em;
+    overflow-wrap: anywhere;
+  }
+  .studio-experience-card-label,
+  .studio-experience-outcome > span {
+    display: block;
+    color: var(--muted);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .studio-experience-tools ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin: .7rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .studio-experience-tools li {
+    padding: .35rem .55rem;
+    border: 1px solid rgba(24, 25, 24, .12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .56);
+    color: #53534e;
+    font-size: .76rem;
+    line-height: 1.2;
+  }
+  .studio-experience-workflow ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .55rem;
+    margin: .7rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .studio-experience-workflow li {
+    position: relative;
+    display: grid;
+    min-width: 0;
+    min-height: 3.5rem;
+    place-items: center;
+    padding: .45rem .25rem;
+    border: 1px solid rgba(24, 25, 24, .045);
+    border-radius: .45rem;
+    background: var(--experience-tint);
+    color: var(--ink);
+    font-size: .78rem;
+    font-weight: 650;
+    line-height: 1.25;
+    text-align: center;
+  }
+  .studio-experience-workflow li:not(:last-child)::after {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: -.58rem;
+    color: var(--experience-accent);
+    content: '→';
+    font-size: 1rem;
+    font-weight: 700;
+    transform: translate(50%, -50%);
+  }
+  .studio-experience-outcome {
+    margin-top: auto;
+    padding: 1rem 1.1rem;
+    border-left: 3px solid var(--experience-accent);
+    border-radius: .45rem;
+    background: var(--experience-tint);
+    color: var(--ink);
+  }
+  .studio-experience-outcome > span { color: var(--experience-accent); }
+  .studio-experience-outcome strong {
+    display: block;
+    margin-top: .45rem;
+    font: 700 1rem/1.4 Manrope, Arial, sans-serif;
+    overflow-wrap: anywhere;
+  }
+  .studio-experience-details {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+  }
+  .studio-experience-details > div {
+    padding-top: .8rem;
+    border-top: 1px solid rgba(24, 25, 24, .12);
+  }
+  .studio-experience-details dt {
+    color: var(--experience-accent);
+    font-size: .67rem;
+    font-weight: 750;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .studio-experience-details dd {
+    margin: .35rem 0 0;
+    color: #55554f;
+    font-size: .9rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+  .studio-experience-flip-button {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    align-self: flex-start;
+    gap: .7rem;
+    margin-top: auto;
+    padding: .25rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: .88rem;
+    font-weight: 650;
+    line-height: 1.3;
+    cursor: pointer;
+  }
+  .studio-experience-flip-button svg {
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: .35rem;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.5;
+    transition: transform 180ms ease;
+  }
+  .studio-experience-flip-button:hover { color: var(--experience-accent); }
+  .studio-experience-flip-button:hover svg { transform: rotate(-12deg); }
+  .studio-experience-flip-button:focus-visible {
+    outline: 2px solid var(--violet);
+    outline-offset: 4px;
+  }
+  .studio-experience-flip-button--back { color: var(--experience-accent); }
+  .studio-experience-flip-button--back svg { order: -1; }
+  @media (prefers-reduced-motion: reduce) {
+    .studio-experience-card-inner,
+    .studio-experience-flip-button svg { transition: none; }
+  }
+  .studio-details {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 7vw, 6rem);
+  }
+  .studio-details h2 { margin: 0; }
+  .studio-format-list {
+    margin: 1.25rem 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+    list-style: none;
+  }
+  .studio-format-list li {
+    padding: .8rem 0;
+    border-bottom: 1px solid var(--line);
+    line-height: 1.5;
+  }
+  .studio-scope {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--ink);
+  }
+  .studio-scope p {
+    max-width: 520px;
+    margin: 1rem 0 0;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .studio-final {
+    padding: clamp(4rem, 8vw, 7rem) 0;
+  }
+  .studio-final h2 { color: var(--paper); }
+  .studio-final > .wrap > p {
+    max-width: 650px;
+    color: rgba(255, 255, 255, .72);
+    font-size: 1.1rem;
+    line-height: 1.7;
+  }
+  .studio-final .pill-link {
+    margin-top: .5rem;
+    background: var(--yellow);
+    color: var(--ink);
+  }
+  .studio-inquiry {
+    padding: clamp(4rem, 8vw, 7rem) 0;
+    background: #f1ece2;
+  }
+  .studio-inquiry-grid {
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    gap: clamp(2.5rem, 8vw, 8rem);
+    align-items: start;
+  }
+  .studio-inquiry-intro h2 {
+    max-width: 10ch;
+    margin: 1.25rem 0 1rem;
+    font: 700 clamp(2.75rem, 5.5vw, 5rem)/1.02 Manrope, Arial, sans-serif;
+    letter-spacing: -.065em;
+  }
+  .studio-inquiry-intro p {
+    max-width: 30rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .studio-inquiry-form {
+    display: grid;
+    gap: 1.35rem;
+    min-width: 0;
+  }
+  .studio-inquiry-form fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .studio-inquiry-form legend,
+  .studio-inquiry-form > label,
+  .studio-inquiry-columns > label {
+    display: block;
+    width: 100%;
+    font-weight: 650;
+  }
+  .studio-inquiry-form legend,
+  .studio-inquiry-form > label,
+  .studio-inquiry-columns > label { margin-bottom: .65rem; }
+  .studio-inquiry-form legend > span,
+  .studio-inquiry-form label > .studio-field-meta {
+    margin-left: .4rem;
+    color: #77766f;
+    font-size: .75rem;
+    font-weight: 500;
+  }
+  .studio-inquiry-form select,
+  .studio-inquiry-form input[type="text"],
+  .studio-inquiry-form input[type="email"],
+  .studio-inquiry-form textarea {
+    display: block;
+    width: 100%;
+    margin-top: .55rem;
+    padding: .85rem 1rem;
+    border: 1px solid rgba(24, 25, 24, .24);
+    border-radius: .2rem;
+    background: rgba(255, 255, 255, .55);
+    color: var(--ink);
+    font: inherit;
+  }
+  .studio-inquiry-form textarea { resize: vertical; }
+  .studio-inquiry-form input:focus,
+  .studio-inquiry-form select:focus,
+  .studio-inquiry-form textarea:focus {
+    outline: 2px solid var(--violet);
+    outline-offset: 2px;
+  }
+  .studio-inquiry-form [aria-invalid="true"] { border-color: #9c2f2f; }
+  .studio-option-list,
+  .studio-inquiry-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+  .studio-option-list { margin-top: .7rem; }
+  .studio-option-list label {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 3rem;
+    padding: .65rem .75rem;
+    border: 1px solid rgba(24, 25, 24, .2);
+    background: rgba(255, 255, 255, .38);
+    font-size: .92rem;
+  }
+  .studio-option-list input { accent-color: var(--violet); }
+  .studio-inquiry-form .studio-field-error {
+    display: block;
+    min-height: 1.15em;
+    margin-top: .25rem;
+    color: #922b2b;
+    font-size: .82rem;
+    font-weight: 500;
+  }
+  .studio-inquiry-privacy {
+    margin: 0;
+    color: var(--muted);
+    font-size: .9rem;
+    line-height: 1.6;
+  }
+  .studio-inquiry-privacy a { color: var(--ink); text-underline-offset: .2em; }
+  .studio-inquiry-status { min-height: 1.5em; margin: 0; line-height: 1.5; }
+  .studio-inquiry-status[role="alert"] { color: #922b2b; }
+  .studio-inquiry-status[role="status"]:not(:empty) { color: #315940; }
+  .studio-inquiry-form button:disabled { cursor: wait; opacity: .65; }
+  .studio-honeypot {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  @media (max-width: 900px) {
+    .studio-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .studio-steps li { padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, .18); }
+    .studio-examples-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .studio-inquiry-grid { grid-template-columns: 1fr; }
+    .studio-inquiry-intro h2 { max-width: 14ch; }
+  }
+  @media (max-width: 760px) {
+    .studio-page-nav { --gutter: 20px; }
+  }
+  @media (max-width: 640px) {
+    .studio-hero { padding-top: 3.5rem; }
+    .studio-hero h1 { font-size: clamp(3rem, 13vw, 4.5rem); }
+    .studio-steps,
+    .studio-takeaways > ul,
+    .studio-details { grid-template-columns: minmax(0, 1fr); }
+    .studio-steps li { padding-right: 0; }
+    .studio-details { gap: 3rem; }
+    .studio-examples-grid { grid-template-columns: 1fr; }
+    .studio-experiences-header { margin-bottom: 1.5rem; padding-bottom: 1.25rem; }
+    .studio-experience-face h3 { min-height: 0; }
+    .studio-experience h2,
+    .studio-takeaways h2,
+    .studio-examples h2,
+    .studio-final h2 { font-size: clamp(2.15rem, 10vw, 3.3rem); }
+    .studio-details h2.section-label {
+      font-size: .625rem;
+      letter-spacing: .1em;
+    }
+  }
+  @media (max-width: 520px) {
+    .studio-option-list,
+    .studio-inquiry-columns { grid-template-columns: 1fr; }
+  }
+</style>

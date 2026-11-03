@@ -173,4 +173,6 @@ npm run build
 
 ## Redaktion und Datenschutz
 
-Vor einem öffentlichen Start müssen Impressum und Datenschutzangaben, Verantwortliche, Hosting-/Datenbankanbieter und die Speicherung von Nutzerkonten geprüft werden. Die Registrierung speichert E-Mail-Adresse, Passwort-Hash und Sitzungsdaten. Derzeit gibt es keine E-Mail-Verifikation oder Löschseite für Nutzerkonten.
+Studio-Anfragen werden nach Migration 014 in PostgreSQL gespeichert und sind im Admin-Bereich unter „Studio-Anfragen“ einsehbar. Status, interne Notizen und Kontaktzeitpunkt können dort gepflegt werden; das dauerhafte Löschen erfolgt manuell. Es gibt keine automatische Aufbewahrungsfrist und keine E-Mail-Benachrichtigung für neue Anfragen.
+
+Die Datenschutzerklärung unter `/datenschutz/` beschreibt die derzeit vorgesehenen Website-Funktionen und Anbieter. Vor dem öffentlichen Einsatz müssen die tatsächliche Hosting-/Datenbankkonfiguration, Anbieter-Verträge, internationale Datenübermittlungen und Aufbewahrungspflichten geprüft und die Erklärung fachlich freigegeben werden. Die Registrierung speichert E-Mail-Adresse, Passwort-Hash und Sitzungsdaten; derzeit gibt es keine E-Mail-Verifikation oder Selbstbedienungs-Löschung für Nutzerkonten.

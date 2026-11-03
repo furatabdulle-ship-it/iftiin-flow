@@ -1,0 +1,225 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { getSessionAccount } from '../../../lib/auth';
+import { getStudioInquiry, studioInquiryStatuses, type StudioInquiryStatus } from '../../../lib/studio-inquiries';
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect('/login/', 302);
+if (account.role !== 'admin') return Astro.redirect('/account/', 302);
+
+const id = Astro.params.id ?? '';
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+if (!uuidPattern.test(id)) return new Response('Not Found', { status: 404 });
+const inquiry = await getStudioInquiry(id);
+if (!inquiry) return new Response('Not Found', { status: 404 });
+
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const statusLabels: Record<StudioInquiryStatus, string> = {
+  new: 'Neu',
+  contacted: 'Kontaktiert',
+  qualified: 'Qualifiziert',
+  closed: 'Abgeschlossen',
+};
+const labels: Record<string, string> = {
+  independent_professional: 'Selbstständig / Professional',
+  founder: 'Gründer:in',
+  small_business: 'Kleines Unternehmen',
+  creator_educator: 'Kreative Arbeit / Bildung',
+  other: 'Anderes',
+  communication_content: 'Kommunikation und Inhalte',
+  research_knowledge: 'Recherche und Wissen',
+  planning_organization: 'Planung und Organisation',
+  creativity_ideas: 'Kreativität und Ideen',
+  business_reinvention: 'Geschäftsmodell oder Arbeitsweise',
+  other_unsure: 'Anderes / noch unklar',
+  redesign_work: 'Meine Arbeit neu gestalten',
+  create_ai_assistant: 'Einen KI-Assistenten entwickeln',
+  reduce_repetitive_work: 'Wiederkehrende Aufgaben vereinfachen',
+  develop_ai_skills: 'Meine KI-Fähigkeiten ausbauen',
+  explore_possibilities: 'Möglichkeiten erkunden',
+  beginner: 'Beginnt gerade',
+  occasional: 'Gelegentliche Nutzung',
+  regular: 'Regelmäßige Nutzung',
+  within_2_weeks: 'Innerhalb von zwei Wochen',
+  within_1_month: 'Innerhalb eines Monats',
+  within_3_months: 'Innerhalb von drei Monaten',
+  exploring: 'Informiert sich noch',
+  under_500: 'Unter 500 €',
+  '500_1500': '500–1.500 €',
+  '1500_3000': '1.500–3.000 €',
+  over_3000: 'Über 3.000 €',
+  unsure: 'Noch offen',
+};
+const formatDate = (value: Date | string) => new Intl.DateTimeFormat('de-DE', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+}).format(new Date(value));
+const contactedAt = inquiry.last_contacted_at ? new Date(inquiry.last_contacted_at).toISOString() : '';
+---
+
+<Base title={`Anfrage: ${inquiry.full_name}`}>
+  <section class="section wrap inquiry-detail">
+    <a class="inquiry-back" href={root('admin/studio-inquiries/')}>← Zur Übersicht</a>
+    <header class="inquiry-detail-header">
+      <div>
+        <div class="section-label">Studio-Anfrage / {inquiry.locale.toUpperCase()}</div>
+        <h1>{inquiry.full_name}</h1>
+        <a href={`mailto:${inquiry.email}`}>{inquiry.email}</a>
+      </div>
+      <span class:list={['inquiry-status', `inquiry-status--${inquiry.status}`]}>{statusLabels[inquiry.status]}</span>
+    </header>
+
+    <p class="inquiry-detail-meta">
+      Eingegangen am {formatDate(inquiry.created_at)} · Zuletzt geändert am {formatDate(inquiry.updated_at)}
+    </p>
+
+    <div class="inquiry-detail-grid">
+      <section class="inquiry-detail-card" aria-labelledby="inquiry-answers-title">
+        <h2 id="inquiry-answers-title">Angaben</h2>
+        <dl>
+          <div><dt>Beruflicher Hintergrund</dt><dd>{labels[inquiry.professional_background] ?? inquiry.professional_background}</dd></div>
+          <div><dt>Herausforderung</dt><dd>{labels[inquiry.challenge_category] ?? inquiry.challenge_category}</dd></div>
+          <div><dt>Gewünschtes Ergebnis</dt><dd>{labels[inquiry.desired_outcome] ?? inquiry.desired_outcome}</dd></div>
+          <div><dt>KI-Erfahrung</dt><dd>{labels[inquiry.ai_experience] ?? inquiry.ai_experience}</dd></div>
+          <div><dt>Zeitrahmen</dt><dd>{inquiry.timeline ? labels[inquiry.timeline] ?? inquiry.timeline : '—'}</dd></div>
+          <div><dt>Budgetrahmen</dt><dd>{inquiry.budget_range ? labels[inquiry.budget_range] ?? inquiry.budget_range : '—'}</dd></div>
+          <div class="inquiry-answer-message"><dt>Weitere Angaben</dt><dd>{inquiry.additional_details || 'Keine weiteren Angaben.'}</dd></div>
+        </dl>
+      </section>
+
+      <section class="inquiry-detail-card" aria-labelledby="inquiry-management-title">
+        <h2 id="inquiry-management-title">Bearbeitung</h2>
+        <form
+          id="inquiry-management-form"
+          data-endpoint={`${root('api/admin/studio-inquiries/')}${inquiry.id}`}
+          data-list-url={root('admin/studio-inquiries/')}
+        >
+          <label>Status
+            <select name="status" required>
+              {studioInquiryStatuses.map((status) => <option value={status} selected={inquiry.status === status}>{statusLabels[status]}</option>)}
+            </select>
+          </label>
+          <label>Interne Notizen
+            <textarea name="internalNotes" maxlength="4000" rows="8">{inquiry.internal_notes ?? ''}</textarea>
+          </label>
+          <label>Zuletzt kontaktiert
+            <input id="last-contacted-at" type="datetime-local" data-utc-value={contactedAt} />
+          </label>
+          <p id="inquiry-management-message" role="status" aria-live="polite" tabindex="-1"></p>
+          <button class="pill-link" type="submit">Änderungen speichern</button>
+        </form>
+        <div class="inquiry-delete-panel">
+          <p>Das Löschen entfernt die Anfrage dauerhaft und kann nicht rückgängig gemacht werden.</p>
+          <button id="delete-inquiry" type="button">Anfrage dauerhaft löschen</button>
+        </div>
+      </section>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#inquiry-management-form');
+  const message = document.querySelector<HTMLElement>('#inquiry-management-message');
+  const contactField = document.querySelector<HTMLInputElement>('#last-contacted-at');
+  const deleteButton = document.querySelector<HTMLButtonElement>('#delete-inquiry');
+  const initialContactedAt = contactField?.dataset.utcValue ?? '';
+
+  function showMessage(text: string, isError = false) {
+    if (!message) return;
+    message.textContent = text;
+    message.setAttribute('role', isError ? 'alert' : 'status');
+  }
+
+  if (contactField && initialContactedAt) {
+    const date = new Date(initialContactedAt);
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    contactField.value = localDate.toISOString().slice(0, 16);
+  }
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form || !contactField) return;
+    const status = form.querySelector<HTMLSelectElement>('select[name="status"]')?.value ?? '';
+    const internalNotes = form.querySelector<HTMLTextAreaElement>('textarea[name="internalNotes"]')?.value ?? '';
+    const lastContactedAt = contactField.value ? new Date(contactField.value).toISOString() : null;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (button) button.disabled = true;
+    try {
+      const response = await fetch(form.dataset.endpoint ?? '', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, internalNotes, lastContactedAt }),
+      });
+      const result = await response.json() as { success?: boolean; error?: string };
+      if (!response.ok || !result.success) {
+        showMessage(result.error ?? 'Die Änderungen konnten nicht gespeichert werden.', true);
+        return;
+      }
+      showMessage('Änderungen gespeichert.');
+    } catch {
+      showMessage('Die Änderungen konnten nicht gespeichert werden. Bitte prüfe deine Verbindung.', true);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+
+  deleteButton?.addEventListener('click', async () => {
+    if (!form || !window.confirm('Diese Anfrage wirklich dauerhaft löschen?')) return;
+    deleteButton.disabled = true;
+    try {
+      const response = await fetch(form.dataset.endpoint ?? '', { method: 'DELETE' });
+      const result = await response.json() as { success?: boolean; error?: string };
+      if (!response.ok || !result.success) {
+        showMessage(result.error ?? 'Die Anfrage konnte nicht gelöscht werden.', true);
+        return;
+      }
+      window.location.assign(form.dataset.listUrl ?? '/admin/studio-inquiries/');
+    } catch {
+      showMessage('Die Anfrage konnte nicht gelöscht werden. Bitte prüfe deine Verbindung.', true);
+    } finally {
+      deleteButton.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .inquiry-detail { padding-top: 3rem; padding-bottom: 6rem; }
+  .inquiry-back { color: inherit; text-underline-offset: .2em; }
+  .inquiry-detail-header { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-top: 2rem; }
+  .inquiry-detail-header h1 { margin: .75rem 0 .4rem; font: 800 clamp(2.5rem, 5vw, 4.5rem)/1 Manrope, Arial, sans-serif; letter-spacing: -.06em; overflow-wrap: anywhere; }
+  .inquiry-detail-header > div > a { color: inherit; }
+  .inquiry-detail-meta { margin: 1.5rem 0 2rem; color: var(--muted); font-size: .9rem; }
+  .inquiry-detail-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: 1.5rem; align-items: start; }
+  .inquiry-detail-card { padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid var(--line); }
+  .inquiry-detail-card h2 { margin: 0 0 1.25rem; font: 700 1.35rem/1.2 Manrope, Arial, sans-serif; }
+  .inquiry-detail-card dl { display: grid; gap: 0; margin: 0; }
+  .inquiry-detail-card dl > div { display: grid; grid-template-columns: minmax(130px, .8fr) minmax(0, 1.2fr); gap: 1rem; padding: .8rem 0; border-top: 1px solid var(--line); }
+  .inquiry-detail-card dt { color: var(--muted); font-size: .88rem; }
+  .inquiry-detail-card dd { margin: 0; overflow-wrap: anywhere; line-height: 1.55; }
+  .inquiry-answer-message dd { white-space: pre-wrap; }
+  #inquiry-management-form { display: grid; gap: 1rem; }
+  #inquiry-management-form label { display: grid; gap: .45rem; font-size: .9rem; font-weight: 650; }
+  #inquiry-management-form select,
+  #inquiry-management-form textarea,
+  #inquiry-management-form input { width: 100%; padding: .75rem; border: 1px solid var(--line); border-radius: .2rem; background: white; color: var(--ink); font: inherit; }
+  #inquiry-management-form textarea { resize: vertical; }
+  #inquiry-management-form p { min-height: 1.5em; margin: 0; }
+  #inquiry-management-form p[role="alert"] { color: #922b2b; }
+  #inquiry-management-form p[role="status"]:not(:empty) { color: #315940; }
+  #inquiry-management-form button:disabled, #delete-inquiry:disabled { opacity: .6; cursor: wait; }
+  .inquiry-delete-panel { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+  .inquiry-delete-panel p { color: var(--muted); font-size: .85rem; line-height: 1.5; }
+  #delete-inquiry { padding: .7rem .9rem; border: 1px solid #9c2f2f; background: transparent; color: #922b2b; font: inherit; cursor: pointer; }
+  .inquiry-status { display: inline-block; padding: .3rem .6rem; border-radius: 999px; background: #e6e1d7; white-space: nowrap; font-size: .8rem; font-weight: 700; }
+  .inquiry-status--new { background: #f5df9d; }
+  .inquiry-status--contacted { background: #dce5f1; }
+  .inquiry-status--qualified { background: #d8ead8; }
+  .inquiry-status--closed { background: #e7e5e2; }
+  @media (max-width: 760px) {
+    .inquiry-detail-header { align-items: start; flex-direction: column; }
+    .inquiry-detail-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .inquiry-detail-card dl > div { grid-template-columns: 1fr; gap: .3rem; }
+  }
+</style>

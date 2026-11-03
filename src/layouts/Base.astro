@@ -43,7 +43,8 @@ const showLanguageSwitch = !Astro.url.pathname.startsWith('/admin/');
       <a class="wordmark" href={root('')} aria-label={locale === 'en' ? 'iftiin flow. Home' : 'iftiin flow. Startseite'}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a>
         {home ? <>
           <nav class="home-nav" aria-label={locale === 'en' ? 'Main navigation' : 'Hauptnavigation'}>
-            <a href={root('explore/')}>{t(locale, 'common.magazine')}</a>
+            <a href={root('explore/')}>{t(locale, 'common.explore')}</a>
+            <a href={root('studio/')}>{t(locale, 'common.studio')}</a>
             <a href={root('store/')}>{t(locale, 'common.shop')} <ArrowIcon /></a>
             <a href={root('about/')}>{t(locale, 'common.aboutIftiin')}</a>
           </nav>
@@ -55,9 +56,10 @@ const showLanguageSwitch = !Astro.url.pathname.startsWith('/admin/');
           </div>
         </> : <nav aria-label={locale === 'en' ? 'Main navigation' : 'Hauptnavigation'}>
           <a href={root('explore/')}>{t(locale, 'common.explore')}</a>
+          <a href={root('studio/')}>{t(locale, 'common.studio')}</a>
+          <a href={root('store/')}>{t(locale, 'common.shop')}</a>
           <a href={root('about/')}>{t(locale, 'common.about')}</a>
           <a href={root('account/')}>{t(locale, 'common.account')}</a>
-          <a href={root('store/')}>{t(locale, 'common.shop')}</a>
           {site.showResearch && <a href={root('research/')}>Research</a>}
           {site.showLearning && <a href={root('learning/')}>Learning</a>}
           {site.showTools && <a href={root('tools/')}>Tools</a>}
@@ -70,7 +72,8 @@ const showLanguageSwitch = !Astro.url.pathname.startsWith('/admin/');
       </div>}
     </header>
     {home && <nav class="site-menu" id="site-menu" aria-label={locale === 'en' ? 'Main menu' : 'Hauptmenü'} inert>
-      <a href={root('explore/')}>{t(locale, 'common.magazine')}</a>
+      <a href={root('explore/')}>{t(locale, 'common.explore')}</a>
+      <a href={root('studio/')}>{t(locale, 'common.studio')}</a>
       <a href={root('store/')}>{t(locale, 'common.shop')}</a>
       <a href={root('about/')}>{t(locale, 'common.aboutIftiin')}</a>
       <a href={root('account/')}>{t(locale, 'common.myAccount')}</a>
@@ -83,7 +86,7 @@ const showLanguageSwitch = !Astro.url.pathname.startsWith('/admin/');
     <footer class="footer">
       <div class="wrap footer-grid">
         <div><a class="wordmark" href={root('')}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a><p>{t(locale, 'common.footerLine1')}<br/>{t(locale, 'common.footerLine2')}</p></div>
-        <div class="footer-links"><a href={root('explore/')}>{t(locale, 'common.explore')}</a><a href={root('store/')}>{t(locale, 'common.shop')}</a><a href={root('about/')}>{t(locale, 'common.about')}</a><a href={root('impressum/')}>{t(locale, 'common.legal')}</a>{site.email && <a href={`mailto:${site.email}`}>{t(locale, 'common.contact')}</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter <ArrowIcon /></a>}</div>
+        <div class="footer-links"><a href={root('explore/')}>{t(locale, 'common.explore')}</a><a href={root('studio/')}>{t(locale, 'common.studio')}</a><a href={root('store/')}>{t(locale, 'common.shop')}</a><a href={root('about/')}>{t(locale, 'common.about')}</a><a href={root('impressum/')}>{t(locale, 'common.legal')}</a><a href={root('datenschutz/')}>{t(locale, 'common.privacy')}</a>{site.email && <a href={`mailto:${site.email}`}>{t(locale, 'common.contact')}</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter <ArrowIcon /></a>}</div>
         <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · {locale === 'en' ? 'Independent knowledge platform' : 'Unabhängige Wissensplattform'}</div>
       </div>
     </footer>

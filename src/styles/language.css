@@ -33,12 +33,54 @@
 }
 
 @media (max-width: 600px) {
+  body:not(.home-page) .site-header {
+    height: auto;
+    min-height: 77px;
+    flex-wrap: wrap;
+    align-content: center;
+    row-gap: 8px;
+    padding-block: 8px;
+  }
+
+  body:not(.home-page) .site-header .wordmark {
+    order: 1;
+  }
+
+  body:not(.home-page) .site-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .language-switch {
     margin-left: auto;
+  }
+
+  body:not(.home-page) .language-switch {
+    order: 2;
   }
 
   .home-page .language-switch {
     margin-left: auto;
     margin-right: 12px;
+  }
+
+  body:not(.home-page) .site-header .wordmark {
+    flex-shrink: 0;
+    font-size: clamp(20px, 6vw, 23px);
+  }
+
+  body:not(.home-page) .site-header nav {
+    gap: clamp(3px, 1vw, 5px);
+    font-size: clamp(10px, 2.8vw, 11px);
+  }
+
+  body:not(.home-page) .site-header nav a {
+    white-space: nowrap;
+  }
+
+  body:not(.home-page) .language-switch {
+    gap: 4px;
+    margin-left: clamp(2px, 1vw, 8px);
   }
 }

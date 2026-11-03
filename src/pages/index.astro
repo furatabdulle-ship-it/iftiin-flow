@@ -21,7 +21,8 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
     <a href={highlighted.length > 1 ? '#ideas' : '#top'}><span>01</span> {copy('home.visions')}</a>
     <a href="#perspective"><span>02</span> {copy('home.perspective')}</a>
     <a href="#explore"><span>03</span> {copy('common.explore')}</a>
-    <a href="#invitation"><span>04</span> {copy('home.invitation')}</a>
+    <a href="#studio"><span>04</span> {copy('home.studioNav')}</a>
+    <a href="#invitation"><span>05</span> {copy('home.invitation')}</a>
   </nav>
 
   <section class="hero" id="top" data-parallax>
@@ -57,10 +58,11 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
             <span>noise.</span><span>AI.</span><span>power.</span><span>change.</span><span>Future Skills.</span>
           </span></span></span>
         </h1>
+        <p class="hero-subheading">{copy('home.heroSubheading')}</p>
         <p class="hero-description">{copy('home.heroDescription')}</p>
         <div class="hero-ctas">
           <a class="pill-link hero-cta-primary" href={root('explore/')}>{copy('home.magazineCta')} <ArrowIcon /></a>
-          <a class="hero-cta-secondary" href={root('store/')}>{copy('home.shopCta')} <ArrowIcon /></a>
+          <a class="hero-cta-secondary" href={root('studio/')}>{copy('home.studioHeroCta')} <ArrowIcon /></a>
         </div>
         <ul class="hero-topics" aria-label={copy('home.topicsLabel')}>
           {pillars.map((pillar) => <li>{pillar.name}</li>)}
@@ -150,7 +152,29 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
     </ul>
   </section>
 
-  <section class="manifesto wrap" id="invitation"><div class="section-label">04 / {copy('home.invitation')}</div><div>
+  <section class="studio-teaser" id="studio" aria-labelledby="studio-teaser-title">
+    <div class="studio-teaser-inner">
+      <div class="section-label">{copy('home.studioEyebrow')}</div>
+      <div class="studio-teaser-grid">
+        <h2 id="studio-teaser-title">{copy('home.studioTitleFirst')}<br /><em>{copy('home.studioTitleSecond')}</em></h2>
+        <div class="studio-teaser-copy">
+          <p>{copy('home.studioDescription')}</p>
+          <div class="studio-teaser-offer">
+            <div>
+              <div class="section-label">{copy('home.studioOfferEyebrow')}</div>
+              <h3>{copy('home.studioOfferTitle')}</h3>
+            </div>
+            <div>
+              <p>{copy('home.studioOfferDescription')}</p>
+              <a class="pill-link" href={root('studio/')}>{copy('home.studioCta')} <ArrowIcon /></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="manifesto wrap" id="invitation"><div class="section-label">05 / {copy('home.invitation')}</div><div>
     <IftiinSun size={56} class="manifesto-sun" /><h2>Better questions.<br />Clearer thinking.<br /><em>More agency.</em></h2>
     <p>{copy('home.manifestoDescription')}</p>
     <a class="pill-link" href={root('explore/')}>{copy('home.discoverTopics')} <ArrowIcon /></a>

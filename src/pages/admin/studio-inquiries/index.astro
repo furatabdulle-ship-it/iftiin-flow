@@ -1,0 +1,204 @@
+---
+import ArrowIcon from '../../../components/ArrowIcon.astro';
+import Base from '../../../layouts/Base.astro';
+import { getSessionAccount } from '../../../lib/auth';
+import {
+  getStudioInquiryCounts,
+  listStudioInquiries,
+  studioInquiryCategories,
+  studioInquiryStatuses,
+  type StudioInquiryFilters,
+  type StudioInquiryStatus,
+} from '../../../lib/studio-inquiries';
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect('/login/', 302);
+if (account.role !== 'admin') return Astro.redirect('/account/', 302);
+
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const searchParams = Astro.url.searchParams;
+const pageSize = 25;
+const isDate = (value: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+};
+const rawStatus = searchParams.get('status') ?? '';
+const rawCategory = searchParams.get('category') ?? '';
+const rawLocale = searchParams.get('locale') ?? '';
+const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10);
+const filters: StudioInquiryFilters = {
+  search: (searchParams.get('q') ?? '').trim().slice(0, 100),
+  status: studioInquiryStatuses.includes(rawStatus as StudioInquiryStatus) ? rawStatus as StudioInquiryStatus : '',
+  category: studioInquiryCategories.includes(rawCategory as typeof studioInquiryCategories[number]) ? rawCategory : '',
+  locale: rawLocale === 'de' || rawLocale === 'en' ? rawLocale : '',
+  from: isDate(searchParams.get('from') ?? '') ? searchParams.get('from')! : '',
+  to: isDate(searchParams.get('to') ?? '') ? searchParams.get('to')! : '',
+  sort: searchParams.get('sort') === 'oldest' ? 'oldest' : 'newest',
+  limit: pageSize,
+  offset: (Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage - 1 : 0) * pageSize,
+};
+let currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+let { inquiries, total } = await listStudioInquiries(filters);
+const totalPages = Math.max(1, Math.ceil(total / pageSize));
+if (currentPage > totalPages) {
+  currentPage = totalPages;
+  ({ inquiries, total } = await listStudioInquiries({ ...filters, offset: (currentPage - 1) * pageSize }));
+}
+const counts = await getStudioInquiryCounts();
+const queryForPage = (page: number) => {
+  const params = new URLSearchParams(Astro.url.searchParams);
+  params.set('page', String(page));
+  return `${root('admin/studio-inquiries/')}?${params}`;
+};
+const categoryLabels: Record<string, string> = {
+  communication_content: 'Kommunikation & Inhalte',
+  research_knowledge: 'Recherche & Wissen',
+  planning_organization: 'Planung & Organisation',
+  creativity_ideas: 'Kreativität & Ideen',
+  business_reinvention: 'Geschäftsmodell / Arbeitsweise',
+  other_unsure: 'Anderes / unklar',
+};
+const statusLabels: Record<StudioInquiryStatus, string> = {
+  new: 'Neu',
+  contacted: 'Kontaktiert',
+  qualified: 'Qualifiziert',
+  closed: 'Abgeschlossen',
+};
+const formatDate = (value: Date | string) => new Intl.DateTimeFormat('de-DE', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+}).format(new Date(value));
+---
+
+<Base title="Studio-Anfragen">
+  <section class="section wrap inquiry-admin">
+    <header class="inquiry-admin-header">
+      <div>
+        <div class="section-label">Admin / Studio</div>
+        <h1>Studio-Anfragen</h1>
+      </div>
+      <nav aria-label="Admin-Navigation">
+        <a href={root('admin/')}>Redaktion</a>
+        <a href={root('admin/products/')}>Inhalte &amp; Produkte</a>
+        <a href={root('admin/studio-inquiries/')} aria-current="page">Studio-Anfragen</a>
+        <a href={root('')}>Website ansehen <ArrowIcon /></a>
+      </nav>
+    </header>
+
+    <div class="inquiry-stats" aria-label="Anfragen nach Status">
+      <div><span>Gesamt</span><strong>{counts.total}</strong></div>
+      {studioInquiryStatuses.map((status) => <div><span>{statusLabels[status]}</span><strong>{counts[status]}</strong></div>)}
+    </div>
+
+    <form class="inquiry-filters" method="get" action={root('admin/studio-inquiries/')}>
+      <label>Suche
+        <input type="search" name="q" value={filters.search} placeholder="Name oder E-Mail" maxlength="100" />
+      </label>
+      <label>Status
+        <select name="status">
+          <option value="">Alle Status</option>
+          {studioInquiryStatuses.map((status) => <option value={status} selected={filters.status === status}>{statusLabels[status]}</option>)}
+        </select>
+      </label>
+      <label>Thema
+        <select name="category">
+          <option value="">Alle Themen</option>
+          {studioInquiryCategories.map((category) => <option value={category} selected={filters.category === category}>{categoryLabels[category]}</option>)}
+        </select>
+      </label>
+      <label>Sprache
+        <select name="locale">
+          <option value="">Alle</option>
+          <option value="de" selected={filters.locale === 'de'}>Deutsch</option>
+          <option value="en" selected={filters.locale === 'en'}>English</option>
+        </select>
+      </label>
+      <label>Von
+        <input type="date" name="from" value={filters.from} />
+      </label>
+      <label>Bis
+        <input type="date" name="to" value={filters.to} />
+      </label>
+      <label>Sortierung
+        <select name="sort">
+          <option value="newest" selected={filters.sort === 'newest'}>Neueste zuerst</option>
+          <option value="oldest" selected={filters.sort === 'oldest'}>Älteste zuerst</option>
+        </select>
+      </label>
+      <button class="pill-link" type="submit">Filtern</button>
+    </form>
+
+    <div class="inquiry-results-heading">
+      <p>{total} {total === 1 ? 'Anfrage' : 'Anfragen'} · Seite {currentPage} von {totalPages}</p>
+      <div>
+        {currentPage > 1 && <a href={queryForPage(currentPage - 1)}>← Zurück</a>}
+        {currentPage < totalPages && <a href={queryForPage(currentPage + 1)}>Weiter →</a>}
+      </div>
+    </div>
+
+    {inquiries.length ? <div class="inquiry-table-wrap">
+      <table class="inquiry-table">
+        <thead>
+          <tr><th>Eingegangen</th><th>Name / E-Mail</th><th>Arbeit</th><th>Herausforderung</th><th>Zeitrahmen</th><th>Budget</th><th>Sprache</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {inquiries.map((inquiry) => <tr>
+            <td>{formatDate(inquiry.created_at)}</td>
+            <td><strong>{inquiry.full_name}</strong><br /><a href={`mailto:${inquiry.email}`}>{inquiry.email}</a></td>
+            <td>{inquiry.professional_background.replaceAll('_', ' ')}</td>
+            <td>{categoryLabels[inquiry.challenge_category] ?? inquiry.challenge_category}</td>
+            <td>{inquiry.timeline?.replaceAll('_', ' ') ?? '—'}</td>
+            <td>{inquiry.budget_range?.replaceAll('_', ' ') ?? '—'}</td>
+            <td>{inquiry.locale.toUpperCase()}</td>
+            <td><span class:list={['inquiry-status', `inquiry-status--${inquiry.status}`]}>{statusLabels[inquiry.status]}</span></td>
+            <td><a class="inquiry-open" href={root(`admin/studio-inquiries/${inquiry.id}/`)}>Öffnen</a></td>
+          </tr>)}
+        </tbody>
+      </table>
+    </div> : <p class="inquiry-empty">Für diese Filter wurden keine Anfragen gefunden.</p>}
+  </section>
+</Base>
+
+<style>
+  .inquiry-admin { padding-top: 3rem; padding-bottom: 6rem; }
+  .inquiry-admin-header { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2rem; }
+  .inquiry-admin-header h1 { margin: .75rem 0 0; font: 800 clamp(2.5rem, 5vw, 4.5rem)/1 Manrope, Arial, sans-serif; letter-spacing: -.06em; }
+  .inquiry-admin-header nav { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; font-size: .9rem; }
+  .inquiry-admin-header nav a { color: inherit; text-underline-offset: .2em; }
+  .inquiry-admin-header nav a[aria-current="page"] { color: #66518d; font-weight: 700; }
+  .inquiry-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; margin-bottom: 1.5rem; }
+  .inquiry-stats div { display: grid; gap: .25rem; padding: 1rem; border: 1px solid var(--line); }
+  .inquiry-stats span { color: var(--muted); font-size: .8rem; }
+  .inquiry-stats strong { font: 700 1.75rem/1 Manrope, Arial, sans-serif; }
+  .inquiry-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; padding: 1.25rem; background: #f1ece2; }
+  .inquiry-filters label { display: grid; gap: .4rem; font-size: .85rem; font-weight: 650; }
+  .inquiry-filters input, .inquiry-filters select { min-width: 0; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .2rem; background: white; color: var(--ink); font: inherit; }
+  .inquiry-filters button { align-self: end; justify-self: start; border: 0; cursor: pointer; }
+  .inquiry-results-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin: 1.5rem 0 .75rem; }
+  .inquiry-results-heading p { margin: 0; color: var(--muted); }
+  .inquiry-results-heading div { display: flex; gap: 1rem; }
+  .inquiry-results-heading a, .inquiry-table a { color: inherit; text-underline-offset: .2em; }
+  .inquiry-table-wrap { overflow-x: auto; border-top: 1px solid var(--line); }
+  .inquiry-table { width: 100%; min-width: 1000px; border-collapse: collapse; text-align: left; }
+  .inquiry-table th, .inquiry-table td { padding: .85rem .65rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .inquiry-table th { color: var(--muted); font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; }
+  .inquiry-table td { font-size: .88rem; line-height: 1.5; }
+  .inquiry-table td strong { font-weight: 700; }
+  .inquiry-status { display: inline-block; padding: .25rem .5rem; border-radius: 999px; background: #e6e1d7; white-space: nowrap; font-size: .75rem; font-weight: 700; }
+  .inquiry-status--new { background: #f5df9d; }
+  .inquiry-status--contacted { background: #dce5f1; }
+  .inquiry-status--qualified { background: #d8ead8; }
+  .inquiry-status--closed { background: #e7e5e2; }
+  .inquiry-open { font-weight: 700; }
+  .inquiry-empty { padding: 3rem 1rem; border-top: 1px solid var(--line); color: var(--muted); text-align: center; }
+  @media (max-width: 800px) {
+    .inquiry-admin-header { align-items: start; flex-direction: column; }
+    .inquiry-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .inquiry-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .inquiry-filters { grid-template-columns: 1fr; }
+    .inquiry-results-heading { align-items: start; flex-direction: column; }
+  }
+</style>

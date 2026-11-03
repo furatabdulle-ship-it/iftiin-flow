@@ -95,6 +95,14 @@ const typeNames: Record<string, string> = {
       <h2>{copy('store.emptyTitle')}</h2>
       <p>{copy('store.emptyDescription')}</p>
     </div>}
+    <section class="store-categories" aria-labelledby="store-categories-title">
+      <h2 class="section-label" id="store-categories-title">{copy('store.futureCategories')}</h2>
+      <ul>
+        <li>{copy('store.categoryKnowledge')}</li>
+        <li>{copy('store.categorySkillKits')}</li>
+        <li>{copy('store.categoryWorkKits')}</li>
+      </ul>
+    </section>
     {!account && checkoutReady && guestAccessReady && <p class="guest-access-note">
       {copy('store.accessAfterPurchase')}
       <a href={root('guest-access/')}>{copy('store.resendAccess')} <ArrowIcon /></a>
@@ -145,6 +153,22 @@ const typeNames: Record<string, string> = {
   .store-card h2 { margin: 1.25rem 0 0.5rem; font-size: 1.5rem; }
   .store-card p { color: var(--muted); line-height: 1.7; }
   .store-card ul { padding-left: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem; }
+  .store-categories { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+  .store-categories h2 { margin: 0; }
+  .store-categories ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .store-categories li {
+    padding-top: .9rem;
+    border-top: 1px solid var(--line);
+    font: 700 clamp(1.05rem, 1.8vw, 1.35rem)/1.25 Manrope, Arial, sans-serif;
+    letter-spacing: -.035em;
+  }
   .store-price-options { width: 100%; margin-top: auto; display: grid; gap: .75rem; }
   .store-price-option { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-top: .75rem; border-top: 1px solid var(--line); }
   .store-price-option .pill-link { margin: 0; }
@@ -153,5 +177,8 @@ const typeNames: Record<string, string> = {
   .guest-access-note { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; color: var(--muted); }
   .guest-access-note a { color: inherit; }
   .store-notice { margin-bottom: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 12px; }
+  @media (max-width: 640px) {
+    .store-categories ul { grid-template-columns: 1fr; gap: .5rem; }
+  }
   @media (max-width: 520px) { .store-price-option { align-items: flex-start; flex-direction: column; } }
 </style>
