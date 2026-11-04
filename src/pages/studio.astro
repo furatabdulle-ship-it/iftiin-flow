@@ -505,12 +505,15 @@ const aiExperienceOptions = [
     for (const name of requiredNames) clearFieldError(name);
     let firstInvalid: HTMLElement | null = null;
     for (const name of requiredNames) {
+      const radioGroup = form.querySelectorAll<HTMLInputElement>(`input[type="radio"][name="${name}"]`);
       const selectedRadio = form.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`);
-      const field = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
+      const field = radioGroup.length
+        ? null
+        : form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
       const value = selectedRadio?.value ?? field?.value.trim() ?? '';
       if (!value) {
         showFieldError(name, form.dataset.requiredMessage ?? '');
-        firstInvalid ??= selectedRadio ?? field;
+        firstInvalid ??= selectedRadio ?? radioGroup[0] ?? field;
       } else if (name === 'email' && field instanceof HTMLInputElement && field.validity.typeMismatch) {
         showFieldError(name, form.dataset.emailMessage ?? '');
         firstInvalid ??= field;
@@ -564,12 +567,17 @@ const aiExperienceOptions = [
       });
       const result = await response.json() as { success?: boolean; error?: string; fields?: string[] };
       if (!response.ok || !result.success) {
+        let firstInvalid: HTMLElement | null = null;
         if (result.fields) {
           for (const name of result.fields) {
-            if (draftFieldNames.includes(name)) showFieldError(name, form.dataset.invalidMessage ?? '');
+            if (draftFieldNames.includes(name)) {
+              showFieldError(name, form.dataset.invalidMessage ?? '');
+              firstInvalid ??= form.querySelector<HTMLElement>(`[name="${name}"]`);
+            }
           }
         }
         showStatus(result.error ?? form.dataset.networkMessage ?? '', true);
+        firstInvalid?.focus();
         return;
       }
       form.reset();
