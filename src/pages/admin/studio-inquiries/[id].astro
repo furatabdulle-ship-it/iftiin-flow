@@ -21,6 +21,9 @@ const statusLabels: Record<StudioInquiryStatus, string> = {
   closed: 'Abgeschlossen',
 };
 const labels: Record<string, string> = {
+  content: 'Content & Kommunikation',
+  research: 'Recherche & Wissen',
+  business: 'Business neu denken',
   independent_professional: 'Selbstständig / Professional',
   founder: 'Gründer:in',
   small_business: 'Kleines Unternehmen',
@@ -44,6 +47,11 @@ const labels: Record<string, string> = {
   within_1_month: 'Innerhalb eines Monats',
   within_3_months: 'Innerhalb von drei Monaten',
   exploring: 'Informiert sich noch',
+  under_1500: 'Unter 1.500 €',
+  '1500_2999': '1.500–2.999 €',
+  '3000_4999': '3.000–4.999 €',
+  '5000_or_more': 'Ab 5.000 €',
+  budget_guidance: 'Wünscht eine Einschätzung zum Budget',
   under_500: 'Unter 500 €',
   '500_1500': '500–1.500 €',
   '1500_3000': '1.500–3.000 €',
@@ -77,13 +85,14 @@ const contactedAt = inquiry.last_contacted_at ? new Date(inquiry.last_contacted_
       <section class="inquiry-detail-card" aria-labelledby="inquiry-answers-title">
         <h2 id="inquiry-answers-title">Angaben</h2>
         <dl>
-          <div><dt>Beruflicher Hintergrund</dt><dd>{labels[inquiry.professional_background] ?? inquiry.professional_background}</dd></div>
-          <div><dt>Herausforderung</dt><dd>{labels[inquiry.challenge_category] ?? inquiry.challenge_category}</dd></div>
-          <div><dt>Gewünschtes Ergebnis</dt><dd>{labels[inquiry.desired_outcome] ?? inquiry.desired_outcome}</dd></div>
-          <div><dt>KI-Erfahrung</dt><dd>{labels[inquiry.ai_experience] ?? inquiry.ai_experience}</dd></div>
+          <div><dt>Studio Experiences</dt><dd>{inquiry.experience_ids.length ? inquiry.experience_ids.map((experience) => labels[experience] ?? experience).join(', ') : '—'}</dd></div>
+          <div><dt>Beruflicher Hintergrund</dt><dd>{inquiry.professional_background ? labels[inquiry.professional_background] ?? inquiry.professional_background : '—'}</dd></div>
+          <div><dt>Herausforderung</dt><dd>{inquiry.challenge_category ? labels[inquiry.challenge_category] ?? inquiry.challenge_category : '—'}</dd></div>
+          <div><dt>Gewünschtes Ergebnis</dt><dd>{inquiry.desired_outcome ? labels[inquiry.desired_outcome] ?? inquiry.desired_outcome : '—'}</dd></div>
+          <div><dt>KI-Erfahrung</dt><dd>{inquiry.ai_experience ? labels[inquiry.ai_experience] ?? inquiry.ai_experience : '—'}</dd></div>
           <div><dt>Zeitrahmen</dt><dd>{inquiry.timeline ? labels[inquiry.timeline] ?? inquiry.timeline : '—'}</dd></div>
           <div><dt>Budgetrahmen</dt><dd>{inquiry.budget_range ? labels[inquiry.budget_range] ?? inquiry.budget_range : '—'}</dd></div>
-          <div class="inquiry-answer-message"><dt>Weitere Angaben</dt><dd>{inquiry.additional_details || 'Keine weiteren Angaben.'}</dd></div>
+          <div class="inquiry-answer-message"><dt>Aufgabe / Lösung oder ergänzende Angaben</dt><dd>{inquiry.additional_details || '—'}</dd></div>
         </dl>
       </section>
 

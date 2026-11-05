@@ -19,10 +19,11 @@ export type StudioInquiry = {
   full_name: string;
   email: string;
   locale: 'de' | 'en';
-  professional_background: string;
-  challenge_category: string;
-  desired_outcome: string;
-  ai_experience: string;
+  experience_ids: string[];
+  professional_background: string | null;
+  challenge_category: string | null;
+  desired_outcome: string | null;
+  ai_experience: string | null;
   timeline: string | null;
   budget_range: string | null;
   additional_details: string | null;
@@ -95,7 +96,7 @@ export async function listStudioInquiries(filters: StudioInquiryFilters): Promis
   const listValues = [...values, filters.limit, filters.offset];
   const result = await query<StudioInquiry>(
     `SELECT id, created_at, updated_at, full_name, email, locale,
-            professional_background, challenge_category, desired_outcome,
+            experience_ids, professional_background, challenge_category, desired_outcome,
             ai_experience, timeline, budget_range, additional_details, status,
             internal_notes, last_contacted_at
      FROM studio_inquiries ${where}
@@ -109,7 +110,7 @@ export async function listStudioInquiries(filters: StudioInquiryFilters): Promis
 export async function getStudioInquiry(id: string): Promise<StudioInquiry | null> {
   const result = await query<StudioInquiry>(
     `SELECT id, created_at, updated_at, full_name, email, locale,
-            professional_background, challenge_category, desired_outcome,
+            experience_ids, professional_background, challenge_category, desired_outcome,
             ai_experience, timeline, budget_range, additional_details, status,
             internal_notes, last_contacted_at
      FROM studio_inquiries WHERE id = $1`,

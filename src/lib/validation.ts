@@ -76,13 +76,17 @@ export const learningProgressSchema = z.object({
 
 export const studioInquirySchema = z.object({
   submissionId: z.uuid(),
+  experienceIds: z.array(z.enum(['content', 'research', 'business']))
+    .min(1)
+    .max(3)
+    .refine((ids) => new Set(ids).size === ids.length, { message: 'Select each Studio experience only once.' }),
   professionalBackground: z.enum([
     'independent_professional',
     'founder',
     'small_business',
     'creator_educator',
     'other',
-  ]),
+  ]).nullable().optional().transform((value) => value ?? null),
   challengeCategory: z.enum([
     'communication_content',
     'research_knowledge',
@@ -90,22 +94,47 @@ export const studioInquirySchema = z.object({
     'creativity_ideas',
     'business_reinvention',
     'other_unsure',
-  ]),
+  ]).nullable().optional().transform((value) => value ?? null),
   desiredOutcome: z.enum([
     'redesign_work',
     'create_ai_assistant',
     'reduce_repetitive_work',
     'develop_ai_skills',
     'explore_possibilities',
-  ]),
-  aiExperience: z.enum(['beginner', 'occasional', 'regular']),
-  timeline: z.enum(['within_2_weeks', 'within_1_month', 'within_3_months', 'exploring']).nullable(),
-  budgetRange: z.enum(['under_500', '500_1500', '1500_3000', 'over_3000', 'unsure']).nullable(),
-  additionalDetails: z.string().trim().max(2000).nullable(),
+  ]).nullable().optional().transform((value) => value ?? null),
+  aiExperience: z.enum(['beginner', 'occasional', 'regular']).nullable().optional().transform((value) => value ?? null),
+  timeline: z.enum(['within_2_weeks', 'within_1_month', 'within_3_months', 'exploring']).nullable().optional().transform((value) => value ?? null),
+  budgetRange: z.enum([
+    'under_1500',
+    '1500_2999',
+    '3000_4999',
+    '5000_or_more',
+    'budget_guidance',
+    'under_500',
+    '500_1500',
+    '1500_3000',
+    'over_3000',
+    'unsure',
+  ]).nullable().optional().transform((value) => value ?? null),
+  additionalDetails: z.string().trim().max(2000).nullable().optional().transform((value) => value || null),
   fullName: z.string().trim().min(1).max(120)
     .transform((name) => name.replace(/\s+/g, ' ')),
   email: z.string().trim().max(254).pipe(z.email()).transform((email) => email.toLowerCase()),
   companyWebsite: z.string().max(0).optional(),
+}).superRefine((inquiry, context) => {
+  const hasLegacyClassifications = [
+    inquiry.professionalBackground,
+    inquiry.challengeCategory,
+    inquiry.desiredOutcome,
+    inquiry.aiExperience,
+  ].every(Boolean);
+  if (!hasLegacyClassifications && !inquiry.additionalDetails) {
+    context.addIssue({
+      code: 'custom',
+      path: ['additionalDetails'],
+      message: 'Describe the task you want to simplify or the solution you want to develop.',
+    });
+  }
 });
 
 export const studioInquiryUpdateSchema = z.object({

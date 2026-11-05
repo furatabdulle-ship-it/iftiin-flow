@@ -35,10 +35,10 @@ export const POST: APIRoute = async (context) => {
     const inquiry = parsed.data;
     const inserted = await query<{ id: string }>(
       `INSERT INTO studio_inquiries
-       (idempotency_key, full_name, email, locale, professional_background,
+       (idempotency_key, full_name, email, locale, experience_ids, professional_background,
         challenge_category, desired_outcome, ai_experience, timeline, budget_range,
         additional_details)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        ON CONFLICT (idempotency_key) DO NOTHING
        RETURNING id`,
       [
@@ -46,6 +46,7 @@ export const POST: APIRoute = async (context) => {
         inquiry.fullName,
         inquiry.email,
         locale,
+        inquiry.experienceIds,
         inquiry.professionalBackground,
         inquiry.challengeCategory,
         inquiry.desiredOutcome,

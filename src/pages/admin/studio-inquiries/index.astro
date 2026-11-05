@@ -8,6 +8,7 @@ import {
   studioInquiryCategories,
   studioInquiryStatuses,
   type StudioInquiryFilters,
+  type StudioInquiry,
   type StudioInquiryStatus,
 } from '../../../lib/studio-inquiries';
 
@@ -16,6 +17,13 @@ if (!account) return Astro.redirect('/login/', 302);
 if (account.role !== 'admin') return Astro.redirect('/account/', 302);
 
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const budgetLabels: Record<string, string> = {
+  under_1500: 'Unter 1.500 €',
+  '1500_2999': '1.500–2.999 €',
+  '3000_4999': '3.000–4.999 €',
+  '5000_or_more': 'Ab 5.000 €',
+  budget_guidance: 'Budgeteinschätzung gewünscht',
+};
 const searchParams = Astro.url.searchParams;
 const pageSize = 25;
 const isDate = (value: string) => {
@@ -58,6 +66,11 @@ const categoryLabels: Record<string, string> = {
   creativity_ideas: 'Kreativität & Ideen',
   business_reinvention: 'Geschäftsmodell / Arbeitsweise',
   other_unsure: 'Anderes / unklar',
+};
+const taskSummary = (inquiry: StudioInquiry) => {
+  const summary = inquiry.additional_details
+    || (inquiry.challenge_category ? categoryLabels[inquiry.challenge_category] ?? inquiry.challenge_category : '');
+  return summary.length > 120 ? `${summary.slice(0, 117).trimEnd()}…` : summary || '—';
 };
 const statusLabels: Record<StudioInquiryStatus, string> = {
   new: 'Neu',
@@ -140,16 +153,16 @@ const formatDate = (value: Date | string) => new Intl.DateTimeFormat('de-DE', {
     {inquiries.length ? <div class="inquiry-table-wrap">
       <table class="inquiry-table">
         <thead>
-          <tr><th>Eingegangen</th><th>Name / E-Mail</th><th>Arbeit</th><th>Herausforderung</th><th>Zeitrahmen</th><th>Budget</th><th>Sprache</th><th>Status</th><th></th></tr>
+          <tr><th>Eingegangen</th><th>Name / E-Mail</th><th>Arbeit</th><th>Aufgabe / Lösung</th><th>Zeitrahmen</th><th>Budget</th><th>Sprache</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>
           {inquiries.map((inquiry) => <tr>
             <td>{formatDate(inquiry.created_at)}</td>
             <td><strong>{inquiry.full_name}</strong><br /><a href={`mailto:${inquiry.email}`}>{inquiry.email}</a></td>
-            <td>{inquiry.professional_background.replaceAll('_', ' ')}</td>
-            <td>{categoryLabels[inquiry.challenge_category] ?? inquiry.challenge_category}</td>
+            <td>{inquiry.professional_background?.replaceAll('_', ' ') ?? '—'}</td>
+            <td>{taskSummary(inquiry)}</td>
             <td>{inquiry.timeline?.replaceAll('_', ' ') ?? '—'}</td>
-            <td>{inquiry.budget_range?.replaceAll('_', ' ') ?? '—'}</td>
+            <td>{inquiry.budget_range ? budgetLabels[inquiry.budget_range] ?? inquiry.budget_range.replaceAll('_', ' ') : '—'}</td>
             <td>{inquiry.locale.toUpperCase()}</td>
             <td><span class:list={['inquiry-status', `inquiry-status--${inquiry.status}`]}>{statusLabels[inquiry.status]}</span></td>
             <td><a class="inquiry-open" href={root(`admin/studio-inquiries/${inquiry.id}/`)}>Öffnen</a></td>

@@ -14,7 +14,7 @@ const root = (path = '') => {
 };
 ---
 <a class="article-card" href={root(`articles/${article.slug}/`)}>
-  <div class="article-card-top"><span>{formatNames[article.data.format] || 'Artikel'}</span><ArrowIcon class="arrow" /></div>
+  <div class="article-card-top"><span>{formatNames[article.data.format] || t(locale, 'article.formatFallback')}</span><ArrowIcon class="arrow" /></div>
   <h3>{article.data.title}</h3>
   <p>{article.data.description}</p>
   <div class="article-card-byline">{author}</div>

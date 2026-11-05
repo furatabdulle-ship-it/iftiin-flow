@@ -3,6 +3,7 @@ import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import IftiinSun from '../components/brand/IftiinSun.astro';
+import HomeStudioTeaser from '../components/HomeStudioTeaser.astro';
 import { localeHref, localizedFormatNames, localizedPillars, t } from '../lib/i18n';
 import { featuredArticles } from '../lib/content';
 import { getSessionAccount } from '../lib/auth';
@@ -15,6 +16,7 @@ const highlighted = await featuredArticles(3, Boolean(account), locale);
 const feature = highlighted[0];
 const featurePillar = feature ? pillars.find((pillar) => pillar.slug === feature.data.pillar) : undefined;
 const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
+const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/about/${file}`;
 ---
 <Base home description={copy('home.metaDescription')}>
   <nav class="home-section-nav" aria-label={copy('home.navLabel')}>
@@ -77,7 +79,7 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
             <IftiinSun size={124} class="hero-feature-sun" />
           </div>
           <div class="hero-feature-body">
-            <div class="hero-feature-meta">{formatNames[feature.data.format] || 'Artikel'}{featurePillar ? ` · ${featurePillar.name}` : ''}</div>
+            <div class="hero-feature-meta">{formatNames[feature.data.format] || copy('article.formatFallback')}{featurePillar ? ` · ${featurePillar.name}` : ''}</div>
             <p>{feature.data.description}</p>
             <span class="hero-feature-link">{copy('home.articleRead')} <ArrowIcon /></span>
           </div>
@@ -96,7 +98,7 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
 
         <a class="hero-shop-card" href={root('store/')}>
           <div class="hero-shop-copy">
-            <div class="section-label">Shop / Wissen vertiefen</div>
+            <div class="section-label">{copy('store.label')}</div>
             <h2>Visions into<br /><em>practice.</em></h2>
             <p>{copy('home.shopDescription')}</p>
             <span>{copy('home.discover')} <ArrowIcon /></span>
@@ -123,6 +125,8 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
     </div>
   </section>
 
+  {locale === 'en' && <HomeStudioTeaser />}
+
   {highlighted.length > 1 && <section class="section articles-section" id="ideas"><div class="wrap">
     <div class="section-heading"><div><div class="section-label">01 / {copy('home.visions')}</div><h2>Thoughts worth<br /><em>exploring.</em></h2></div><a href={root('explore/')} class="text-link">{copy('home.allArticles')} <ArrowIcon /></a></div>
     <div class="card-grid">{highlighted.slice(1).map(article => <ArticleCard article={article} />)}</div>
@@ -139,6 +143,26 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
     </div>
   </div></section>
 
+  {locale === 'en' && <section class="home-founder" aria-labelledby="home-founder-title">
+    <div class="wrap home-founder-inner">
+      <figure class="home-founder-portrait">
+        <img
+          src={media('furat-summit.jpg')}
+          alt="Furat Abdulle at the Black Girls Tech Summit 2025"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>Black Girls Tech Summit 2025</figcaption>
+      </figure>
+      <div class="home-founder-copy">
+        <div class="section-label">{copy('home.founderEyebrow')}</div>
+        <h2 id="home-founder-title">Furat Abdulle</h2>
+        <p>{copy('home.founderDescription')}</p>
+        <a class="text-link light" href={root('about/')}>{copy('home.founderLink')} <ArrowIcon /></a>
+      </div>
+    </div>
+  </section>}
+
   <section class="worlds" id="explore">
     <div class="worlds-head"><div><div class="section-label">03 / {copy('common.explore')}</div><h2>{copy('home.worldsTitle')}<br /><span>{copy('home.worldsTitleSecond')}</span></h2></div>
       <p>{copy('home.worldsDescription')}</p>
@@ -152,27 +176,7 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
     </ul>
   </section>
 
-  <section class="studio-teaser" id="studio" aria-labelledby="studio-teaser-title">
-    <div class="studio-teaser-inner">
-      <div class="section-label">{copy('home.studioEyebrow')}</div>
-      <div class="studio-teaser-grid">
-        <h2 id="studio-teaser-title">{copy('home.studioTitleFirst')}<br /><em>{copy('home.studioTitleSecond')}</em></h2>
-        <div class="studio-teaser-copy">
-          <p>{copy('home.studioDescription')}</p>
-          <div class="studio-teaser-offer">
-            <div>
-              <div class="section-label">{copy('home.studioOfferEyebrow')}</div>
-              <h3>{copy('home.studioOfferTitle')}</h3>
-            </div>
-            <div>
-              <p>{copy('home.studioOfferDescription')}</p>
-              <a class="pill-link" href={root('studio/')}>{copy('home.studioCta')} <ArrowIcon /></a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  {locale === 'de' && <HomeStudioTeaser />}
 
   <section class="manifesto wrap" id="invitation"><div class="section-label">05 / {copy('home.invitation')}</div><div>
     <IftiinSun size={56} class="manifesto-sun" /><h2>Better questions.<br />Clearer thinking.<br /><em>More agency.</em></h2>

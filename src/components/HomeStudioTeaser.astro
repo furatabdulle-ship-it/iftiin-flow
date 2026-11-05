@@ -1,0 +1,35 @@
+---
+import ArrowIcon from './ArrowIcon.astro';
+import { localeHref, t } from '../lib/i18n';
+
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const studioHref = localeHref(`${import.meta.env.BASE_URL.replace(/\/$/, '/')}studio/`, locale);
+---
+
+<section class="studio-teaser" id="studio" aria-labelledby="studio-teaser-title">
+  <div class="studio-teaser-inner">
+    <div class="section-label">{copy('home.studioEyebrow')}</div>
+    <div class="studio-teaser-grid">
+      <h2 id="studio-teaser-title">{copy('home.studioTitleFirst')}<br /><em>{copy('home.studioTitleSecond')}</em></h2>
+      <div class="studio-teaser-copy">
+        <p>{copy('home.studioDescription')}</p>
+        {locale === 'en' && <ul class="studio-teaser-examples">
+          <li>{copy('home.studioExampleContent')}</li>
+          <li>{copy('home.studioExampleResearch')}</li>
+          <li>{copy('home.studioExampleService')}</li>
+        </ul>}
+        <div class="studio-teaser-offer">
+          <div>
+            <div class="section-label">{copy('home.studioOfferEyebrow')}</div>
+            <h3>{copy('home.studioOfferTitle')}</h3>
+          </div>
+          <div>
+            <p>{copy('home.studioOfferDescription')}</p>
+            <a class="pill-link" href={studioHref}>{copy('home.studioCta')} <ArrowIcon /></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
