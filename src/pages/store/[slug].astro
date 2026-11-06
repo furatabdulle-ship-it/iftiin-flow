@@ -1,0 +1,99 @@
+---
+import ArrowIcon from '../../components/ArrowIcon.astro';
+import StorePriceOptions from '../../components/StorePriceOptions.astro';
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { listPublicProducts } from '../../lib/commerce';
+import { isGuestAccessEmailConfigured } from '../../lib/password-reset-email';
+import { isCheckoutConfigured } from '../../lib/stripe';
+import { localeHref, t } from '../../lib/i18n';
+
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const availableProducts = await listPublicProducts();
+const products = locale === 'en'
+  ? availableProducts.filter((item) => item.nameEn && item.content.every((content) => content.titleEn))
+  : availableProducts;
+const product = products.find((item) => item.slug === Astro.params.slug) ?? null;
+if (!product) Astro.response.status = 404;
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+const checkoutReady = isCheckoutConfigured();
+const guestAccessReady = isGuestAccessEmailConfigured();
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
+const productName = product
+  ? (locale === 'en' ? product.nameEn ?? product.name : product.name)
+  : copy('store.productNotFound');
+const productDescription = product
+  ? (locale === 'en' ? product.descriptionEn : product.description)
+  : copy('store.productNotFoundDescription');
+const typeNames: Record<string, string> = {
+  digital_download: copy('store.digitalDownload'),
+  premium_article: copy('store.premiumArticle'),
+  online_course: copy('store.onlineCourse'),
+  bundle: copy('store.bundle'),
+  membership: copy('store.membership'),
+};
+---
+<Base title={productName} description={productDescription || copy('store.description')}>
+  {product ? <section class="section wrap store-product">
+    <a class="product-back" href={root('store/')}><ArrowIcon direction="left" /> {copy('store.backToShop')}</a>
+    <div class:list={['product-detail-grid', { 'product-detail-grid--no-image': !product.coverAssetId }]}>
+      {product.coverAssetId && <div class="product-gallery" role="group" aria-label={copy('store.productImage')}>
+        <img
+          src={root(`api/store/products/${encodeURIComponent(product.slug)}/cover/`)}
+          alt={`${copy('store.productImage')}: ${productName}`}
+          decoding="async"
+        />
+      </div>}
+      <div class="product-detail-info">
+        <div class="section-label">{typeNames[product.productType]}</div>
+        <h1>{productName}</h1>
+        {productDescription && <p class="product-description">{productDescription}</p>}
+        {product.content.length > 0 && <section class="product-included" aria-labelledby="product-included-title">
+          <h2 class="section-label" id="product-included-title">{copy('store.includedContent')}</h2>
+          <ul>{product.content.map((item) => <li>{locale === 'en' ? item.titleEn : item.title}</li>)}</ul>
+        </section>}
+        <div class="product-purchase">
+          <StorePriceOptions
+            product={product}
+            mode="checkout"
+            signedIn={Boolean(account)}
+            checkoutReady={checkoutReady}
+            guestAccessReady={guestAccessReady}
+          />
+        </div>
+        {!account && checkoutReady && guestAccessReady && <p class="guest-access-note">
+          {copy('store.accessAfterPurchase')}
+          <a href={root('guest-access/')}>{copy('store.resendAccess')} <ArrowIcon /></a>
+        </p>}
+      </div>
+    </div>
+  </section> : <section class="interior-hero wrap store-product-not-found">
+    <div class="section-label">{copy('store.label')}</div>
+    <h1>{copy('store.productNotFound')}</h1>
+    <p>{copy('store.productNotFoundDescription')}</p>
+    <a class="pill-link" href={root('store/')}>{copy('store.backToShop')} <ArrowIcon direction="left" /></a>
+  </section>}
+</Base>
+
+<style>
+  .store-product { padding-top: 1.5rem; padding-bottom: 6rem; }
+  .product-back { display: inline-flex; align-items: center; gap: .45rem; margin-bottom: 1.5rem; color: inherit; text-decoration: none; }
+  .product-back:hover { color: var(--violet); }
+  .product-detail-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: start; gap: clamp(2rem, 6vw, 5rem); }
+  .product-detail-grid--no-image { grid-template-columns: minmax(0, 1fr); max-width: 760px; margin-inline: auto; }
+  .product-gallery { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface, #f3f0e8); }
+  .product-gallery img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .product-detail-info h1 { margin: .75rem 0 1rem; font-size: clamp(2.2rem, 5vw, 4rem); line-height: 1.05; }
+  .product-description { color: var(--muted); line-height: 1.75; white-space: pre-line; }
+  .product-included { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+  .product-included h2 { margin: 0; }
+  .product-included ul { display: grid; gap: .6rem; padding-left: 1.25rem; line-height: 1.6; }
+  .guest-access-note { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; color: var(--muted); }
+  .guest-access-note a { color: inherit; }
+  .store-product-not-found { padding-bottom: 6rem; }
+  @media (max-width: 760px) {
+    .product-detail-grid { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+  }
+</style>

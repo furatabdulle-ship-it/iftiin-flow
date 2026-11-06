@@ -1,6 +1,7 @@
 ---
 import ArrowIcon from '../components/ArrowIcon.astro';
 import IftiinSun from '../components/brand/IftiinSun.astro';
+import StorePriceOptions from '../components/StorePriceOptions.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
 import { listPublicProducts } from '../lib/commerce';
@@ -23,10 +24,6 @@ const hasLockedProduct = lockedSlug
 const checkoutReady = isCheckoutConfigured();
 const guestAccessReady = isGuestAccessEmailConfigured();
 const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
-const formatPrice = (amount: number, currency: string) => new Intl.NumberFormat(locale === 'en' ? 'en-IE' : 'de-DE', {
-  style: 'currency',
-  currency: currency.toUpperCase(),
-}).format(amount / 100);
 const typeNames: Record<string, string> = {
   digital_download: copy('store.digitalDownload'),
   premium_article: copy('store.premiumArticle'),
@@ -38,10 +35,10 @@ const typeNames: Record<string, string> = {
 <Base title={copy('common.shop')} description={copy('store.description')}>
   <section class="interior-hero wrap store-hero">
     <div class="section-label">{copy('store.label')}</div>
-    <h1>Visions into <em>practice.</em></h1>
+    <h1>{copy('store.headlineStart')} <em>{copy('store.headlineAccent')}</em></h1>
     <p>{copy('store.description')}</p>
   </section>
-  <section class="section wrap store-content" data-checkout-preparing={copy('store.checkoutPreparing')} data-checkout-error={copy('store.checkoutError')}>
+  <section class="section wrap store-content">
     {lockedSlug && <aside class="store-notice" role="status">
       {hasLockedProduct
         ? copy('store.lockedAvailable')
@@ -49,47 +46,26 @@ const typeNames: Record<string, string> = {
     </aside>}
     {cancelled && <aside class="store-notice" role="status">{copy('store.cancelled')}</aside>}
     {products.length ? <div class="store-grid">
-      {products.map((product) => <article class="store-card">
-        {product.coverAssetId && <img
-          class="store-card-cover"
-          src={root(`api/store/products/${encodeURIComponent(product.slug)}/cover/`)}
-          alt={`${locale === 'en' ? 'Cover' : 'Cover'}: ${locale === 'en' ? product.nameEn : product.name}`}
-          loading="lazy"
-          decoding="async"
-        />}
-        <div class="store-card-top">
-          <span class="section-label">{typeNames[product.productType]}</span>
-        </div>
-        <h2>{locale === 'en' ? product.nameEn : product.name}</h2>
-        {(locale === 'en' ? product.descriptionEn : product.description) && <p>{locale === 'en' ? product.descriptionEn : product.description}</p>}
-        {product.content.length > 0 && <ul>
-          {product.content.map((item) => <li>{locale === 'en' ? item.titleEn : item.title}</li>)}
-        </ul>}
-        <div class="store-price-options">
-          {product.prices.map((price) => <div class="store-price-option">
-            <strong>{formatPrice(price.amountCents, price.currency)}{price.billingInterval !== 'one_time' ? ` / ${price.billingInterval === 'month' ? copy('store.month') : copy('store.year')}` : ` ${copy('store.oneTime')}`}</strong>
-            {!account && <label class="guest-email-label">
-              {copy('store.emailForAccess')}
-              <input class="guest-email" type="email" autocomplete="email" maxlength="254" required />
-            </label>}
-            <button
-              class="pill-link checkout-button"
-              type="button"
-              data-product-id={product.id}
-              data-price-id={price.priceId}
-              disabled={!checkoutReady || (!account && !guestAccessReady)}
-            >
-              {checkoutReady
-                ? (!account && !guestAccessReady
-                  ? copy('store.emailAccessUnavailable')
-                  : account
-                  ? (price.billingInterval === 'one_time' ? copy('store.buySecurely') : copy('store.startSubscription'))
-                  : (price.billingInterval === 'one_time' ? copy('store.buyWithoutAccount') : copy('store.startGuestSubscription')))
-                : copy('store.checkoutUnavailable')} <ArrowIcon />
-            </button>
-          </div>)}
-        </div>
-      </article>)}
+      {products.map((product) => {
+        const name = locale === 'en' ? product.nameEn ?? product.name : product.name;
+        const description = locale === 'en' ? product.descriptionEn : product.description;
+        return <article class="store-card">
+          <a class="store-card-link" href={root(`store/${encodeURIComponent(product.slug)}/`)}>
+            {product.coverAssetId && <img
+              class="store-card-cover"
+              src={root(`api/store/products/${encodeURIComponent(product.slug)}/cover/`)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />}
+            <span class="section-label">{typeNames[product.productType]}</span>
+            <h2>{name}</h2>
+            {description && <p>{description}</p>}
+            <StorePriceOptions product={product} mode="summary" />
+            <span class="store-card-cta">{copy('store.viewProduct')} <ArrowIcon /></span>
+          </a>
+        </article>;
+      })}
     </div> : <div class="empty-state">
       <IftiinSun class="empty-symbol" color="var(--violet)" />
       <h2>{copy('store.emptyTitle')}</h2>
@@ -107,52 +83,21 @@ const typeNames: Record<string, string> = {
       {copy('store.accessAfterPurchase')}
       <a href={root('guest-access/')}>{copy('store.resendAccess')} <ArrowIcon /></a>
     </p>}
-    <p class="form-message" id="store-message" role="status" aria-live="polite"></p>
   </section>
 </Base>
-
-<script>
-  const message = document.querySelector<HTMLElement>('#store-message');
-  const storeContent = document.querySelector<HTMLElement>('.store-content');
-  document.querySelectorAll<HTMLButtonElement>('.checkout-button').forEach((button) => {
-    button.addEventListener('click', async () => {
-      if (!message || !button.dataset.productId || !button.dataset.priceId) return;
-      const emailInput = button.closest('.store-card')?.querySelector<HTMLInputElement>('.guest-email');
-      if (emailInput && !emailInput.reportValidity()) return;
-      message.textContent = storeContent?.dataset.checkoutPreparing ?? 'Preparing secure checkout …';
-      button.disabled = true;
-      try {
-        const email = emailInput?.value.trim();
-        const response = await fetch('/api/checkout/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            productId: button.dataset.productId,
-            priceId: button.dataset.priceId,
-            ...(email ? { email } : {}),
-          }),
-        });
-        const result = await response.json() as { checkoutUrl?: string; error?: string };
-        if (!response.ok || !result.checkoutUrl) throw new Error(result.error ?? storeContent?.dataset.checkoutError ?? 'Checkout could not be started.');
-        window.location.assign(result.checkoutUrl);
-      } catch (error) {
-        message.textContent = error instanceof Error ? error.message : storeContent?.dataset.checkoutError ?? 'Checkout could not be started.';
-        button.disabled = false;
-      }
-    });
-  });
-</script>
 
 <style>
   .store-hero { padding-bottom: 2rem; }
   .store-content { min-height: 40vh; padding-top: 1rem; padding-bottom: 6rem; }
   .store-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.25rem; }
-  .store-card { border: 1px solid var(--line); border-radius: 20px; padding: 1.5rem; display: flex; flex-direction: column; align-items: flex-start; }
-  .store-card-cover { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; margin-bottom: 1.25rem; background: var(--surface, #f3f0e8); }
-  .store-card-top { width: 100%; display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
-  .store-card h2 { margin: 1.25rem 0 0.5rem; font-size: 1.5rem; }
+  .store-card { border: 1px solid var(--line); border-radius: 20px; overflow: hidden; transition: border-color .2s ease, transform .2s ease; }
+  .store-card:hover { border-color: var(--violet); transform: translateY(-2px); }
+  .store-card-link { display: flex; height: 100%; flex-direction: column; align-items: flex-start; padding: 1.25rem; color: inherit; text-decoration: none; }
+  .store-card-link:focus-visible { outline: 2px solid var(--violet); outline-offset: -3px; border-radius: 20px; }
+  .store-card-cover { width: calc(100% + 2.5rem); max-width: none; aspect-ratio: 4 / 3; object-fit: cover; margin: -1.25rem -1.25rem 1.25rem; background: var(--surface, #f3f0e8); }
+  .store-card h2 { margin: .75rem 0 .25rem; font-size: 1.5rem; }
   .store-card p { color: var(--muted); line-height: 1.7; }
-  .store-card ul { padding-left: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem; }
+  .store-card-cta { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1rem; font-weight: 700; }
   .store-categories { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
   .store-categories h2 { margin: 0; }
   .store-categories ul {
@@ -169,16 +114,10 @@ const typeNames: Record<string, string> = {
     font: 700 clamp(1.05rem, 1.8vw, 1.35rem)/1.25 Manrope, Arial, sans-serif;
     letter-spacing: -.035em;
   }
-  .store-price-options { width: 100%; margin-top: auto; display: grid; gap: .75rem; }
-  .store-price-option { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-top: .75rem; border-top: 1px solid var(--line); }
-  .store-price-option .pill-link { margin: 0; }
-  .guest-email-label { display: grid; width: 100%; gap: .35rem; font-size: .9rem; }
-  .guest-email { width: 100%; min-height: 42px; padding: .5rem .7rem; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: inherit; font: inherit; }
   .guest-access-note { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; color: var(--muted); }
   .guest-access-note a { color: inherit; }
   .store-notice { margin-bottom: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 12px; }
   @media (max-width: 640px) {
     .store-categories ul { grid-template-columns: 1fr; gap: .5rem; }
   }
-  @media (max-width: 520px) { .store-price-option { align-items: flex-start; flex-direction: column; } }
 </style>
