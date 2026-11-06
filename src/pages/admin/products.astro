@@ -8,6 +8,7 @@ const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.val
 if (!account) return Astro.redirect('/login/', 302);
 if (account.role !== 'admin') return Astro.redirect('/account/', 302);
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const initialTab = Astro.url.searchParams.get('tab') === 'products' ? 'products' : 'contents';
 ---
 <Base title="CMS verwalten">
   <section class="cms-admin" data-api-root={root('api/admin/')} data-site-root={root()}>
@@ -25,7 +26,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       <div class="cms-title-row">
         <div>
           <p class="cms-eyebrow">Admin / Verwaltung</p>
-          <h1>Inhalte &amp; Produkte</h1>
+          <h1 id="cms-page-title">{initialTab === 'products' ? 'Produkte' : 'Inhalte'}</h1>
         </div>
         <p id="cms-message" class="cms-message" role="status" aria-live="polite"></p>
       </div>
@@ -364,9 +365,15 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     try { sessionStorage.setItem(stateKey, JSON.stringify(state)); } catch {}
   }
   function restoreListState() {
+    const requestedTab = new URLSearchParams(location.search).get('tab');
+    const selectedTab = requestedTab === 'products' || requestedTab === 'contents'
+      ? requestedTab : null;
     try {
       const raw = sessionStorage.getItem(stateKey);
-      if (!raw) return;
+      if (!raw) {
+        setActiveTab(selectedTab ?? 'contents');
+        return;
+      }
       const state = JSON.parse(raw) as {
         selectedTab?: string; contentSearch?: string; productSearch?: string;
         contentStatus?: string; productStatus?: string;
@@ -375,9 +382,10 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       if (productSearch) productSearch.value = state.productSearch ?? '';
       if (contentStatusFilter) contentStatusFilter.value = state.contentStatus ?? '';
       if (productStatusFilter) productStatusFilter.value = state.productStatus ?? '';
-      setActiveTab(state.selectedTab === 'products' ? 'products' : 'contents');
+      setActiveTab(selectedTab ?? (state.selectedTab === 'products' ? 'products' : 'contents'));
     } catch {
       sessionStorage.removeItem(stateKey);
+      setActiveTab(selectedTab ?? 'contents');
     }
   }
   function setActiveTab(tab: 'contents' | 'products') {
@@ -389,6 +397,11 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       button?.setAttribute('tabindex', selected ? '0' : '-1');
       panel?.toggleAttribute('hidden', !selected);
     }
+    const title = document.getElementById('cms-page-title');
+    if (title) title.textContent = tab === 'products' ? 'Produkte' : 'Inhalte';
+    const url = new URL(location.href);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState({}, '', url);
     updateListState();
   }
   function addActionMenu(

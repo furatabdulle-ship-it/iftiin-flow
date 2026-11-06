@@ -57,7 +57,7 @@ const uncategorizedActive = products.filter((product) => product.status === 'act
           <div><dt>Entwürfe</dt><dd>{contentCounts.draft}</dd></div>
           <div><dt>Archiviert</dt><dd>{contentCounts.archived}</dd></div>
         </dl>
-        <a class="pill-link" href={root('admin/products/')}>Inhalte verwalten <ArrowIcon /></a>
+        <a class="pill-link" href={root('admin/products/?tab=contents')}>Inhalte verwalten <ArrowIcon /></a>
       </article>
 
       <article class="dashboard-card">
@@ -71,7 +71,7 @@ const uncategorizedActive = products.filter((product) => product.status === 'act
         {uncategorizedActive > 0 && (
           <p class="dashboard-warning">{uncategorizedActive} aktive Produkte haben noch keine Kategorie.</p>
         )}
-        <a class="pill-link" href={root('admin/products/')}>Produkte einstellen <ArrowIcon /></a>
+        <a class="pill-link" href={root('admin/products/?tab=products')}>Produkte einstellen <ArrowIcon /></a>
       </article>
 
       <article class="dashboard-card">
