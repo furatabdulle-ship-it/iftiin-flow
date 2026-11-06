@@ -6,6 +6,7 @@ import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
 import { listPublicProducts } from '../lib/commerce';
 import { isGuestAccessEmailConfigured } from '../lib/password-reset-email';
+import type { ProductCategory } from '../lib/product-categories';
 import { isCheckoutConfigured } from '../lib/stripe';
 import { localeHref, t } from '../lib/i18n';
 
@@ -30,6 +31,11 @@ const typeNames: Record<string, string> = {
   online_course: copy('store.onlineCourse'),
   bundle: copy('store.bundle'),
   membership: copy('store.membership'),
+};
+const categoryNames: Record<ProductCategory, string> = {
+  knowledge_products: copy('store.categoryKnowledge'),
+  creative_skill_kits: copy('store.categorySkillKits'),
+  new_ways_of_working_kits: copy('store.categoryWorkKits'),
 };
 ---
 <Base title={copy('common.shop')} description={copy('store.description')}>
@@ -58,7 +64,10 @@ const typeNames: Record<string, string> = {
               loading="lazy"
               decoding="async"
             />}
-            <span class="section-label">{typeNames[product.productType]}</span>
+            <span class="store-card-labels">
+              <span class="section-label">{typeNames[product.productType]}</span>
+              {product.storeCategory && <span class="store-category-label">{categoryNames[product.storeCategory]}</span>}
+            </span>
             <h2>{name}</h2>
             {description && <p>{description}</p>}
             <StorePriceOptions product={product} mode="summary" />
@@ -72,7 +81,7 @@ const typeNames: Record<string, string> = {
       <p>{copy('store.emptyDescription')}</p>
     </div>}
     <section class="store-categories" aria-labelledby="store-categories-title">
-      <h2 class="section-label" id="store-categories-title">{copy('store.futureCategories')}</h2>
+      <h2 class="section-label" id="store-categories-title">{copy('store.productCategories')}</h2>
       <ul>
         <li>{copy('store.categoryKnowledge')}</li>
         <li>{copy('store.categorySkillKits')}</li>
@@ -95,6 +104,8 @@ const typeNames: Record<string, string> = {
   .store-card-link { display: flex; height: 100%; flex-direction: column; align-items: flex-start; padding: 1.25rem; color: inherit; text-decoration: none; }
   .store-card-link:focus-visible { outline: 2px solid var(--violet); outline-offset: -3px; border-radius: 20px; }
   .store-card-cover { width: calc(100% + 2.5rem); max-width: none; aspect-ratio: 4 / 3; object-fit: cover; margin: -1.25rem -1.25rem 1.25rem; background: var(--surface, #f3f0e8); }
+  .store-card-labels { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+  .store-category-label { padding: .25rem .55rem; border: 1px solid var(--line); border-radius: 999px; font-size: .75rem; font-weight: 700; }
   .store-card h2 { margin: .75rem 0 .25rem; font-size: 1.5rem; }
   .store-card p { color: var(--muted); line-height: 1.7; }
   .store-card-cta { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1rem; font-weight: 700; }

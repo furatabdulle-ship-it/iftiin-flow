@@ -50,11 +50,11 @@ export const PUT: APIRoute = async (context) => {
       );
       if (referenceError) throw new ProductReferenceChangedError(referenceError);
       const productResult = await client.query(
-        `UPDATE products SET slug = $2, product_type = $3, name = $4, name_en = $5,
-           description = $6, description_en = $7, status = $8, cover_asset_id = $9,
+        `UPDATE products SET slug = $2, product_type = $3, store_category = $4, name = $5, name_en = $6,
+           description = $7, description_en = $8, status = $9, cover_asset_id = $10,
            updated_at = NOW()
          WHERE id = $1`,
-        [id, product.slug, product.productType, product.name, product.nameEn, product.description,
+        [id, product.slug, product.productType, product.storeCategory, product.name, product.nameEn, product.description,
           product.descriptionEn, product.status, product.coverAssetId],
       );
       if (!productResult.rowCount) return false;

@@ -5,6 +5,7 @@ import Base from '../../layouts/Base.astro';
 import { getSessionAccount } from '../../lib/auth';
 import { listPublicProducts } from '../../lib/commerce';
 import { isGuestAccessEmailConfigured } from '../../lib/password-reset-email';
+import type { ProductCategory } from '../../lib/product-categories';
 import { isCheckoutConfigured } from '../../lib/stripe';
 import { localeHref, t } from '../../lib/i18n';
 
@@ -34,6 +35,11 @@ const typeNames: Record<string, string> = {
   bundle: copy('store.bundle'),
   membership: copy('store.membership'),
 };
+const categoryNames: Record<ProductCategory, string> = {
+  knowledge_products: copy('store.categoryKnowledge'),
+  creative_skill_kits: copy('store.categorySkillKits'),
+  new_ways_of_working_kits: copy('store.categoryWorkKits'),
+};
 ---
 <Base title={productName} description={productDescription || copy('store.description')}>
   {product ? <section class="section wrap store-product">
@@ -47,7 +53,10 @@ const typeNames: Record<string, string> = {
         />
       </div>}
       <div class="product-detail-info">
-        <div class="section-label">{typeNames[product.productType]}</div>
+        <div class="product-detail-labels">
+          <span class="section-label">{typeNames[product.productType]}</span>
+          {product.storeCategory && <span class="store-category-label">{categoryNames[product.storeCategory]}</span>}
+        </div>
         <h1>{productName}</h1>
         {productDescription && <p class="product-description">{productDescription}</p>}
         {product.content.length > 0 && <section class="product-included" aria-labelledby="product-included-title">
@@ -85,6 +94,8 @@ const typeNames: Record<string, string> = {
   .product-detail-grid--no-image { grid-template-columns: minmax(0, 1fr); max-width: 760px; margin-inline: auto; }
   .product-gallery { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface, #f3f0e8); }
   .product-gallery img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .product-detail-labels { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+  .store-category-label { padding: .25rem .55rem; border: 1px solid var(--line); border-radius: 999px; font-size: .75rem; font-weight: 700; }
   .product-detail-info h1 { margin: .75rem 0 1rem; font-size: clamp(2.2rem, 5vw, 4rem); line-height: 1.05; }
   .product-description { color: var(--muted); line-height: 1.75; white-space: pre-line; }
   .product-included { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }

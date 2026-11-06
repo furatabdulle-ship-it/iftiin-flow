@@ -1,5 +1,6 @@
 import { z } from 'astro/zod';
 import { pillars, formatNames } from '../config';
+import { availableProductCategories } from './product-categories';
 
 export const credentialsSchema = z.object({
   email: z.string().trim().max(254).pipe(z.email()).transform((email) => email.toLowerCase()),
@@ -27,6 +28,7 @@ const productPriceInputSchema = z.object({
 export const productInputSchema = z.object({
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   productType: z.enum(['digital_download', 'premium_article', 'online_course', 'bundle', 'membership']),
+  storeCategory: z.enum(availableProductCategories).nullable().optional().transform((category) => category ?? null),
   name: z.string().trim().min(1).max(180),
   nameEn: z.string().trim().max(180).default(''),
   description: z.string().trim().max(2000),
@@ -43,6 +45,9 @@ export const productInputSchema = z.object({
   || (product.prices.length === 1 && product.prices[0].billingInterval === 'one_time'), {
   path: ['prices'],
   message: 'Nur Membership-Produkte können mehrere oder wiederkehrende Preise haben.',
+}).refine((product) => product.status !== 'active' || product.storeCategory !== null, {
+  path: ['storeCategory'],
+  message: 'Aktive Produkte benötigen eine Produktkategorie.',
 }).refine((product) => product.status !== 'active'
   || (product.nameEn.length > 0 && (!product.description || product.descriptionEn.length > 0)), {
   path: ['nameEn'],

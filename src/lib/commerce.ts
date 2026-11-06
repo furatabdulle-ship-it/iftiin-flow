@@ -1,4 +1,5 @@
 import type { QueryResultRow } from 'pg';
+import type { ProductCategory } from './product-categories';
 import { query } from './db';
 
 export const availableProductTypes = [
@@ -21,6 +22,7 @@ export type ProductRecord = {
   id: string;
   slug: string;
   productType: ProductType;
+  storeCategory: ProductCategory | null;
   name: string;
   nameEn: string | null;
   description: string;
@@ -58,6 +60,7 @@ type ProductRow = QueryResultRow & {
   id: string;
   slug: string;
   product_type: ProductType;
+  store_category: ProductCategory | null;
   name: string;
   name_en: string | null;
   description: string;
@@ -69,7 +72,7 @@ type ProductRow = QueryResultRow & {
 };
 
 const productSelection = `
-  SELECT p.id, p.slug, p.product_type, p.name, p.name_en, p.description, p.description_en, p.status,
+  SELECT p.id, p.slug, p.product_type, p.store_category, p.name, p.name_en, p.description, p.description_en, p.status,
          p.cover_asset_id,
          COALESCE((
            SELECT json_agg(json_build_object(
@@ -110,6 +113,7 @@ function mapProduct(row: ProductRow): ProductRecord {
     id: row.id,
     slug: row.slug,
     productType: row.product_type,
+    storeCategory: row.store_category,
     name: row.name,
     nameEn: row.name_en,
     description: row.description,

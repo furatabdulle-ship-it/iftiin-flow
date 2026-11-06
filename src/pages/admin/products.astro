@@ -85,7 +85,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
         <p id="product-empty" class="cms-empty" hidden>Keine Produkte gefunden.</p>
         <div class="cms-table-wrap">
           <table>
-            <thead><tr><th>Name</th><th>Preis</th><th>Status</th><th>Aktionen</th></tr></thead>
+            <thead><tr><th>Name</th><th>Produktkategorie</th><th>Preis</th><th>Status</th><th>Aktionen</th></tr></thead>
             <tbody id="product-table"></tbody>
           </table>
         </div>
@@ -175,9 +175,18 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
                   <option value="membership">Membership</option>
                 </select>
               </label>
+              <label>Produktkategorie
+                <select name="storeCategory" aria-describedby="store-category-hint">
+                  <option value="">Kategorie auswählen</option>
+                  <option value="knowledge_products">Knowledge Products</option>
+                  <option value="creative_skill_kits">Creative Skill Kits</option>
+                  <option value="new_ways_of_working_kits">New Ways of Working Kits</option>
+                </select>
+              </label>
               <label class="cms-field-wide">Beschreibung (Deutsch)<textarea name="description" maxlength="2000" rows="3"></textarea></label>
               <label class="cms-field-wide">Description (English)<textarea name="descriptionEn" maxlength="2000" rows="3"></textarea></label>
             </div>
+            <p id="store-category-hint" class="cms-hint">Für aktive Produkte verpflichtend. Die Kategorie erscheint als Label im Shop.</p>
           </section>
           <section class="cms-form-section">
             <h3>Darstellung &amp; Preis</h3>
@@ -241,10 +250,16 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
   type ProductRecord = {
     id: string; slug: string; name: string; nameEn: string | null;
     description: string; descriptionEn: string | null; productType: string;
+    storeCategory: 'knowledge_products' | 'creative_skill_kits' | 'new_ways_of_working_kits' | null;
     status: string;
     prices: { priceId: string; amountCents: number; currency: string; billingInterval: 'one_time' | 'month' | 'year' }[];
     coverAssetId: string | null;
     content: Pick<ContentRecord, 'id' | 'title' | 'titleEn' | 'contentType' | 'status'>[];
+  };
+  const productCategoryNames: Record<NonNullable<ProductRecord['storeCategory']>, string> = {
+    knowledge_products: 'Knowledge Products',
+    creative_skill_kits: 'Creative Skill Kits',
+    new_ways_of_working_kits: 'New Ways of Working Kits',
   };
   type UploadResponse = { id: string; uploadUrl: string; headers: Record<string, string> };
   type ApiError = Error & { products?: string[] };
@@ -494,7 +509,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     const status = productStatusFilter?.value ?? '';
     const visible = products.filter((item) =>
       (!status || item.status === status) &&
-      (!needle || `${item.name} ${item.slug}`.toLocaleLowerCase('de').includes(needle)));
+      (!needle || `${item.name} ${item.slug} ${item.storeCategory ? productCategoryNames[item.storeCategory] : 'Nicht zugeordnet'}`.toLocaleLowerCase('de').includes(needle)));
     if (productTable) productTable.replaceChildren();
     if (productCards) productCards.replaceChildren();
     for (const item of visible) {
@@ -502,6 +517,8 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       const title = document.createElement('th');
       title.scope = 'row';
       title.textContent = item.name;
+      const category = document.createElement('td');
+      category.textContent = item.storeCategory ? productCategoryNames[item.storeCategory] : 'Nicht zugeordnet';
       const price = document.createElement('td');
       price.textContent = item.prices.map((option) => {
         const amount = new Intl.NumberFormat('de-DE', { style: 'currency', currency: option.currency.toUpperCase() })
@@ -515,7 +532,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       const badge = document.createElement('span');
       setStatusBadge(badge, item.status);
       statusCell.append(badge);
-      row.append(title, price, statusCell, createActionCell(item, 'product'));
+      row.append(title, category, price, statusCell, createActionCell(item, 'product'));
       productTable?.append(row);
 
       const card = document.createElement('article');
@@ -523,7 +540,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       const cardTitle = document.createElement('h3');
       cardTitle.textContent = item.name;
       const cardMeta = document.createElement('p');
-      cardMeta.textContent = price.textContent;
+      cardMeta.textContent = `${item.storeCategory ? productCategoryNames[item.storeCategory] : 'Nicht zugeordnet'} · ${price.textContent}`;
       const cardStatus = document.createElement('span');
       setStatusBadge(cardStatus, item.status);
       const cardActions = document.createElement('div');
@@ -600,6 +617,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     selectedContentIds.clear();
     showCoverPreview(null);
     renderContentOptions();
+    toggleStoreCategoryRequirement();
     if (productEditorTitle) productEditorTitle.textContent = 'Produkt erstellen';
   }
   function openContentEditor(item?: ContentRecord) {
@@ -634,6 +652,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       formField<HTMLInputElement>(productForm, 'slug')!.value = item.slug;
       formField<HTMLInputElement>(productForm, 'slug')!.dataset.manual = 'true';
       formField<HTMLSelectElement>(productForm, 'productType')!.value = item.productType;
+      formField<HTMLSelectElement>(productForm, 'storeCategory')!.value = item.storeCategory ?? '';
       formField<HTMLTextAreaElement>(productForm, 'description')!.value = item.description;
       formField<HTMLTextAreaElement>(productForm, 'descriptionEn')!.value = item.descriptionEn ?? '';
       const priceFields: Record<string, string> = {
@@ -655,7 +674,13 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       if (productEditorTitle) productEditorTitle.textContent = `Produkt bearbeiten: ${item.name}`;
     }
     toggleMembershipBilling();
+    toggleStoreCategoryRequirement();
     openEditor(productDialog, productForm);
+  }
+  function toggleStoreCategoryRequirement() {
+    const status = formField<HTMLSelectElement>(productForm, 'status')?.value;
+    const category = formField<HTMLSelectElement>(productForm, 'storeCategory');
+    if (category) category.required = status === 'active';
   }
   function toggleMembershipBilling() {
     const type = formField<HTMLSelectElement>(productForm, 'productType')?.value;
@@ -778,6 +803,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
     });
   }
   formField<HTMLSelectElement>(productForm, 'productType')?.addEventListener('change', toggleMembershipBilling);
+  formField<HTMLSelectElement>(productForm, 'status')?.addEventListener('change', toggleStoreCategoryRequirement);
   window.addEventListener('beforeunload', (event) => {
     if (!dirty) return;
     event.preventDefault();
@@ -874,6 +900,7 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
       const payload = {
         slug: data.get('slug'),
         productType,
+        storeCategory: String(data.get('storeCategory') ?? '') || null,
         name: data.get('name'),
         nameEn: data.get('nameEn'),
         description: data.get('description'),
