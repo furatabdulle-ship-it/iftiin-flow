@@ -12,9 +12,9 @@ const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.
 <Base title="CMS verwalten">
   <section class="cms-admin" data-api-root={root('api/admin/')} data-site-root={root()}>
     <header class="cms-header">
-      <a class="cms-brand" href={root('admin/')} aria-label="Zur Artikelverwaltung">iftiin <span>flow.</span> / CMS</a>
+      <a class="cms-brand" href={root('admin/')} aria-label="Zum Dashboard">iftiin <span>flow.</span> / CMS</a>
       <nav aria-label="Admin-Navigation">
-        <a href={root('admin/')}>Redaktion</a>
+        <a href={root('admin/')}>Dashboard</a>
         <a href={root('admin/products/')} aria-current="page">Inhalte &amp; Produkte</a>
         <a href={root('admin/studio-inquiries/')}>Studio-Anfragen</a>
         <a href={root('')}>Website ansehen <ArrowIcon /></a>

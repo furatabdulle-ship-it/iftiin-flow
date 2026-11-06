@@ -31,7 +31,7 @@ const orderStatusNames: Record<string, string> = {
     <h1><em>{account.displayName || copy('account.yourName')}</em></h1>
     <p>{copy('account.signedInAs')} <strong>{account.email}</strong></p>
     <p class="account-role">{copy('account.role')} {account.role === 'admin' ? copy('account.admin') : copy('account.visitor')}</p>
-    {account.role === 'admin' && <a class="pill-link" href={root('admin/')}>{copy('account.manageArticles')} <ArrowIcon /></a>}
+    {account.role === 'admin' && <a class="pill-link" href={root('admin/')}>{copy('account.openDashboard')} <ArrowIcon /></a>}
     <form class="account-form" id="profile-form">
       <label for="profile-name">{copy('account.displayName')}</label>
       <input id="profile-name" name="displayName" type="text" autocomplete="name" maxlength="80" value={account.displayName} required />
