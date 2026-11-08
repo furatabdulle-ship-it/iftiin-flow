@@ -1,4 +1,5 @@
 ---
+import AdminIcon from '../../components/AdminIcon.astro';
 import ArrowIcon from '../../components/ArrowIcon.astro';
 import Base from '../../layouts/Base.astro';
 import { getSessionAccount } from '../../lib/auth';
@@ -27,93 +28,298 @@ const [articles, products, inquiryCounts, waitlistCounts, contentResult] = await
   ),
 ]);
 const contentCounts = contentResult.rows[0];
+const articlePublished = articles.filter((article) => article.data.status === 'published').length;
+const articleDrafts = articles.filter((article) => article.data.status === 'draft').length;
 const activeProducts = products.filter((product) => product.status === 'active').length;
 const draftProducts = products.filter((product) => product.status === 'draft').length;
 const uncategorizedActive = products.filter((product) => product.status === 'active' && !product.storeCategory).length;
+const activeInquiries = inquiryCounts.new + inquiryCounts.contacted + inquiryCounts.qualified;
+
+const navigation = [
+  { label: 'Übersicht', href: root('admin/'), icon: 'overview' as const, active: true },
+  { label: 'Artikel', href: root('admin/articles/'), icon: 'article' as const },
+  { label: 'Inhalte', href: root('admin/products/?tab=contents'), icon: 'content' as const },
+  { label: 'Produkte', href: root('admin/products/?tab=products'), icon: 'product' as const },
+  { label: 'Pilotanmeldungen', href: root('admin/skills-navigator-waitlist/'), icon: 'people' as const },
+  { label: 'Anfragen', href: root('admin/studio-inquiries/'), icon: 'mail' as const },
+];
+
+const summary = [
+  { label: 'Artikel', value: articles.length, detail: `${articlePublished} veröffentlicht` },
+  { label: 'Inhalte', value: contentCounts.total, detail: `${contentCounts.draft} Entwürfe` },
+  { label: 'Produkte', value: products.length, detail: `${activeProducts} aktiv` },
+  { label: 'Pilotanmeldungen', value: waitlistCounts.confirmed + waitlistCounts.pending, detail: `${waitlistCounts.confirmed} bestätigt` },
+];
+
+const areas = [
+  {
+    label: 'Artikel',
+    description: 'Beiträge und Essays',
+    href: root('admin/articles/'),
+    icon: 'article' as const,
+    primary: `${articlePublished} veröffentlicht`,
+    secondary: `${articleDrafts} ${articleDrafts === 1 ? 'Entwurf' : 'Entwürfe'}`,
+    warning: '',
+  },
+  {
+    label: 'Inhalte',
+    description: 'Weitere Seiteninhalte',
+    href: root('admin/products/?tab=contents'),
+    icon: 'content' as const,
+    primary: `${contentCounts.published} veröffentlicht`,
+    secondary: `${contentCounts.draft} ${Number(contentCounts.draft) === 1 ? 'Entwurf' : 'Entwürfe'}`,
+    warning: '',
+  },
+  {
+    label: 'Produkte',
+    description: 'Digitale Produkte und Kategorien',
+    href: root('admin/products/?tab=products'),
+    icon: 'product' as const,
+    primary: `${activeProducts} aktiv`,
+    secondary: `${draftProducts} Entwürfe`,
+    warning: uncategorizedActive > 0 ? `${uncategorizedActive} aktive Produkte ohne Kategorie` : '',
+  },
+  {
+    label: 'Pilotanmeldungen',
+    description: 'IFTIIN Skills Navigator',
+    href: root('admin/skills-navigator-waitlist/'),
+    icon: 'people' as const,
+    primary: `${waitlistCounts.confirmed} bestätigt`,
+    secondary: `${waitlistCounts.pending} offen`,
+    warning: '',
+  },
+  {
+    label: 'Anfragen',
+    description: 'Bestehende Kontaktanfragen',
+    href: root('admin/studio-inquiries/'),
+    icon: 'mail' as const,
+    primary: `${inquiryCounts.closed} abgeschlossen`,
+    secondary: `${activeInquiries} offen`,
+    warning: '',
+  },
+];
 ---
 
-<Base title="Admin-Dashboard">
-  <section class="section wrap admin-layout admin-dashboard">
-    <div class="section-label">Admin / Übersicht</div>
-    <h1>Alles <em>im Blick.</em></h1>
-    <p>Verwalte Redaktion, Shop, Anfragen und Pilotanmeldungen an einem Ort. Über die Bereiche gelangst du direkt zu den vorhandenen Einstellungen und Bearbeitungsseiten.</p>
+<Base title="Admin-Übersicht">
+  <div class="admin-dashboard">
+    <aside class="admin-sidebar">
+      <a class="admin-brand" href={root('admin/')} aria-label="IFTIIN Admin-Übersicht">
+        <strong>iftiin</strong><span>/ admin</span>
+      </a>
+      <nav class="admin-nav" aria-label="Admin-Navigation">
+        {navigation.map((item) => (
+          <a
+            href={item.href}
+            class:list={['admin-nav-link', { 'is-active': item.active }]}
+            aria-current={item.active ? 'page' : undefined}
+          >
+            <AdminIcon name={item.icon} size={20} />
+            <span>{item.label}</span>
+          </a>
+        ))}
+      </nav>
+      <a class="admin-sidebar-website" href={root('')}>
+        <AdminIcon name="external" size={19} />
+        <span>Website öffnen</span>
+      </a>
+    </aside>
 
-    <div class="dashboard-grid">
-      <article class="dashboard-card">
-        <p class="dashboard-kicker">Redaktion</p>
-        <h2>Artikel</h2>
-        <p class="dashboard-total">{articles.length} Beiträge insgesamt</p>
-        <dl class="dashboard-stats">
-          <div><dt>Veröffentlicht</dt><dd>{articles.filter((article) => article.data.status === 'published').length}</dd></div>
-          <div><dt>Entwürfe</dt><dd>{articles.filter((article) => article.data.status === 'draft').length}</dd></div>
-        </dl>
-        <a class="pill-link" href={root('admin/articles/')}>Artikel verwalten <ArrowIcon /></a>
-      </article>
+    <div class="admin-main">
+      <header class="admin-page-header">
+        <div>
+          <p class="admin-eyebrow">Administration</p>
+          <h1>Übersicht</h1>
+          <p class="admin-intro">Inhalte, Produkte und Anmeldungen verwalten.</p>
+        </div>
+        <a class="admin-website-button" href={root('')}>
+          Website öffnen<ArrowIcon size={16} />
+        </a>
+      </header>
 
-      <article class="dashboard-card">
-        <p class="dashboard-kicker">Redaktion</p>
-        <h2>Inhalte</h2>
-        <p class="dashboard-total">{contentCounts.total} Inhalte insgesamt</p>
-        <dl class="dashboard-stats">
-          <div><dt>Veröffentlicht</dt><dd>{contentCounts.published}</dd></div>
-          <div><dt>Entwürfe</dt><dd>{contentCounts.draft}</dd></div>
-          <div><dt>Archiviert</dt><dd>{contentCounts.archived}</dd></div>
-        </dl>
-        <a class="pill-link" href={root('admin/products/?tab=contents')}>Inhalte verwalten <ArrowIcon /></a>
-      </article>
+      <section class="admin-summary" aria-label="Aktueller Bestand">
+        {summary.map((item) => (
+          <article class="admin-summary-card">
+            <h2>{item.label}</h2>
+            <strong>{item.value}</strong>
+            <p>{item.detail}</p>
+          </article>
+        ))}
+      </section>
 
-      <article class="dashboard-card">
-        <p class="dashboard-kicker">Shop</p>
-        <h2>Produkte &amp; Kategorien</h2>
-        <p class="dashboard-total">{products.length} Produkte insgesamt</p>
-        <dl class="dashboard-stats">
-          <div><dt>Aktiv</dt><dd>{activeProducts}</dd></div>
-          <div><dt>Entwürfe</dt><dd>{draftProducts}</dd></div>
-        </dl>
-        {uncategorizedActive > 0 && (
-          <p class="dashboard-warning">{uncategorizedActive} aktive Produkte haben noch keine Kategorie.</p>
-        )}
-        <a class="pill-link" href={root('admin/products/?tab=products')}>Produkte einstellen <ArrowIcon /></a>
-      </article>
-
-      <article class="dashboard-card">
-        <p class="dashboard-kicker">Skills Navigator</p>
-        <h2>Pilotanmeldungen</h2>
-        <p class="dashboard-total">{waitlistCounts.confirmed + waitlistCounts.pending} Anmeldungen insgesamt</p>
-        <dl class="dashboard-stats">
-          <div><dt>Bestätigt</dt><dd>{waitlistCounts.confirmed}</dd></div>
-          <div><dt>Offen</dt><dd>{waitlistCounts.pending}</dd></div>
-        </dl>
-        <a class="pill-link" href={root('admin/skills-navigator-waitlist/')}>Pilot verwalten <ArrowIcon /></a>
-      </article>
-
-      <article class="dashboard-card">
-        <p class="dashboard-kicker">Studio</p>
-        <h2>Anfragen</h2>
-        <p class="dashboard-total">{inquiryCounts.total} Anfragen insgesamt</p>
-        <dl class="dashboard-stats">
-          <div><dt>Neu</dt><dd>{inquiryCounts.new}</dd></div>
-          <div><dt>Kontaktiert</dt><dd>{inquiryCounts.contacted}</dd></div>
-          <div><dt>Qualifiziert</dt><dd>{inquiryCounts.qualified}</dd></div>
-          <div><dt>Abgeschlossen</dt><dd>{inquiryCounts.closed}</dd></div>
-        </dl>
-        <a class="pill-link" href={root('admin/studio-inquiries/')}>Anfragen verwalten <ArrowIcon /></a>
-      </article>
+      <section class="admin-areas" aria-labelledby="admin-areas-heading">
+        <h2 id="admin-areas-heading">Bereiche verwalten</h2>
+        <div class="admin-area-list">
+          {areas.map((area) => (
+            <article class="admin-area-row">
+              <span class="admin-area-icon"><AdminIcon name={area.icon} size={25} /></span>
+              <div class="admin-area-description">
+                <h3>{area.label}</h3>
+                <p>{area.description}</p>
+                {area.warning && <p class="admin-area-warning" role="status">{area.warning}</p>}
+              </div>
+              <div class="admin-area-badges">
+                <span class:list={['admin-badge', { 'admin-badge-positive': area.primary.includes('veröffentlicht') || area.primary.includes('bestätigt') || area.primary.includes('abgeschlossen') }]}>{area.primary}</span>
+                <span class="admin-badge">{area.secondary}</span>
+              </div>
+              <a class="admin-manage-link" href={area.href}>Verwalten<ArrowIcon size={16} /></a>
+            </article>
+          ))}
+        </div>
+        <p class="admin-footnote">Alle Angaben beziehen sich auf den aktuellen Bestand.</p>
+      </section>
     </div>
-  </section>
+  </div>
 </Base>
 
 <style>
-  .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-top:38px}
-  .dashboard-card{display:flex;flex-direction:column;align-items:flex-start;min-width:0;padding:24px;background:var(--paper);border:1px solid var(--line)}
-  .dashboard-kicker{margin:0 0 12px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-  .dashboard-card h2{margin:0;font-size:clamp(22px,2.4vw,30px)}
-  .dashboard-total{margin:10px 0 0;color:var(--muted);font-size:14px}
-  .dashboard-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px;width:100%;margin:22px 0}
-  .dashboard-stats div{display:grid;gap:4px}
-  .dashboard-stats dt{color:var(--muted);font-size:12px}
-  .dashboard-stats dd{margin:0;font-size:24px;font-weight:700}
-  .dashboard-warning{width:100%;margin:0 0 18px;padding:12px;background:color-mix(in srgb,var(--yellow) 35%,transparent);font-size:13px}
-  .dashboard-card .pill-link{margin-top:auto}
-  @media(max-width:600px){.dashboard-grid{grid-template-columns:1fr}.dashboard-card{padding:20px}}
+  :global(body.admin-page) { background: #f5f4f0; }
+  :global(body.admin-page #content) { min-height: 100vh; }
+  .admin-dashboard {
+    --admin-ink: #171815;
+    --admin-muted: #66675f;
+    --admin-line: #dedbd4;
+    --admin-olive: #4a5427;
+    display: grid;
+    min-height: 100vh;
+    grid-template-columns: 192px minmax(0, 1fr);
+    color: var(--admin-ink);
+    background: #f5f4f0;
+  }
+  .admin-sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+    padding: 27px 12px 18px;
+    border-right: 1px solid var(--admin-line);
+    background: rgba(255, 255, 255, .36);
+  }
+  .admin-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 0 14px;
+    color: var(--admin-ink);
+    font-size: 19px;
+  }
+  .admin-brand strong { font-family: Manrope, Arial, sans-serif; font-weight: 800; letter-spacing: -.06em; }
+  .admin-brand span { font-size: 15px; }
+  .admin-nav { display: grid; gap: 5px; margin-top: 35px; }
+  .admin-nav-link {
+    display: flex;
+    min-height: 41px;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    border-radius: 6px;
+    color: var(--admin-ink);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background .16s ease, color .16s ease;
+  }
+  .admin-nav-link:hover { background: #ebeade; }
+  .admin-nav-link.is-active { background: #e4e6d1; font-weight: 700; }
+  .admin-nav-link.is-active :global(svg) { color: var(--admin-olive); }
+  .admin-sidebar-website {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+    padding: 17px 12px 0;
+    border-top: 1px solid var(--admin-line);
+    color: var(--admin-ink);
+    font-size: 13px;
+  }
+  .admin-main { width: min(100%, 1500px); margin-inline: auto; padding: 33px clamp(24px, 3vw, 40px) 36px; }
+  .admin-page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+  .admin-eyebrow { margin: 0 0 6px; color: var(--admin-olive); font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+  .admin-page-header h1 { margin: 0; font: 800 clamp(2.2rem, 3.6vw, 3rem)/1.05 Manrope, Arial, sans-serif; letter-spacing: -.065em; }
+  .admin-intro { margin: 6px 0 0; color: #42433d; font-size: 16px; }
+  .admin-website-button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+    padding: 9px 16px;
+    border: 1px solid var(--admin-olive);
+    border-radius: 6px;
+    color: #343a20;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background .16s ease;
+  }
+  .admin-website-button:hover { background: #e9eadb; }
+  .admin-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 30px; }
+  .admin-summary-card { min-width: 0; padding: 16px 19px 15px; border: 1px solid var(--admin-line); border-radius: 7px; background: #fff; }
+  .admin-summary-card h2 { overflow: hidden; margin: 0 0 7px; font-size: 16px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+  .admin-summary-card strong { display: block; font: 800 2.45rem/1 Manrope, Arial, sans-serif; letter-spacing: -.06em; }
+  .admin-summary-card p { margin: 4px 0 0; color: var(--admin-muted); font-size: 14px; }
+  .admin-areas { margin-top: 32px; }
+  .admin-areas > h2 { margin: 0 0 18px; font: 750 clamp(1.55rem, 2.2vw, 2rem)/1.2 Manrope, Arial, sans-serif; letter-spacing: -.045em; }
+  .admin-area-list { overflow: hidden; border: 1px solid var(--admin-line); border-radius: 7px; background: #fff; }
+  .admin-area-row { display: grid; min-height: 65px; grid-template-columns: 38px minmax(170px, 1fr) minmax(180px, 1.15fr) 120px; align-items: center; gap: 12px; padding: 10px 20px; }
+  .admin-area-row + .admin-area-row { border-top: 1px solid var(--admin-line); }
+  .admin-area-icon { display: grid; place-items: center; color: var(--admin-olive); }
+  .admin-area-description h3 { margin: 0; font-size: 16px; font-weight: 750; }
+  .admin-area-description p { margin: 1px 0 0; color: var(--admin-muted); font-size: 13px; }
+  .admin-area-description .admin-area-warning { margin-top: 4px; color: #9a5d00; font-size: 12px; }
+  .admin-area-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+  .admin-badge { display: inline-flex; min-height: 24px; align-items: center; padding: 3px 13px; border-radius: 99px; background: #f0eee9; font-size: 12px; line-height: 1.2; white-space: nowrap; }
+  .admin-badge-positive { background: #e7e9d8; }
+  .admin-manage-link { display: inline-flex; justify-self: end; align-items: center; gap: 8px; color: #424b27; font-size: 13px; font-weight: 750; white-space: nowrap; }
+  .admin-manage-link:hover { color: #202615; text-decoration: underline; text-underline-offset: 3px; }
+  .admin-footnote { margin: 16px 0 0; color: #77776f; font-size: 12px; }
+  @media (max-width: 1050px) {
+    .admin-dashboard { grid-template-columns: 172px minmax(0, 1fr); }
+    .admin-main { padding-inline: 22px; }
+    .admin-area-row { grid-template-columns: 32px minmax(140px, 1fr) minmax(150px, 1.1fr) 105px; gap: 9px; padding-inline: 14px; }
+    .admin-badge { padding-inline: 9px; font-size: 11px; }
+  }
+  @media (max-width: 820px) {
+    .admin-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-area-row { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px 12px; padding-block: 13px; }
+    .admin-area-badges { grid-column: 2; grid-row: 2; }
+    .admin-manage-link { grid-column: 3; grid-row: 1 / span 2; }
+  }
+  @media (max-width: 600px) {
+    .admin-dashboard { display: block; }
+    .admin-sidebar { position: static; height: auto; padding: 13px 15px 10px; border-right: 0; border-bottom: 1px solid var(--admin-line); background: rgba(255, 255, 255, .7); }
+    .admin-brand { padding: 0 2px; font-size: 18px; }
+    .admin-nav { display: flex; gap: 5px; overflow-x: auto; margin: 12px -15px 0; padding: 0 15px 3px; scrollbar-width: thin; }
+    .admin-nav-link { min-height: 36px; flex: none; gap: 7px; padding-inline: 9px; font-size: 12px; }
+    .admin-nav-link :global(svg) { width: 17px; height: 17px; }
+    .admin-sidebar-website { display: none; }
+    .admin-main { padding: 25px 16px 30px; }
+    .admin-page-header { align-items: flex-start; }
+    .admin-page-header h1 { font-size: 2.25rem; }
+    .admin-intro { max-width: 35ch; font-size: 14px; line-height: 1.5; }
+    .admin-website-button { gap: 6px; padding: 8px 9px; font-size: 12px; }
+    .admin-summary { gap: 9px; margin-top: 22px; }
+    .admin-summary-card { padding: 13px 12px; }
+    .admin-summary-card h2 { font-size: 14px; }
+    .admin-summary-card strong { font-size: 2rem; }
+    .admin-summary-card p { font-size: 12px; }
+    .admin-areas { margin-top: 26px; }
+    .admin-area-row { grid-template-columns: 27px minmax(0, 1fr) auto; gap: 6px 9px; padding: 12px 10px; }
+    .admin-area-icon :global(svg) { width: 22px; height: 22px; }
+    .admin-area-description h3 { font-size: 14px; }
+    .admin-area-description p { font-size: 12px; }
+    .admin-area-badges { gap: 5px; }
+    .admin-badge { min-height: 22px; padding: 3px 8px; font-size: 10px; }
+    .admin-manage-link { gap: 4px; font-size: 11px; }
+    .admin-manage-link :global(svg) { width: 13px; height: 13px; }
+  }
+  @media (max-width: 380px) {
+    .admin-website-button { width: 38px; height: 38px; justify-content: center; overflow: hidden; padding: 0; font-size: 0; }
+    .admin-summary-card h2 { font-size: 12px; }
+    .admin-area-row { grid-template-columns: 23px minmax(0, 1fr); }
+    .admin-area-badges { grid-column: 2; grid-row: auto; }
+    .admin-manage-link { grid-column: 2; grid-row: auto; justify-self: start; margin-top: 3px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .admin-nav-link,
+    .admin-website-button { transition: none; }
+  }
 </style>

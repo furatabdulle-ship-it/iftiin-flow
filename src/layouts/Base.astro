@@ -18,6 +18,7 @@ const prefix = import.meta.env.BASE_URL;
 const root = (path = '') => localeHref(prefix.replace(/\/$/, '/') + path.replace(/^\//,''), locale);
 const languageHref = (language: 'de' | 'en') => localeHref(`${Astro.url.pathname}${Astro.url.search}`, language);
 const showLanguageSwitch = !Astro.url.pathname.startsWith('/admin/');
+const isAdminPage = Astro.url.pathname.startsWith('/admin/');
 ---
 <!doctype html>
 <html lang={locale}>
@@ -36,10 +37,10 @@ const showLanguageSwitch = !Astro.url.pathname.startsWith('/admin/');
     <link rel="apple-touch-icon" sizes="180x180" href={root('apple-touch-icon.png')} />
     <title>{pageTitle}</title>
   </head>
-  <body class:list={{ 'home-page': home }}>
+  <body class:list={{ 'home-page': home, 'admin-page': isAdminPage }}>
     <a class="skip" href="#content">{t(locale, 'common.skip')}</a>
-    {!home && <div class="announcement">{t(locale, 'common.announcement')} <span aria-hidden="true"><ArrowIcon /></span></div>}
-    <header class="site-header wrap">
+    {!home && !isAdminPage && <div class="announcement">{t(locale, 'common.announcement')} <span aria-hidden="true"><ArrowIcon /></span></div>}
+    {!isAdminPage && <header class="site-header wrap">
       <a class="wordmark" href={root('')} aria-label={locale === 'en' ? 'iftiin flow. Home' : 'iftiin flow. Startseite'}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a>
         {home ? <>
           <nav class="home-nav" aria-label={locale === 'en' ? 'Main navigation' : 'Hauptnavigation'}>
@@ -62,20 +63,20 @@ const showLanguageSwitch = !Astro.url.pathname.startsWith('/admin/');
         <span aria-hidden="true">/</span>
         <a href={languageHref('en')} aria-current={locale === 'en' ? 'page' : undefined}>EN</a>
       </div>}
-    </header>
+    </header>}
     {home && <nav class="site-menu" id="site-menu" aria-label={locale === 'en' ? 'Main menu' : 'Hauptmenü'} inert>
       <a href={root('explore/')}>{t(locale, 'common.explore')}</a>
       <a href={root('store/')}>{t(locale, 'common.shop')}</a>
       <a href={root('skills-navigator/')}>{t(locale, 'waitlist.title')}</a>
     </nav>}
     <main id="content"><slot /></main>
-    <footer class="footer">
+    {!isAdminPage && <footer class="footer">
       <div class="wrap footer-grid">
         <div><a class="wordmark" href={root('')}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a><p>{t(locale, 'common.footerLine1')}<br/>{t(locale, 'common.footerLine2')}</p></div>
         <div class="footer-links"><a href={root('explore/')}>{t(locale, 'common.explore')}</a><a href={root('store/')}>{t(locale, 'common.shop')}</a><a href={root('skills-navigator/')}>{t(locale, 'waitlist.title')}</a><a href={root('about/')}>{t(locale, 'common.about')}</a><a href={root('account/')}>{t(locale, 'common.account')}</a><a href={root('impressum/')}>{t(locale, 'common.legal')}</a><a href={root('datenschutz/')}>{t(locale, 'common.privacy')}</a>{site.email && <a href={`mailto:${site.email}`}>{t(locale, 'common.contact')}</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter <ArrowIcon /></a>}</div>
         <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · {locale === 'en' ? 'Independent knowledge platform' : 'Unabhängige Wissensplattform'}</div>
       </div>
-    </footer>
+    </footer>}
     {home && <script>
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const menuToggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
