@@ -2,94 +2,391 @@
 import ArrowIcon from '../components/ArrowIcon.astro';
 import IftiinSun from '../components/brand/IftiinSun.astro';
 import Base from '../layouts/Base.astro';
-import { localeHref, t } from '../lib/i18n';
+
 const locale = Astro.locals.locale;
-const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
-const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,''), locale);
 const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/about/${file}`;
+const content = locale === 'en'
+  ? {
+      pageTitle: 'About Furat Abdulle',
+      pageDescription: 'Furat Abdulle is the founder of IFTIIN, a technology consultant, and a spoken-word artist.',
+      navLabel: 'About Furat Abdulle',
+      navigation: [
+        { href: '#profile', label: 'About me' },
+        { href: '#background', label: 'Background & work' },
+        { href: '#appearances', label: 'Talks & media' },
+        { href: '#publications', label: 'Publications' },
+        { href: '#community', label: 'Community' },
+      ],
+      profileEyebrow: 'Furat Abdulle · Founder, technology consultant & spoken-word artist',
+      profileIntro: 'I’m Furat Abdulle, founder of IFTIIN, a technology consultant, and a spoken-word artist. My work brings education, technology, and communication together: How do we understand change, develop our skills, and give expression to our own ideas?',
+      profileImageAlt: 'Furat Abdulle at the Black Girls Tech Summit 2025',
+      profileImageCaption: 'Black Girls Tech Summit · Berlin, 2025',
+      backgroundEyebrow: 'Background & work',
+      backgroundTitle: 'Knowledge, technology, and expression.',
+      backgroundCards: [
+        {
+          number: '01',
+          label: 'Education & research',
+          title: 'Knowledge production',
+          text: 'My background in English, philosophy, educational sciences, and digital humanities shapes how I think about knowledge and social change. In my master’s thesis, “Networks of Black Knowledge Production,” I explored how digital platforms connect and make Black knowledge production visible.',
+        },
+        {
+          number: '02',
+          label: 'Teaching',
+          title: 'University of Marburg',
+          text: 'I taught the seminar “The Power of Knowledge Production” at the University of Marburg.',
+        },
+        {
+          number: '03',
+          label: 'Consulting',
+          title: 'Data & AI',
+          text: 'In data and AI consulting, I support organizations in applying data and artificial intelligence. I develop learning-design-based enablement formats, lead workshops, and help people understand technologies, assess them critically, and apply them meaningfully in their work.',
+        },
+        {
+          number: '04',
+          label: 'Writing & performance',
+          title: 'Language and stories',
+          text: 'For more than ten years, I have worked with language and stories as a writer, speaker, and spoken-word artist. My work explores belonging, power, and the perspectives that shape how we understand the world.',
+        },
+        {
+          number: '05',
+          label: 'Founder',
+          title: 'IFTIIN',
+          text: 'With IFTIIN, I bring these experiences together: future skills, AI and media literacy, and storytelling and communication. For people who want to understand change, open up new possibilities, and put their ideas into practice.',
+        },
+      ],
+      appearancesEyebrow: 'Selected work',
+      appearancesTitle: 'Workshops, talks & media',
+      appearances: [
+        {
+          title: 'Feminist Fair Future',
+          context: 'Frankfurt · 2026',
+          description: 'Workshop on future skills with AI—understanding technologies critically and using them for personal and professional development.',
+          href: 'https://www.feministfairfuture.de/event/weltfrauentag-brunch-2026',
+          linkLabel: 'Event details',
+        },
+        {
+          title: 'Africa Policy Week',
+          context: 'Hertie School Africa Policy Club · 2026',
+          description: 'Panel on digital governance and AI sovereignty: data, responsibility, and shaping independent AI ecosystems.',
+          href: 'https://www.africapolicyweek.com/',
+          linkLabel: 'View the program',
+        },
+        {
+          title: 'Black Girls Tech Summit',
+          context: 'Berlin · 2025',
+          description: 'Featured in the speaker lineup as a data and AI consultant at the international summit for Black women in technology.',
+          href: 'https://www.blackgirlstechsummit.com/',
+          linkLabel: 'Speaker lineup',
+        },
+        {
+          title: 'On the Matter of Blackness in Europe',
+          context: 'UCLA · Los Angeles · 2019',
+          description: 'Panel contribution at the international symposium “On the Matter of Blackness in Europe: Transnational Perspectives.”',
+          href: 'https://afam.ucla.edu/event/on-the-matter-of-blackness-in-europe-transnational-perspectives/',
+          linkLabel: 'Symposium details',
+        },
+        {
+          title: 'Mic Drop',
+          context: 'Deutschlandfunk Kultur · 2018',
+          description: 'Conversation about spoken word, artistic voice, and responding to criticism.',
+          href: 'https://www.deutschlandfunkkultur.de/podcast-reihe-mic-drop-furat-abdulle-wem-das-nicht-gefaellt-100.html',
+          linkLabel: 'Listen to the audio',
+        },
+      ],
+      publicationsEyebrow: 'Writing & contributions',
+      publicationsTitle: 'Selected publications',
+      publications: [
+        {
+          title: 'Togetherness – A Poetry Meets Anthology',
+          publisher: 'Archive Books · 2025',
+          description: 'A literary contribution to the international anthology on family, home, and belonging.',
+          href: 'https://www.hhv.de/en-FI/records/item/poetry-meets-togetherness-a-poetry-meets-anthology-1298199v1',
+          linkLabel: 'View publication',
+        },
+        {
+          title: 'Look at Us!',
+          publisher: 'akono Verlag · 2023',
+          description: 'Featured in “Galerie der Schwarzen Vorbilder & Held*innen in Deutschland,” a book about Black lives, perspectives, and impact.',
+          href: 'https://akono.de/product/look-at-us/',
+          linkLabel: 'View the book',
+        },
+        {
+          title: 'Europa',
+          publisher: 'Beltz Juventa · 2023',
+          description: 'A literary contribution to “Erziehungswissenschaften dekolonisieren. Theoretische Debatten und praxisorientierte Impulse.”',
+          href: 'https://www.pedocs.de/volltexte/2024/29051/pdf/Akbaba_Heinemann_2023_Erziehungswissenschaften_dekolonisieren.pdf',
+          linkLabel: 'View publication',
+        },
+        {
+          title: 'Black History Month in Germany – the Foundations of Freedom',
+          publisher: 'SCHIRN MAG · 2022',
+          description: 'An essay on writing history, social responsibility, and the significance of Black history.',
+          href: 'https://www.schirn.de/en/schirnmag/black-history-month-in-germany-the-foundations-of-freedom-2022-antsy-en/',
+          linkLabel: 'Read the essay',
+        },
+        {
+          title: 'Perspektivwechsel: Empowerment',
+          publisher: 'Der Paritätische Gesamtverband · 2016',
+          description: 'A poetic contribution about flight, exclusion, and self-determination.',
+          href: 'https://www.der-paritaetische.de/fileadmin/user_upload/Publikationen/doc/perspektivwechsel-empowerment-2016_web.pdf',
+          linkLabel: 'View publication',
+        },
+      ],
+      communityEyebrow: 'Community & cultural work',
+      communityTitle: 'Building knowledge and spaces together.',
+      communityDescription: 'I initiated and co-designed Black History Month Mainz and co-founded Impulse Poetry. This work connects cultural expression with social engagement and building community.',
+      communityLinks: [
+        { label: 'University of Mainz alumni profile', href: 'https://www.digitale-methodik.uni-mainz.de/dmgk_alt/' },
+        { label: 'LinkedIn', href: 'https://de.linkedin.com/in/furat-abdulle' },
+      ],
+    }
+  : {
+      pageTitle: 'Über Furat Abdulle',
+      pageDescription: 'Furat Abdulle ist Gründerin von IFTIIN, Technologieberaterin und Spoken-Word-Künstlerin.',
+      navLabel: 'Über Furat Abdulle',
+      navigation: [
+        { href: '#profile', label: 'Über mich' },
+        { href: '#background', label: 'Hintergrund & Arbeit' },
+        { href: '#appearances', label: 'Auftritte & Medien' },
+        { href: '#publications', label: 'Publikationen' },
+        { href: '#community', label: 'Community' },
+      ],
+      profileEyebrow: 'Furat Abdulle · Gründerin, Technologieberaterin & Spoken-Word-Künstlerin',
+      profileIntro: 'Ich bin Furat Abdulle, Gründerin von IFTIIN, Technologieberaterin und Spoken-Word-Künstlerin. Meine Arbeit verbindet Bildung, Technologie und Kommunikation: Wie verstehen wir Veränderungen, entwickeln unsere Fähigkeiten und geben eigenen Ideen Ausdruck?',
+      profileImageAlt: 'Furat Abdulle beim Black Girls Tech Summit 2025',
+      profileImageCaption: 'Black Girls Tech Summit · Berlin, 2025',
+      backgroundEyebrow: 'Hintergrund & Arbeit',
+      backgroundTitle: 'Wissen, Technologie und Ausdruck.',
+      backgroundCards: [
+        {
+          number: '01',
+          label: 'Studium & Forschung',
+          title: 'Wissensproduktion',
+          text: 'Mein Hintergrund in Englisch, Philosophie, Bildungswissenschaften und Digital Humanities prägt meinen Blick auf Wissen und gesellschaftlichen Wandel. In meiner Masterarbeit „Networks of Black Knowledge Production“ habe ich untersucht, wie digitale Plattformen Schwarze Wissensproduktion vernetzen und sichtbar machen.',
+        },
+        {
+          number: '02',
+          label: 'Lehre',
+          title: 'Universität Marburg',
+          text: 'An der Universität Marburg habe ich das Seminar „Die Macht der Wissensproduktion“ unterrichtet.',
+        },
+        {
+          number: '03',
+          label: 'Beratung',
+          title: 'Data & AI',
+          text: 'In der Data-&-AI-Beratung begleite ich Organisationen beim Einsatz von Daten und künstlicher Intelligenz. Ich entwickle didaktisch fundierte Enablement-Formate, leite Workshops und unterstütze Menschen dabei, Technologien zu verstehen, kritisch einzuordnen und sinnvoll in ihrer Arbeit anzuwenden.',
+        },
+        {
+          number: '04',
+          label: 'Autorin & Performance',
+          title: 'Sprache und Geschichten',
+          text: 'Als Autorin, Speakerin und Spoken-Word-Künstlerin arbeite ich seit über zehn Jahren mit Sprache und Geschichten. Dabei beschäftigen mich Zugehörigkeit, Macht und die Frage, welche Perspektiven unser Verständnis der Welt prägen.',
+        },
+        {
+          number: '05',
+          label: 'Gründerin',
+          title: 'IFTIIN',
+          text: 'Mit IFTIIN bringe ich diese Erfahrungen zusammen: Future Skills, KI- und Medienkompetenz sowie Storytelling und Kommunikation. Für Menschen, die Veränderungen verstehen, neue Möglichkeiten erschließen und ihre Ideen wirksam umsetzen möchten.',
+        },
+      ],
+      appearancesEyebrow: 'Ausgewählte Arbeit',
+      appearancesTitle: 'Workshops, Talks & Medienbeiträge',
+      appearances: [
+        {
+          title: 'Feminist Fair Future',
+          context: 'Frankfurt · 2026',
+          description: 'Workshop zu Future Skills mit KI – Technologien kritisch verstehen und für die persönliche und berufliche Entwicklung nutzen.',
+          href: 'https://www.feministfairfuture.de/event/weltfrauentag-brunch-2026',
+          linkLabel: 'Zur Veranstaltung',
+        },
+        {
+          title: 'Africa Policy Week',
+          context: 'Hertie School Africa Policy Club · 2026',
+          description: 'Panelbeitrag zu Digital Governance und AI Sovereignty: Daten, Verantwortung und die Gestaltung eigenständiger KI-Ökosysteme.',
+          href: 'https://www.africapolicyweek.com/',
+          linkLabel: 'Zum Programm',
+        },
+        {
+          title: 'Black Girls Tech Summit',
+          context: 'Berlin · 2025',
+          description: 'Als Data-&-AI-Beraterin im Speaker-Line-up des internationalen Summits für Schwarze Frauen in Technologie.',
+          href: 'https://www.blackgirlstechsummit.com/',
+          linkLabel: 'Zur Speakerübersicht',
+        },
+        {
+          title: 'On the Matter of Blackness in Europe',
+          context: 'UCLA · Los Angeles · 2019',
+          description: 'Panelbeitrag beim internationalen Symposium „On the Matter of Blackness in Europe: Transnational Perspectives“.',
+          href: 'https://afam.ucla.edu/event/on-the-matter-of-blackness-in-europe-transnational-perspectives/',
+          linkLabel: 'Zum Symposium',
+        },
+        {
+          title: 'Mic Drop',
+          context: 'Deutschlandfunk Kultur · 2018',
+          description: 'Gespräch über Spoken Word, die eigene künstlerische Stimme und den Umgang mit Kritik.',
+          href: 'https://www.deutschlandfunkkultur.de/podcast-reihe-mic-drop-furat-abdulle-wem-das-nicht-gefaellt-100.html',
+          linkLabel: 'Zum Audiobeitrag',
+        },
+      ],
+      publicationsEyebrow: 'Texte & Beiträge',
+      publicationsTitle: 'Ausgewählte Publikationen',
+      publications: [
+        {
+          title: 'Togetherness – A Poetry Meets Anthology',
+          publisher: 'Archive Books · 2025',
+          description: 'Literarischer Beitrag zur internationalen Anthologie über Familie, Heimat und Zugehörigkeit.',
+          href: 'https://www.hhv.de/en-FI/records/item/poetry-meets-togetherness-a-poetry-meets-anthology-1298199v1',
+          linkLabel: 'Zur Publikation',
+        },
+        {
+          title: 'Look at Us!',
+          publisher: 'akono Verlag · 2023',
+          description: 'Vertreten in „Galerie der Schwarzen Vorbilder & Held*innen in Deutschland“ – einem Buch über Schwarze Lebenswege, Perspektiven und Wirken.',
+          href: 'https://akono.de/product/look-at-us/',
+          linkLabel: 'Zum Buch',
+        },
+        {
+          title: 'Europa',
+          publisher: 'Beltz Juventa · 2023',
+          description: 'Literarischer Beitrag im Sammelband „Erziehungswissenschaften dekolonisieren. Theoretische Debatten und praxisorientierte Impulse“.',
+          href: 'https://www.pedocs.de/volltexte/2024/29051/pdf/Akbaba_Heinemann_2023_Erziehungswissenschaften_dekolonisieren.pdf',
+          linkLabel: 'Zur Publikation',
+        },
+        {
+          title: 'Black History Month in Germany – the Foundations of Freedom',
+          publisher: 'SCHIRN MAG · 2022',
+          description: 'Essay über Geschichtsschreibung, gesellschaftliche Verantwortung und die Bedeutung Schwarzer Geschichte.',
+          href: 'https://www.schirn.de/en/schirnmag/black-history-month-in-germany-the-foundations-of-freedom-2022-antsy-en/',
+          linkLabel: 'Zum Essay',
+        },
+        {
+          title: 'Perspektivwechsel: Empowerment',
+          publisher: 'Der Paritätische Gesamtverband · 2016',
+          description: 'Poetischer Beitrag über Flucht, Ausgrenzung und Selbstbestimmung.',
+          href: 'https://www.der-paritaetische.de/fileadmin/user_upload/Publikationen/doc/perspektivwechsel-empowerment-2016_web.pdf',
+          linkLabel: 'Zur Publikation',
+        },
+      ],
+      communityEyebrow: 'Community & Kulturarbeit',
+      communityTitle: 'Wissen und Räume gemeinsam gestalten.',
+      communityDescription: 'Ich habe den Black History Month Mainz initiiert und mitkonzipiert sowie Impulse Poetry mitgegründet. Diese Arbeit verbindet kulturellen Ausdruck mit gesellschaftlicher Auseinandersetzung und dem Aufbau von Communitys.',
+      communityLinks: [
+        { label: 'Alumni-Porträt der Universität Mainz', href: 'https://www.digitale-methodik.uni-mainz.de/dmgk_alt/' },
+        { label: 'LinkedIn', href: 'https://de.linkedin.com/in/furat-abdulle' },
+      ],
+    };
 ---
-<Base title={locale === 'en' ? 'About' : 'About'}>
-  <nav class="about-section-nav" aria-label={copy('about.sectionNav')}>
+
+<Base title={content.pageTitle} description={content.pageDescription}>
+  <nav class="about-section-nav" aria-label={content.navLabel}>
     <div class="wrap about-section-nav-inner">
-      <a href="#mission"><span>01</span>{copy('about.label')}</a>
-      <a href="#purpose"><span>02</span>{copy('about.purpose')}</a>
-      <a href="#behind"><span>03</span>{copy('about.behind')}</a>
+      {content.navigation.map((item, index) => (
+        <a href={item.href}><span>{String(index + 1).padStart(2, '0')}</span>{item.label}</a>
+      ))}
     </div>
   </nav>
-  <section class="about-hero" id="mission">
-    <div class="about-hero-orbit" aria-hidden="true">
-      <span></span><span></span><span></span>
-      <IftiinSun size={154} class="about-hero-sun" />
+
+  <section class="about-profile" id="profile">
+    <div class="about-profile-mark" aria-hidden="true">
+      <IftiinSun size={240} color="var(--violet)" />
     </div>
-    <div class="wrap about-hero-inner">
-      <div class="section-label">{copy('about.label')}</div>
-      <div class="about-hero-grid">
-        <h1>Understand more.<br/><em>Imagine further.</em><br/>Create what’s next.</h1>
-        <div class="about-hero-copy">
-          <p>{copy('about.intro')}</p>
-          <div class="about-hero-signoff" aria-hidden="true"><span>Understand</span><i></i><span>Imagine</span><i></i><span>Create</span></div>
-        </div>
+    <div class="wrap about-profile-inner">
+      <div class="about-profile-copy">
+        <div class="section-label light">{content.profileEyebrow}</div>
+        <h1>Understand more.<br /><em>Imagine further.</em><br />Create what’s next.</h1>
+        <p>{content.profileIntro}</p>
       </div>
-      <nav class="about-work-nav" aria-label={copy('about.workTitle')}>
-        <p>{copy('about.workTitle')}</p>
-        <div class="about-work-links">
-          <a href={root('explore/')}>
-            <span class="about-work-icon" aria-hidden="true">
-              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 5h9l5 5v17H9z" /><path d="M18 5v6h5M13 17h6M13 21h6" />
-              </svg>
-            </span>
-            <span>{copy('about.articlesLink')}</span>
-            <ArrowIcon size={14} />
-          </a>
-          <a href={root('store/')}>
-            <span class="about-work-icon" aria-hidden="true">
-              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 12V9a6 6 0 0 1 12 0v3" /><path d="M7 12h18l2 15H5z" />
-              </svg>
-            </span>
-            <span>{copy('common.shop')}</span>
-            <ArrowIcon size={14} />
-          </a>
-        </div>
-      </nav>
-    </div>
-  </section>
-  <section class="dark-section about-purpose" id="purpose">
-    <div class="wrap about-body">
-      <div class="about-purpose-meta">
-        <div class="section-label light">{copy('about.purpose')}</div>
-        <span aria-hidden="true">02</span>
-      </div>
-      <div>
-        <h2>Think deeply.<br/><i>Create with vision.</i></h2>
-        <p>{copy('about.bodyFirst')}</p>
-        <p>{copy('about.bodySecond')}</p>
-        <p>{copy('about.bodyThird')}</p>
-      </div>
-    </div>
-  </section>
-  <section class="section wrap about-bio" id="behind">
-    <div class="about-profile">
-      <figure class="about-profile-feature">
-        <img
-          src={media('furat-summit.jpg')}
-          alt={locale === 'en' ? 'Furat Abdulle at the Black Girls Tech Summit 2025' : 'Furat Abdulle beim Black Girls Tech Summit 2025'}
-          loading="lazy"
-          decoding="async"
-        />
-        <figcaption>
-          <div class="section-label light"><span aria-hidden="true">03 / </span>{copy('about.behind')}</div>
-          <h2>{copy('about.bioHeading')}</h2>
-          <span>Black Girls Tech Summit 2025</span>
-        </figcaption>
+      <figure class="about-profile-portrait">
+        <img src={media('furat-summit.jpg')} alt={content.profileImageAlt} fetchpriority="high" />
+        <figcaption>{content.profileImageCaption}</figcaption>
       </figure>
     </div>
-    <div class="about-bio-copy">
-      <p>{copy('about.bioFirst')}</p>
-      <p>{copy('about.bioSecond')}</p>
-      <p>{copy('about.bioThird')}</p>
-      <a class="text-link about-bio-link" href={root('explore/')}>{copy('about.discoverTopics')} <ArrowIcon /></a>
+  </section>
+
+  <section class="about-section about-background" id="background">
+    <div class="wrap">
+      <header class="about-section-heading">
+        <div>
+          <div class="section-label">{content.backgroundEyebrow}</div>
+          <h2>{content.backgroundTitle}</h2>
+        </div>
+      </header>
+      <div class="about-focus-grid">
+        {content.backgroundCards.map((card) => (
+          <article class="about-focus-card">
+            <span class="about-card-number">{card.number}</span>
+            <p class="about-card-label">{card.label}</p>
+            <h3>{card.title}</h3>
+            <p>{card.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="about-section about-records" id="appearances">
+    <div class="wrap">
+      <header class="about-section-heading">
+        <div>
+          <div class="section-label">{content.appearancesEyebrow}</div>
+          <h2>{content.appearancesTitle}</h2>
+        </div>
+      </header>
+      <div class="about-record-grid">
+        {content.appearances.map((item) => (
+          <article class="about-record-card">
+            <p class="about-record-context">{item.context}</p>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+            <a href={item.href} target="_blank" rel="noopener noreferrer">
+              {item.linkLabel}<ArrowIcon size={15} />
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="about-section about-publications" id="publications">
+    <div class="wrap">
+      <header class="about-section-heading">
+        <div>
+          <div class="section-label">{content.publicationsEyebrow}</div>
+          <h2>{content.publicationsTitle}</h2>
+        </div>
+      </header>
+      <div class="about-record-grid">
+        {content.publications.map((item) => (
+          <article class="about-record-card about-publication-card">
+            <p class="about-record-context">{item.publisher}</p>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+            <a href={item.href} target="_blank" rel="noopener noreferrer">
+              {item.linkLabel}<ArrowIcon size={15} />
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="about-community" id="community">
+    <div class="wrap about-community-inner">
+      <div>
+        <div class="section-label light">{content.communityEyebrow}</div>
+        <h2>{content.communityTitle}</h2>
+      </div>
+      <div class="about-community-copy">
+        <p>{content.communityDescription}</p>
+        <div class="about-community-links">
+          {content.communityLinks.map((item) => (
+            <a href={item.href} target="_blank" rel="noopener noreferrer">
+              {item.label}<ArrowIcon size={15} />
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   </section>
 </Base>
@@ -107,379 +404,193 @@ const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/
     display: flex;
     min-height: 52px;
     align-items: center;
-    gap: clamp(1.25rem, 3vw, 2.5rem);
+    gap: clamp(1rem, 2.5vw, 2rem);
     overflow-x: auto;
     scrollbar-width: none;
   }
-  .about-section-nav-inner::-webkit-scrollbar {
-    display: none;
-  }
+  .about-section-nav-inner::-webkit-scrollbar { display: none; }
   .about-section-nav a {
     display: inline-flex;
     flex: none;
     align-items: center;
-    gap: .55rem;
+    gap: .5rem;
     color: var(--muted);
     font-size: .65rem;
     font-weight: 700;
-    letter-spacing: .1em;
+    letter-spacing: .08em;
     text-transform: uppercase;
     transition: color .2s ease;
   }
-  .about-section-nav a:hover {
-    color: var(--ink);
-  }
-  .about-section-nav a span {
-    color: var(--violet);
-    font-size: .6rem;
-  }
-  .about-hero,
-  .about-purpose,
-  .about-bio {
-    scroll-margin-top: 60px;
-  }
-  .about-hero {
+  .about-section-nav a:hover { color: var(--ink); }
+  .about-section-nav a span { color: var(--violet); font-size: .6rem; }
+  .about-profile,
+  .about-section,
+  .about-community { scroll-margin-top: 60px; }
+  .about-profile {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    background: #f3f0e9;
+    background: var(--ink);
+    color: var(--paper);
   }
-  .about-hero-inner {
+  .about-profile-inner {
     position: relative;
     z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, .7fr);
+    align-items: center;
+    gap: clamp(3rem, 8vw, 8rem);
     padding-top: clamp(4rem, 8vw, 7rem);
-    padding-bottom: clamp(3.25rem, 5vw, 5rem);
+    padding-bottom: clamp(4rem, 8vw, 7rem);
   }
-  .about-hero-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.7fr) minmax(230px, .7fr);
-    gap: clamp(2rem, 4vw, 4rem);
-    align-items: start;
+  .about-profile-copy { max-width: 760px; }
+  .about-profile-copy h1 {
+    margin: 1.1rem 0 1.5rem;
+    font: 800 clamp(3.2rem, 7.2vw, 6.8rem)/.94 Manrope, Arial, sans-serif;
+    letter-spacing: -.075em;
   }
-  .about-hero h1 {
-    max-width: 1000px;
-    margin: 3.5rem 0 0;
-    font: 700 clamp(3.5rem, 5.8vw, 6.25rem)/.99 Manrope, Arial, sans-serif;
-    letter-spacing: -.09em;
-  }
-  .about-hero h1 em {
-    color: var(--violet);
-    font-weight: 500;
-    font-style: normal;
-  }
-  .about-hero-copy {
-    position: relative;
-    z-index: 1;
-    padding-top: clamp(5.5rem, 6vw, 6.25rem);
-  }
-  .about-work-nav {
-    position: absolute;
-    z-index: 2;
-    top: clamp(2.5rem, 4vw, 4rem);
-    right: 0;
-    width: min(380px, 34vw);
-  }
-  .about-work-nav > p {
-    margin-bottom: .75rem;
-    color: var(--ink);
-    font-size: .82rem;
-    font-weight: 700;
-    line-height: 1.4;
-  }
-  .about-work-links {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .55rem;
-  }
-  .about-work-links a {
-    display: flex;
-    min-width: 0;
-    min-height: 64px;
-    align-items: center;
-    gap: .6rem;
-    padding: .65rem;
-    border: 1px solid rgba(24, 25, 24, .12);
-    background: rgba(255, 255, 255, .76);
-    font-size: .78rem;
-    font-weight: 700;
-    transition: transform .2s ease, border-color .2s ease, background .2s ease;
-  }
-  .about-work-links a:hover {
-    transform: translateY(-2px);
-    border-color: var(--violet);
-    background: var(--cream);
-  }
-  .about-work-icon {
-    display: grid;
-    width: 32px;
-    height: 32px;
-    flex: none;
-    place-items: center;
-    background: var(--yellow);
-  }
-  .about-work-icon svg {
-    width: 19px;
-    height: 19px;
-  }
-  .about-work-links a > span:nth-child(2) {
-    flex: 1;
-  }
-  .about-hero-copy p {
+  .about-profile-copy h1 em { color: var(--violet); font-style: normal; font-weight: 600; }
+  .about-profile-copy > p {
+    max-width: 640px;
     margin: 0;
-    font-size: clamp(1rem, 1.25vw, 1.2rem);
+    color: rgba(255, 255, 255, .78);
+    font-size: clamp(1.05rem, 1.45vw, 1.3rem);
     line-height: 1.75;
-    color: #55564f;
   }
-  .about-hero-signoff {
-    display: flex;
-    align-items: center;
-    gap: .55rem;
-    margin-top: 2rem;
-    color: var(--violet);
-    font-size: .62rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    white-space: nowrap;
+  .about-profile-portrait {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    margin: 0;
+    background: var(--paper);
   }
-  .about-hero-signoff i {
-    width: 1.2rem;
-    height: 1px;
-    background: var(--yellow);
+  .about-profile-portrait::after {
+    position: absolute;
+    inset: 45% 0 0;
+    background: linear-gradient(180deg, transparent, rgba(24, 25, 24, .72));
+    content: "";
   }
-  .about-hero-orbit {
+  .about-profile-portrait img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 54%; }
+  .about-profile-portrait figcaption {
+    position: absolute;
+    z-index: 1;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    left: 1.25rem;
+    color: rgba(255, 255, 255, .9);
+    font-size: .75rem;
+    letter-spacing: .06em;
+  }
+  .about-profile-mark {
     position: absolute;
     z-index: 0;
-    top: 4%;
-    right: -3%;
-    width: clamp(300px, 39vw, 550px);
-    aspect-ratio: 1;
-    opacity: .8;
-    pointer-events: none;
-    animation: about-orbit 45s linear infinite;
-  }
-  .about-hero-orbit span,
-  .about-profile-orbit span {
-    position: absolute;
-    inset: 3%;
-    border: 1px solid rgba(112, 83, 186, .2);
-    border-radius: 50%;
-  }
-  .about-hero-orbit span:nth-child(2) {
-    inset: 15% 0;
-    transform: rotate(45deg);
-  }
-  .about-hero-orbit span:nth-child(3) {
-    inset: 0 15%;
-    transform: rotate(-45deg);
-  }
-  .about-hero-sun {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 31%;
-    height: auto;
-    transform: translate(-50%, -50%);
-  }
-  .about-purpose {
-    position: relative;
-    overflow: hidden;
-  }
-  .about-purpose::after {
-    position: absolute;
-    right: -7rem;
-    bottom: -16rem;
-    width: 31rem;
-    height: 31rem;
-    border: 1px solid rgba(243, 216, 91, .2);
-    border-radius: 50%;
-    content: "";
+    top: -4rem;
+    right: 16%;
+    opacity: .14;
     pointer-events: none;
   }
-  .about-purpose .about-body {
+  .about-section { padding: clamp(4.5rem, 8vw, 7rem) 0; }
+  .about-background { background: var(--cream); }
+  .about-records { background: var(--paper); }
+  .about-publications { background: var(--cream); }
+  .about-section-heading { max-width: 760px; margin-bottom: clamp(2rem, 4vw, 3.5rem); }
+  .about-section-heading h2 {
+    max-width: 15ch;
+    margin: .7rem 0 0;
+    font-size: clamp(2.4rem, 5.3vw, 4.8rem);
+    letter-spacing: -.065em;
+    line-height: 1;
+  }
+  .about-focus-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .about-focus-card {
     position: relative;
-    z-index: 1;
-    grid-template-columns: minmax(180px, .8fr) minmax(0, 2fr);
-    gap: clamp(2rem, 8vw, 8rem);
-    padding: clamp(5rem, 10vw, 9rem) 0;
+    grid-column: span 2;
+    min-width: 0;
+    padding: clamp(1.25rem, 2.4vw, 2rem);
+    border: 1px solid var(--line);
+    background: var(--paper);
   }
-  .about-purpose-meta {
-    display: grid;
-    grid-template-rows: auto 1fr;
-    align-items: start;
-  }
-  .about-purpose-meta > span {
-    align-self: center;
-    justify-self: center;
-    color: rgba(255, 255, 255, .16);
-    font: 700 clamp(8rem, 16vw, 14rem)/.8 Manrope, Arial, sans-serif;
-    letter-spacing: -.1em;
-  }
-  .about-purpose .about-body h2 {
-    max-width: 800px;
-    font-size: clamp(3.5rem, 7.3vw, 6.8rem);
-    line-height: 1.02;
-  }
-  .about-purpose .about-body p {
-    max-width: 680px;
-  }
-  .about-bio {
-    display: grid;
-    grid-template-columns: minmax(260px, .9fr) minmax(0, 1.4fr);
-    gap: clamp(2.5rem, 8vw, 8rem);
-    align-items: center;
-    padding-top: clamp(5rem, 9vw, 8rem);
-    padding-bottom: clamp(5rem, 9vw, 8rem);
-    border-bottom: 1px solid var(--line);
-  }
-  .about-profile {
-    display: grid;
-    align-self: start;
-    gap: .85rem;
-  }
-  .about-profile-feature {
-    position: relative;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
+  .about-focus-card:first-child,
+  .about-focus-card:nth-child(2) { grid-column: span 3; }
+  .about-card-number { color: var(--violet); font-size: .75rem; font-weight: 700; letter-spacing: .1em; }
+  .about-card-label { margin: 1.5rem 0 .45rem; color: var(--muted); font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .about-focus-card h3,
+  .about-record-card h3 { margin: 0 0 .75rem; font-size: clamp(1.35rem, 2vw, 1.8rem); letter-spacing: -.04em; line-height: 1.15; }
+  .about-focus-card > p:last-child,
+  .about-record-card > p:not(.about-record-context) {
     margin: 0;
-    background: var(--ink);
-    color: var(--cream);
+    color: var(--muted);
+    font-size: .95rem;
+    line-height: 1.7;
   }
-  .about-profile-feature::after {
-    position: absolute;
-    inset: 30% 0 0;
-    background: linear-gradient(180deg, transparent, rgba(24, 25, 24, .84));
-    content: "";
+  .about-record-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .about-record-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: clamp(1.25rem, 2.2vw, 1.8rem);
+    border: 1px solid var(--line);
+    background: var(--cream);
   }
-  .about-profile-feature img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .about-profile-feature img {
-    object-position: center 54%;
-  }
-  .about-profile-feature figcaption {
-    position: absolute;
-    z-index: 1;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    padding: clamp(1.25rem, 3vw, 2rem);
-  }
-  .about-profile-feature .section-label {
-    color: #f3e99e;
-  }
-  .about-profile-feature h2 {
-    margin: .8rem 0 .45rem;
-    font: 700 clamp(2.2rem, 3.4vw, 3.4rem)/1 Manrope, Arial, sans-serif;
-    letter-spacing: -.08em;
-  }
-  .about-profile-feature figcaption > span {
-    color: rgba(255, 255, 255, .8);
-    font-size: .75rem;
-    letter-spacing: .04em;
-  }
-  .about-bio-copy {
-    padding: 1rem 0;
-  }
-  .about-bio-copy p {
-    max-width: 680px;
-    font-size: clamp(1rem, 1.25vw, 1.15rem);
-    line-height: 1.8;
-  }
-  .about-bio-copy p:last-of-type {
-    margin-bottom: 0;
+  .about-record-context {
+    min-height: 2.5em;
+    margin: 0 0 1rem;
     color: var(--violet);
-    font-weight: 600;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1.5;
+    text-transform: uppercase;
   }
-  .about-bio-link {
-    margin-top: .5rem;
+  .about-record-card h3 { font-size: clamp(1.25rem, 1.7vw, 1.55rem); }
+  .about-record-card > p:not(.about-record-context) { margin-bottom: 1.5rem; }
+  .about-record-card a,
+  .about-community-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    margin-top: auto;
     color: var(--ink);
-    transition: color .2s ease;
+    font-size: .85rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-underline-offset: .2em;
   }
-  .about-bio-link:hover {
-    color: var(--violet);
-  }
-  @keyframes about-orbit {
-    to { transform: rotate(360deg); }
+  .about-record-card a:hover,
+  .about-community-links a:hover { color: var(--violet); text-decoration: underline; }
+  .about-community { padding: clamp(4rem, 8vw, 7rem) 0; background: var(--ink); color: var(--paper); }
+  .about-community-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr); gap: clamp(2rem, 7vw, 7rem); }
+  .about-community h2 { max-width: 13ch; margin: .8rem 0 0; font-size: clamp(2.6rem, 5.5vw, 5rem); letter-spacing: -.065em; line-height: 1; }
+  .about-community-copy > p { max-width: 620px; margin: 0; color: rgba(255, 255, 255, .76); font-size: clamp(1rem, 1.35vw, 1.2rem); line-height: 1.75; }
+  .about-community-links { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; margin-top: 2rem; }
+  .about-community-links a { color: var(--paper); }
+  @media (max-width: 900px) {
+    .about-record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .about-community-inner { grid-template-columns: 1fr; }
   }
   @media (max-width: 760px) {
-    .about-section-nav-inner {
-      gap: .55rem;
-    }
-    .about-section-nav a {
-      gap: .3rem;
-      font-size: .52rem;
-      letter-spacing: .06em;
-    }
-    .about-section-nav a span {
-      font-size: .5rem;
-    }
-    .about-hero-inner {
-      padding-top: 3.5rem;
-      padding-bottom: 3.5rem;
-    }
-    .about-hero-grid {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-    }
-    .about-hero h1 {
-      margin-top: 2.5rem;
-      font-size: clamp(2.65rem, 10.6vw, 4.5rem);
-      line-height: 1;
-      letter-spacing: -.085em;
-    }
-    .about-hero-copy {
-      max-width: 540px;
-      padding-top: 0;
-    }
-    .about-work-nav {
-      position: relative;
-      top: auto;
-      right: auto;
-      width: 100%;
-      max-width: 540px;
-      margin-top: 2rem;
-    }
-    .about-hero-orbit {
-      top: 2%;
-      right: -30%;
-      width: 78vw;
-      opacity: .45;
-    }
-    .about-purpose .about-body {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-      padding: 4.5rem 0;
-    }
-    .about-purpose-meta {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-    }
-    .about-purpose-meta > span {
-      margin-top: 0;
-      font-size: 5rem;
-    }
-    .about-purpose .about-body h2 {
-      font-size: clamp(3rem, 10vw, 4.5rem);
-    }
-    .about-bio {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-    }
-    .about-profile-feature h2 {
-      font-size: clamp(3rem, 11vw, 4.25rem);
-    }
+    .about-section-nav-inner { gap: .75rem; }
+    .about-section-nav a { gap: .35rem; font-size: .56rem; letter-spacing: .05em; }
+    .about-profile-inner { grid-template-columns: 1fr; gap: 2rem; padding-top: 3.75rem; padding-bottom: 3.75rem; }
+    .about-profile-copy h1 { font-size: clamp(3rem, 11vw, 5rem); }
+    .about-profile-copy > p { font-size: 1rem; }
+    .about-profile-portrait { width: min(100%, 460px); aspect-ratio: 4 / 3; }
+    .about-profile-mark { top: 20%; right: -5rem; }
+    .about-focus-grid { grid-template-columns: 1fr; }
+    .about-focus-card,
+    .about-focus-card:first-child,
+    .about-focus-card:nth-child(2) { grid-column: auto; }
+    .about-record-grid { grid-template-columns: 1fr; }
+    .about-record-context { min-height: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .about-hero-orbit {
-      animation: none;
-    }
-    .about-bio-link {
-      transition: none;
-    }
+    .about-section-nav a,
+    .about-record-card a,
+    .about-community-links a { transition: none; }
   }
 </style>
