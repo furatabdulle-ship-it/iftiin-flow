@@ -21,7 +21,7 @@ export const pillars = [
 ] as const;
 
 export const formatNames: Record<string, string> = {
-  essay: 'Essay', note: 'IFTIIN Note', map: 'IFTIIN Map', deconstruct: 'Deconstruct',
+  essay: 'Essay', note: 'IFTIIN Note', map: 'Research Map', deconstruct: 'Deconstruct',
   research: 'Research Note', 'ai-domain': 'AI × Domain', capability: 'Capability Note',
   'field-note': 'Field Note', question: 'Questions Worth Asking', video: 'Video',
 };

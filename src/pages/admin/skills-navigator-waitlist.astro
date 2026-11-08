@@ -1,0 +1,263 @@
+---
+import ArrowIcon from '../../components/ArrowIcon.astro';
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { isSkillsNavigatorEmailConfigured } from '../../lib/password-reset-email';
+import { getWaitlistCounts, listWaitlistSubscribers } from '../../lib/skills-navigator-waitlist';
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect('/login/', 302);
+if (account.role !== 'admin') return Astro.redirect('/account/', 302);
+
+const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
+const pageSize = 25;
+const requestedPage = Number.parseInt(Astro.url.searchParams.get('page') ?? '1', 10);
+let currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+let { subscribers, total } = await listWaitlistSubscribers(pageSize, (currentPage - 1) * pageSize);
+const totalPages = Math.max(1, Math.ceil(total / pageSize));
+if (currentPage > totalPages) {
+  currentPage = totalPages;
+  ({ subscribers, total } = await listWaitlistSubscribers(pageSize, (currentPage - 1) * pageSize));
+}
+const counts = await getWaitlistCounts();
+const mailConfigured = isSkillsNavigatorEmailConfigured();
+const queryForPage = (page: number) => `${root('admin/skills-navigator-waitlist/')}?page=${page}`;
+const formatDate = (value: Date | string | null) => value
+  ? new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+  : '—';
+---
+
+<Base title="Skills-Navigator-Pilotanmeldungen">
+  <section class="section wrap waitlist-admin">
+    <header class="waitlist-admin-header">
+      <div>
+        <div class="section-label">Admin / Pilot</div>
+        <h1>Skills-Navigator-Pilot</h1>
+      </div>
+      <nav aria-label="Admin-Navigation">
+        <a href={root('admin/')}>Dashboard</a>
+        <a href={root('admin/products/')}>Inhalte &amp; Produkte</a>
+        <a href={root('admin/skills-navigator-waitlist/')} aria-current="page">Pilotanmeldungen</a>
+        <a href={root('')}>Website ansehen <ArrowIcon /></a>
+      </nav>
+    </header>
+
+    <div class="waitlist-stats">
+      <div><span>Bestätigt</span><strong>{counts.confirmed}</strong></div>
+      <div><span>Warten auf Bestätigung</span><strong>{counts.pending}</strong></div>
+    </div>
+
+    <section class="waitlist-panel" aria-labelledby="subscribers-heading">
+      <h2 id="subscribers-heading">Bestätigte Anmeldungen</h2>
+      <p>Nur bestätigte Einwilligungen sind auswählbar. Nicht bestätigte Anmeldungen werden nach sieben Tagen automatisch gelöscht. Bestätigte Daten werden spätestens zwölf Monate nach Bestätigung oder dem letzten Update gelöscht.</p>
+      {subscribers.length ? (
+        <>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" aria-label="Alle Einträge dieser Seite auswählen" data-select-all /></th>
+                  <th>E-Mail</th>
+                  <th>Sprache</th>
+                  <th>Einwilligung</th>
+                  <th>Letztes Update</th>
+                  <th>Löschung spätestens</th>
+                  <th><span class="visually-hidden">Aktionen</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {subscribers.map((subscriber) => (
+                  <tr data-subscriber-row>
+                    <td><input type="checkbox" value={subscriber.id} aria-label={`Pilot-Update an ${subscriber.email}`} data-subscriber-id /></td>
+                    <td><a href={`mailto:${subscriber.email}`}>{subscriber.email}</a></td>
+                    <td>{subscriber.locale.toUpperCase()}</td>
+                    <td>{formatDate(subscriber.consent_at)}</td>
+                    <td>{subscriber.last_update_sent_at ? formatDate(subscriber.last_update_sent_at) : 'Noch kein Update'}</td>
+                    <td>{formatDate(subscriber.retention_until)}</td>
+                    <td><button class="delete-button" type="button" data-delete-signup={subscriber.id}>Löschen</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <span>Seite {currentPage} von {totalPages} · {total} bestätigte Anmeldungen</span>
+            <div>
+              {currentPage > 1 && <a href={queryForPage(currentPage - 1)}>Zurück</a>}
+              {currentPage < totalPages && <a href={queryForPage(currentPage + 1)}>Weiter</a>}
+            </div>
+          </div>
+        </>
+      ) : (
+        <p>Es gibt derzeit keine bestätigten Pilotanmeldungen.</p>
+      )}
+    </section>
+
+    <section class="waitlist-panel mailer-panel" aria-labelledby="mailer-heading">
+      <h2 id="mailer-heading">Pilot-Update senden</h2>
+      <p>Versand erfolgt einzeln und in der jeweils bestätigten Sprache. Jede Nachricht enthält einen individuellen Abmeldelink. Es werden nur die oben ausgewählten Empfänger angeschrieben; maximal zehn pro Versand.</p>
+      {!mailConfigured && <p class="warning" role="alert">Gmail-OAuth ist nicht vollständig konfiguriert. Der Mailversand ist deaktiviert.</p>}
+      <form data-mailer-form data-endpoint={root('api/admin/skills-navigator-waitlist/update/')}>
+        <label>Betreff Deutsch
+          <input name="subjectDe" type="text" maxlength="120" required />
+        </label>
+        <label>Nachricht Deutsch
+          <textarea name="messageDe" rows="6" maxlength="5000" required></textarea>
+        </label>
+        <label>Subject English
+          <input name="subjectEn" type="text" maxlength="120" required />
+        </label>
+        <label>Message English
+          <textarea name="messageEn" rows="6" maxlength="5000" required></textarea>
+        </label>
+        <label class="send-consent">
+          <input name="confirm" type="checkbox" required />
+          <span>Ich bestätige, dass diese Nachricht ein zulässiges Skills-Navigator-Pilot-Update ist und ausschließlich die ausgewählten, bestätigten Empfänger erhalten.</span>
+        </label>
+        <button class="pill-link" type="submit" disabled={!mailConfigured}>Ausgewählte senden <ArrowIcon /></button>
+        <p class="mailer-message" role="status" aria-live="polite" data-mailer-message></p>
+      </form>
+    </section>
+  </section>
+</Base>
+
+<style>
+  .waitlist-admin-header{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:32px}
+  .waitlist-admin h1{margin:.5rem 0 0;font-size:clamp(2rem,5vw,4rem);letter-spacing:-.055em}
+  .waitlist-admin-header nav{display:flex;flex-wrap:wrap;gap:10px 18px}
+  .waitlist-admin-header nav a{color:inherit;text-underline-offset:.2em}
+  .waitlist-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:28px 0}
+  .waitlist-stats div{display:grid;gap:6px;padding:18px;border:1px solid var(--line);background:var(--paper)}
+  .waitlist-stats span{color:var(--muted);font-size:13px}
+  .waitlist-stats strong{font-size:28px}
+  .waitlist-panel{margin:28px 0;padding:24px;background:var(--paper);border:1px solid var(--line)}
+  .waitlist-panel h2{margin:0 0 10px}
+  .waitlist-panel > p{max-width:900px;color:var(--muted);line-height:1.6}
+  .table-wrap{overflow-x:auto;margin-top:24px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  th{font-size:12px;color:var(--muted)}
+  td a{color:inherit}
+  input[type="checkbox"]{width:18px;height:18px;accent-color:var(--violet)}
+  .delete-button{padding:7px 10px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer}
+  .pagination{display:flex;justify-content:space-between;gap:16px;margin-top:18px;font-size:14px}
+  .pagination div{display:flex;gap:16px}
+  .pagination a{color:inherit}
+  .mailer-panel form{display:grid;gap:16px;max-width:760px;margin-top:22px}
+  .mailer-panel label:not(.send-consent){display:grid;gap:6px;font-size:14px;font-weight:700}
+  .mailer-panel input[type="text"],.mailer-panel textarea{width:100%;padding:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit}
+  .send-consent{display:flex;align-items:flex-start;gap:10px;line-height:1.55}
+  .send-consent input{flex:0 0 auto;margin-top:3px}
+  .mailer-panel button{justify-self:start;border:0;cursor:pointer;font:inherit}
+  .mailer-panel button:disabled{opacity:.5;cursor:not-allowed}
+  .mailer-message{min-height:1.5em;margin:0;color:var(--muted)}
+  .warning{padding:12px;background:color-mix(in srgb,var(--yellow) 35%,transparent);color:var(--ink)!important}
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  @media(max-width:800px){.waitlist-admin-header{align-items:flex-start;flex-direction:column}.waitlist-panel{padding:16px}.pagination{flex-direction:column}}
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-mailer-form]');
+  const message = document.querySelector<HTMLElement>('[data-mailer-message]');
+  const selectAll = document.querySelector<HTMLInputElement>('[data-select-all]');
+  const subscriberBoxes = [...document.querySelectorAll<HTMLInputElement>('[data-subscriber-id]')];
+  const maximumRecipients = 10;
+
+  const showMessage = (text: string, isError = false) => {
+    if (!message) return;
+    message.textContent = text;
+    message.dataset.error = String(isError);
+  };
+
+  selectAll?.addEventListener('change', () => {
+    subscriberBoxes.forEach((box, index) => {
+      box.checked = selectAll.checked && index < maximumRecipients;
+    });
+    if (selectAll.checked && subscriberBoxes.length > maximumRecipients) {
+      showMessage('Pro Versand sind höchstens zehn Empfänger möglich.', true);
+    }
+  });
+
+  subscriberBoxes.forEach((box) => box.addEventListener('change', () => {
+    const selected = subscriberBoxes.filter((item) => item.checked);
+    if (selected.length > maximumRecipients) {
+      box.checked = false;
+      showMessage('Pro Versand sind höchstens zehn Empfänger möglich.', true);
+      return;
+    }
+    if (selectAll) selectAll.checked = subscriberBoxes.length > 0 && selected.length === subscriberBoxes.length;
+    showMessage('');
+  }));
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity() || !message) return;
+    const selected = subscriberBoxes.filter((box) => box.checked).map((box) => box.value);
+    if (!selected.length || selected.length > maximumRecipients) {
+      showMessage('Bitte wähle ein bis zehn Empfänger auf dieser Seite aus.', true);
+      return;
+    }
+    const data = new FormData(form);
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (submit) submit.disabled = true;
+    showMessage('Versand läuft …');
+    try {
+      const response = await fetch(form.dataset.endpoint ?? '', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscriberIds: selected,
+          subjectDe: data.get('subjectDe'),
+          messageDe: data.get('messageDe'),
+          subjectEn: data.get('subjectEn'),
+          messageEn: data.get('messageEn'),
+          confirm: data.get('confirm') === 'on',
+        }),
+      });
+      const result: unknown = await response.json();
+      if (typeof result === 'object' && result !== null && 'sentIds' in result && Array.isArray(result.sentIds)) {
+        const sentIds = result.sentIds.filter((id): id is string => typeof id === 'string');
+        subscriberBoxes.forEach((box) => {
+          if (sentIds.includes(box.value)) box.checked = false;
+        });
+        if (selectAll) selectAll.checked = false;
+        if ('failed' in result && typeof result.failed === 'number' && result.failed > 0
+          && 'sent' in result && typeof result.sent === 'number') {
+          showMessage(`${result.sent} E-Mail(s) versendet; ${result.failed} fehlgeschlagen. Erfolgreich versendete Empfänger wurden abgewählt.`, true);
+          return;
+        }
+        if (response.ok && 'sent' in result && typeof result.sent === 'number') {
+          showMessage(`${result.sent} E-Mail(s) versendet.`);
+          return;
+        }
+      }
+      const error = typeof result === 'object' && result !== null && 'error' in result && typeof result.error === 'string'
+        ? result.error
+        : 'Der Versand konnte nicht abgeschlossen werden.';
+      showMessage(error, true);
+    } catch {
+      showMessage('Der Versand konnte nicht abgeschlossen werden. Bitte prüfe den Versandstatus vor einem erneuten Versuch.', true);
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-delete-signup]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const id = button.dataset.deleteSignup;
+      if (!id || !window.confirm('Diese Pilotanmeldung und alle Abmeldetokens endgültig löschen?')) return;
+      button.disabled = true;
+      try {
+        const response = await fetch(`${form?.dataset.endpoint?.replace(/\/update\/?$/, '') ?? '/api/admin/skills-navigator-waitlist'}/${id}/`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('delete-failed');
+        button.closest('tr')?.remove();
+        showMessage('Anmeldung gelöscht.');
+      } catch {
+        button.disabled = false;
+        showMessage('Die Anmeldung konnte nicht gelöscht werden.', true);
+      }
+    });
+  });
+</script>

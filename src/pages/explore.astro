@@ -1,23 +1,18 @@
 ---
-import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import IftiinSun from '../components/brand/IftiinSun.astro';
-import { localeHref, localizedPillars, t } from '../lib/i18n';
-import { publishedArticles } from '../lib/content';
-import { getSessionAccount } from '../lib/auth';
-const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+import { t } from '../lib/i18n';
+import { exploreArticles } from '../lib/articles';
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
-const pillars = localizedPillars(locale);
-const articles = await publishedArticles(Boolean(account), locale);
-const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//,''), locale);
+const articles = await exploreArticles(locale);
 ---
 <Base title={copy('explore.title')} description={copy('explore.description')}>
   <section class="explore-opening wrap">
     <div class="explore-intro">
       <div class="section-label">{copy('explore.topicLabel')}</div>
-      <h1>{copy('explore.title')} <em>the thinking.</em></h1>
+      <h1>{copy('explore.title')}</h1>
       <p>{copy('explore.description')}</p>
     </div>
     <section class="explore-library" aria-labelledby="explore-articles-title">
@@ -37,12 +32,16 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
       </div>}
     </section>
   </section>
-  <section class="section wrap compact-section explore-topics">
-    <div class="pillars">{pillars.map(p => <a class="pillar-row" href={root(`topics/${p.slug}/`)}>
-      <span class="pillar-number">{p.number}</span>
-      <span class="pillar-main"><strong>{p.name}</strong><small>{p.description}</small></span>
-      <ArrowIcon class="pillar-arrow" />
-    </a>)}</div>
+  <section class="section wrap compact-section explore-topics" aria-labelledby="explore-themes-title">
+    <div class="explore-theme-list">
+      <h2 class="section-label" id="explore-themes-title">{copy('explore.topicLabel')}</h2>
+      <ul>
+        <li>{copy('explore.themeFutureSkills')}</li>
+        <li>{copy('explore.themeAiLiteracy')}</li>
+        <li>{copy('explore.themeMediaLiteracy')}</li>
+        <li>{copy('explore.themeStorytelling')}</li>
+      </ul>
+    </div>
   </section>
 </Base>
 
@@ -127,14 +126,27 @@ const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '
   .explore-article-list :global(.article-card:not(:first-child) .article-card-top .arrow) { color: var(--ink); }
   .explore-article-list :global(.article-card:not(:first-child) .article-card-bottom) { border-color: var(--line); }
   .explore-topics { padding-top: clamp(3rem, 6vw, 5rem); }
+  .explore-theme-list { border-top: 1px solid var(--ink); padding-top: 1rem; }
+  .explore-theme-list h2 { margin: 0 0 1rem; }
+  .explore-theme-list ul {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .explore-theme-list li { padding: .8rem 0; border-top: 1px solid var(--line); font-weight: 700; }
 
   @media (max-width: 800px) {
     .explore-opening { grid-template-columns: 1fr; gap: 2.5rem; }
     .explore-intro h1 { max-width: 11ch; }
+    .explore-theme-list ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 480px) {
     .explore-opening { gap: 2rem; }
     .explore-article-list :global(.article-card) { min-height: 300px; }
+    .explore-theme-list ul { grid-template-columns: 1fr; }
   }
 </style>

@@ -6,16 +6,18 @@ import { allArticles } from '../../lib/articles';
 import { listAdminProducts } from '../../lib/commerce';
 import { query } from '../../lib/db';
 import { getStudioInquiryCounts } from '../../lib/studio-inquiries';
+import { getWaitlistCounts } from '../../lib/skills-navigator-waitlist';
 
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 if (!account) return Astro.redirect('/login/', 302);
 if (account.role !== 'admin') return Astro.redirect('/account/', 302);
 
 const root = (path = '') => import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, '');
-const [articles, products, inquiryCounts, contentResult] = await Promise.all([
+const [articles, products, inquiryCounts, waitlistCounts, contentResult] = await Promise.all([
   allArticles(),
   listAdminProducts(),
   getStudioInquiryCounts(),
+  getWaitlistCounts(),
   query<{ total: string; published: string; draft: string; archived: string }>(
     `SELECT COUNT(*)::text AS total,
        COUNT(*) FILTER (WHERE status = 'published')::text AS published,
@@ -34,7 +36,7 @@ const uncategorizedActive = products.filter((product) => product.status === 'act
   <section class="section wrap admin-layout admin-dashboard">
     <div class="section-label">Admin / Übersicht</div>
     <h1>Alles <em>im Blick.</em></h1>
-    <p>Verwalte Redaktion, Shop und Studio an einem Ort. Über die Bereiche gelangst du direkt zu den vorhandenen Einstellungen und Bearbeitungsseiten.</p>
+    <p>Verwalte Redaktion, Shop, Anfragen und Pilotanmeldungen an einem Ort. Über die Bereiche gelangst du direkt zu den vorhandenen Einstellungen und Bearbeitungsseiten.</p>
 
     <div class="dashboard-grid">
       <article class="dashboard-card">
@@ -72,6 +74,17 @@ const uncategorizedActive = products.filter((product) => product.status === 'act
           <p class="dashboard-warning">{uncategorizedActive} aktive Produkte haben noch keine Kategorie.</p>
         )}
         <a class="pill-link" href={root('admin/products/?tab=products')}>Produkte einstellen <ArrowIcon /></a>
+      </article>
+
+      <article class="dashboard-card">
+        <p class="dashboard-kicker">Skills Navigator</p>
+        <h2>Pilotanmeldungen</h2>
+        <p class="dashboard-total">{waitlistCounts.confirmed + waitlistCounts.pending} Anmeldungen insgesamt</p>
+        <dl class="dashboard-stats">
+          <div><dt>Bestätigt</dt><dd>{waitlistCounts.confirmed}</dd></div>
+          <div><dt>Offen</dt><dd>{waitlistCounts.pending}</dd></div>
+        </dl>
+        <a class="pill-link" href={root('admin/skills-navigator-waitlist/')}>Pilot verwalten <ArrowIcon /></a>
       </article>
 
       <article class="dashboard-card">

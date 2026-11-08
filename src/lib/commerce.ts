@@ -30,7 +30,14 @@ export type ProductRecord = {
   status: 'draft' | 'active' | 'archived';
   coverAssetId: string | null;
   prices: ProductPrice[];
-  content: { id: string; slug: string; title: string; titleEn: string | null; contentType: string }[];
+  content: {
+    id: string;
+    slug: string;
+    title: string;
+    titleEn: string | null;
+    contentType: string;
+    fileFormat: string | null;
+  }[];
 };
 
 export type CheckoutProduct = Omit<ProductRecord, 'prices'> & ProductPrice;
@@ -99,10 +106,19 @@ const productSelection = `
          COALESCE((
            SELECT json_agg(json_build_object(
              'id', ci.id, 'slug', ci.slug, 'title', ci.title, 'titleEn', ci.title_en,
-             'contentType', ci.content_type
+             'contentType', ci.content_type,
+             'fileFormat', CASE sa.content_type
+               WHEN 'application/pdf' THEN 'PDF'
+               WHEN 'application/zip' THEN 'ZIP'
+               WHEN 'video/mp4' THEN 'MP4'
+               WHEN 'video/webm' THEN 'WebM'
+               WHEN 'video/quicktime' THEN 'MOV'
+               ELSE NULL
+             END
            ) ORDER BY ci.position, ci.title)
            FROM product_content pc
            JOIN content_items ci ON ci.id = pc.content_item_id
+           LEFT JOIN storage_assets sa ON sa.id = ci.storage_asset_id AND sa.status = 'ready'
            WHERE pc.product_id = p.id
          ), '[]'::json) AS content
   FROM products p

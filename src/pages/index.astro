@@ -3,28 +3,21 @@ import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import IftiinSun from '../components/brand/IftiinSun.astro';
-import HomeStudioTeaser from '../components/HomeStudioTeaser.astro';
-import { localeHref, localizedFormatNames, localizedPillars, t } from '../lib/i18n';
-import { featuredArticles } from '../lib/content';
-import { getSessionAccount } from '../lib/auth';
-const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+import { localeHref, localizedFormatNames, t } from '../lib/i18n';
+import { exploreArticles } from '../lib/articles';
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
-const pillars = localizedPillars(locale);
 const formatNames = localizedFormatNames(locale);
-const highlighted = await featuredArticles(3, Boolean(account), locale);
+const highlighted = await exploreArticles(locale, 3);
 const feature = highlighted[0];
-const featurePillar = feature ? pillars.find((pillar) => pillar.slug === feature.data.pillar) : undefined;
 const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
 const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/about/${file}`;
 ---
 <Base home description={copy('home.metaDescription')}>
   <nav class="home-section-nav" aria-label={copy('home.navLabel')}>
-    <a href={highlighted.length > 1 ? '#ideas' : '#top'}><span>01</span> {copy('home.visions')}</a>
-    <a href="#perspective"><span>02</span> {copy('home.perspective')}</a>
-    <a href="#explore"><span>03</span> {copy('common.explore')}</a>
-    <a href="#studio"><span>04</span> {copy('home.studioNav')}</a>
-    <a href="#invitation"><span>05</span> {copy('home.invitation')}</a>
+    <a href={root('explore/')}><span>01</span> {copy('common.explore')}</a>
+    <a href={root('store/')}><span>02</span> {copy('common.shop')}</a>
+    <a href={root('skills-navigator/')}><span>03</span> {copy('waitlist.title')}</a>
   </nav>
 
   <section class="hero" id="top" data-parallax>
@@ -51,47 +44,39 @@ const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/
 
     <div class="hero-layout">
       <div class="hero-copy">
-        <div class="section-label hero-kicker">Visions / Themes</div>
-        <h1 class="hero-title">
-          <span class="sr-only">Make sense of noise, AI, power, change and Future Skills.</span>
-          <span class="hero-line" aria-hidden="true"><span>Make sense</span></span>
-          <span class="hero-line" aria-hidden="true"><span class="outline">of</span></span>
-          <span class="hero-line rotator" aria-hidden="true"><span><span class="rotator-track" data-rotator>
-            <span>noise.</span><span>AI.</span><span>power.</span><span>change.</span><span>Future Skills.</span>
-          </span></span></span>
-        </h1>
-        <p class="hero-subheading">{copy('home.heroSubheading')}</p>
+        <div class="section-label hero-kicker">{copy('common.explore')}</div>
+        <h1 class="hero-title hero-title--statement">{copy('home.heroTitle')}</h1>
         <p class="hero-description">{copy('home.heroDescription')}</p>
         <div class="hero-ctas">
-          <a class="pill-link hero-cta-primary" href={root('explore/')}>{copy('home.magazineCta')} <ArrowIcon /></a>
-          <a class="hero-cta-secondary" href={root('studio/')}>{copy('home.studioHeroCta')} <ArrowIcon /></a>
+          <a class="pill-link hero-cta-primary" href={root('explore/')}>{copy('home.pillarsCta')} <ArrowIcon /></a>
+          <a class="hero-cta-secondary" href={root('skills-navigator/')}>{copy('home.navigatorCta')} <ArrowIcon /></a>
         </div>
         <ul class="hero-topics" aria-label={copy('home.topicsLabel')}>
-          {pillars.map((pillar) => <li>{pillar.name}</li>)}
+          {(['education', 'technology', 'storytelling'] as const).map((pillar) => <li>{copy(`home.pillar.${pillar}`)}</li>)}
         </ul>
       </div>
 
       <div class="hero-feature-column">
         {feature ? <a class="hero-feature-card" href={root(`articles/${feature.slug}/`)}>
           <div class="hero-feature-art">
-            <span>{featurePillar?.name ?? 'Visions / Themes'}</span>
+            <span>{formatNames[feature.data.format] || copy('article.formatFallback')}</span>
             <h2>{feature.data.title}</h2>
             <IftiinSun size={124} class="hero-feature-sun" />
           </div>
           <div class="hero-feature-body">
-            <div class="hero-feature-meta">{formatNames[feature.data.format] || copy('article.formatFallback')}{featurePillar ? ` · ${featurePillar.name}` : ''}</div>
+            <div class="hero-feature-meta">{formatNames[feature.data.format] || copy('article.formatFallback')}</div>
             <p>{feature.data.description}</p>
             <span class="hero-feature-link">{copy('home.articleRead')} <ArrowIcon /></span>
           </div>
-        </a> : <a class="hero-feature-card" href={root(`topics/${pillars[0].slug}/`)}>
+        </a> : <a class="hero-feature-card" href={root('explore/')}>
           <div class="hero-feature-art">
-            <span>{pillars[0].name}</span>
-            <h2>{pillars[0].name}</h2>
+            <span>{copy('common.explore')}</span>
+            <h2>{copy('common.explore')}</h2>
             <IftiinSun size={124} class="hero-feature-sun" />
           </div>
           <div class="hero-feature-body">
-            <div class="hero-feature-meta">Visions / Themes</div>
-            <p>{pillars[0].question}</p>
+            <div class="hero-feature-meta">{copy('explore.allArticles')}</div>
+            <p>{copy('explore.description')}</p>
             <span class="hero-feature-link">{copy('home.discoverTopics')} <ArrowIcon /></span>
           </div>
         </a>}
@@ -99,22 +84,18 @@ const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/
         <a class="hero-shop-card" href={root('store/')}>
           <div class="hero-shop-copy">
             <div class="section-label">{copy('store.label')}</div>
-            <h2>Visions into<br /><em>practice.</em></h2>
+            <h2>{copy('store.tagline')}</h2>
             <p>{copy('home.shopDescription')}</p>
-            <span>{copy('home.discover')} <ArrowIcon /></span>
+            <span>{copy('home.shopCta')} <ArrowIcon /></span>
           </div>
-          <div class="hero-workbook" aria-hidden="true">
-            <span>iftiin flow.</span>
-            <strong>VISIONS<br />INTO<br />PRACTICE.</strong>
-            <small>QUESTION. UNDERSTAND. ACT.</small>
-          </div>
+          <div class="hero-workbook" aria-hidden="true"><IftiinSun size={88} color="var(--violet)" /></div>
         </a>
       </div>
     </div>
 
     <div class="hero-foot">
       <span class="hero-foot-side">{copy('common.announcement')}</span>
-      <a class="badge" href="#explore" aria-label={copy('home.discoverTopics')}>
+      <a class="badge" href="#pillars" aria-label={copy('home.discoverTopics')}>
         <svg viewBox="0 0 140 140" aria-hidden="true">
           <defs><path id="badge-circle" d="M70,70 m-54,0 a54,54 0 1,1 108,0 a54,54 0 1,1 -108,0" /></defs>
           <text><textPath href="#badge-circle">UNDERSTAND · QUESTION · ACT · </textPath></text>
@@ -125,7 +106,16 @@ const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/
     </div>
   </section>
 
-  {locale === 'en' && <HomeStudioTeaser />}
+  <section class="home-navigator section wrap" id="skills-navigator" aria-labelledby="home-navigator-title">
+    <div class="section-label">{copy('waitlist.eyebrow')}</div>
+    <div class="home-navigator-content">
+      <h2 id="home-navigator-title">{copy('waitlist.title')}</h2>
+      <p class="home-navigator-question">{copy('waitlist.question')}</p>
+      <p>{copy('waitlist.description')}</p>
+      <p>{copy('waitlist.timeline')}</p>
+      <a class="pill-link" href={root('skills-navigator/')}>{copy('waitlist.cta')} <ArrowIcon /></a>
+    </div>
+  </section>
 
   {highlighted.length > 1 && <section class="section articles-section" id="ideas"><div class="wrap">
     <div class="section-heading"><div><div class="section-label">01 / {copy('home.visions')}</div><h2>Thoughts worth<br /><em>exploring.</em></h2></div><a href={root('explore/')} class="text-link">{copy('home.allArticles')} <ArrowIcon /></a></div>
@@ -163,20 +153,20 @@ const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/
     </div>
   </section>}
 
-  <section class="worlds" id="explore">
-    <div class="worlds-head"><div><div class="section-label">03 / {copy('common.explore')}</div><h2>{copy('home.worldsTitle')}<br /><span>{copy('home.worldsTitleSecond')}</span></h2></div>
-      <p>{copy('home.worldsDescription')}</p>
+  <section class="worlds home-pillars-section" id="pillars">
+    <div class="worlds-head"><div><div class="section-label">03 / {copy('home.pillarsLabel')}</div><h2>{copy('home.pillarsTitle')}</h2></div>
+      <p>{copy('home.pillarsIntro')}</p>
     </div>
-    <ul class="world-list">
-      {pillars.map(p => <li><a class="world" href={root(`topics/${p.slug}/`)}>
-        <span class="world-number">{p.number}</span>
-        <span class="world-body"><span class="world-name">{p.name}</span><span class="world-question">{p.question}</span></span>
-        <span class="world-arrow" aria-hidden="true"><ArrowIcon /></span>
-      </a></li>)}
+    <ul class="world-list home-pillars">
+      {(['education', 'technology', 'storytelling'] as const).map((pillar, index) => <li class="home-pillar">
+        <span class="world-number">{String(index + 1).padStart(2, '0')}</span>
+        <span class="world-body">
+          <h3 class="world-name">{copy(`home.pillar.${pillar}`)}</h3>
+          <p class="world-question">{copy(`home.pillar.${pillar}.description`)}</p>
+        </span>
+      </li>)}
     </ul>
   </section>
-
-  {locale === 'de' && <HomeStudioTeaser />}
 
   <section class="manifesto wrap" id="invitation"><div class="section-label">05 / {copy('home.invitation')}</div><div>
     <IftiinSun size={56} class="manifesto-sun" /><h2>Better questions.<br />Clearer thinking.<br /><em>More agency.</em></h2>

@@ -54,6 +54,20 @@ type ArticleRow = QueryResultRow & {
 
 const articleColumns = `id, slug, title, title_en, description, description_en, body_en, date, updated, pillar,
   format, status, featured, video_url, login_required, requires_purchase, tags, sources, body`;
+const exploreTopicPatterns = [
+  '%future skill%',
+  '%skills literacy%',
+  '%skills snapshot%',
+  '%zukunftskompetenz%',
+  '%ai literacy%',
+  '%ki-literacy%',
+  '%ki kompetenz%',
+  '%ki-kompetenz%',
+  '%artificial intelligence literacy%',
+  '%media literacy%',
+  '%medienkompetenz%',
+  '%storytelling%',
+];
 
 function fromRow(row: ArticleRow): ArticleRecord {
   const asDate = (value: Date | string | null) => {
@@ -125,6 +139,27 @@ export async function featuredArticles(limit = 3, includeLoginRequired = false, 
      ORDER BY featured DESC, date DESC
      LIMIT $1`,
     [limit, includeLoginRequired],
+  );
+  return result.rows.map(fromRow).map((article) => localizeArticle(article, locale));
+}
+
+export async function exploreArticles(
+  locale: Locale = 'de',
+  limit?: number,
+): Promise<ArticleRecord[]> {
+  const limitClause = limit === undefined ? '' : 'LIMIT $3';
+  const values: unknown[] = [['essay', 'map'], exploreTopicPatterns];
+  if (limit !== undefined) values.push(limit);
+  const result = await query<ArticleRow>(
+    `SELECT ${articleColumns} FROM articles
+     WHERE status = 'published' AND login_required = FALSE AND requires_purchase = FALSE
+       AND format = ANY($1::text[])
+       AND lower(concat_ws(' ', slug, title, title_en, description, description_en, array_to_string(tags, ' ')))
+         LIKE ANY($2::text[])
+       ${englishTranslationFilter(locale)}
+     ORDER BY featured DESC, date DESC, created_at DESC
+     ${limitClause}`,
+    values,
   );
   return result.rows.map(fromRow).map((article) => localizeArticle(article, locale));
 }

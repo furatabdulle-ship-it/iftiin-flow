@@ -47,6 +47,10 @@ export function isPasswordResetEmailConfigured(): boolean {
   return getPasswordResetEmailConfig() !== null;
 }
 
+export function isSkillsNavigatorEmailConfigured(): boolean {
+  return getPasswordResetEmailConfig() !== null;
+}
+
 async function getAccessToken(config: PasswordResetEmailConfig): Promise<string> {
   const response = await fetch(GOOGLE_TOKEN_URL, {
     method: 'POST',
@@ -155,7 +159,7 @@ export async function sendGuestAccessEmail(email: string, token: string, locale:
         accessUrl.toString(),
         '',
         'The link can only be used once. Your guest library will then stay signed in for up to 30 days.',
-        'You can request a new access link from the shop at any time.',
+        'You can request a new access link from Resources at any time.',
       ]
     : [
         'Dein Kauf ist bestätigt. Öffne diesen persönlichen Zugangslink innerhalb von 30 Minuten:',
@@ -163,12 +167,90 @@ export async function sendGuestAccessEmail(email: string, token: string, locale:
         accessUrl.toString(),
         '',
         'Der Link ist einmalig. Danach bleibt deine konto-freie Bibliothek bis zu 30 Tage angemeldet.',
-        'Über die Shopseite kannst du jederzeit einen neuen Zugangslink anfordern.',
+        'Über Resources kannst du jederzeit einen neuen Zugangslink anfordern.',
       ];
   await sendPlainTextEmail(
     config,
     email,
     locale === 'en' ? 'Your iftiin flow. access' : 'Dein iftiin flow. Zugang',
+    content,
+  );
+}
+
+export async function sendSkillsNavigatorConfirmationEmail(
+  email: string,
+  confirmationToken: string,
+  unsubscribeToken: string,
+  locale: Locale,
+): Promise<void> {
+  const config = getPasswordResetEmailConfig();
+  if (!config) throw new Error('Gmail API Skills Navigator settings are missing or invalid.');
+
+  const confirmationUrl = new URL('/skills-navigator/confirm/', config.siteUrl);
+  confirmationUrl.searchParams.set('token', confirmationToken);
+  confirmationUrl.searchParams.set('lang', locale);
+  const unsubscribeUrl = new URL('/skills-navigator/unsubscribe/', config.siteUrl);
+  unsubscribeUrl.searchParams.set('token', unsubscribeToken);
+  unsubscribeUrl.searchParams.set('lang', locale);
+  const content = locale === 'en'
+    ? [
+        'You requested pilot updates from IFTIIN Skills Navigator.',
+        'Confirm your email address within 24 hours:',
+        '',
+        confirmationUrl.toString(),
+        '',
+        'This is a pilot update list only, not a newsletter. If you did not sign up, you can ignore this email or remove the request here:',
+        unsubscribeUrl.toString(),
+      ]
+    : [
+        'Du hast Pilot-Updates zum IFTIIN Skills Navigator angefordert.',
+        'Bestätige deine E-Mail-Adresse innerhalb von 24 Stunden:',
+        '',
+        confirmationUrl.toString(),
+        '',
+        'Diese Liste dient ausschließlich Pilot-Updates und ist kein Newsletter. Wenn du dich nicht angemeldet hast, kannst du diese E-Mail ignorieren oder die Anmeldung hier löschen:',
+        unsubscribeUrl.toString(),
+      ];
+  await sendPlainTextEmail(
+    config,
+    email,
+    locale === 'en' ? 'Confirm your Skills Navigator pilot sign-up' : 'Pilotanmeldung für den Skills Navigator bestätigen',
+    content,
+  );
+}
+
+export async function sendSkillsNavigatorUpdateEmail(
+  email: string,
+  locale: Locale,
+  subject: string,
+  message: string,
+  unsubscribeToken: string,
+): Promise<void> {
+  const config = getPasswordResetEmailConfig();
+  if (!config) throw new Error('Gmail API Skills Navigator settings are missing or invalid.');
+
+  const unsubscribeUrl = new URL('/skills-navigator/unsubscribe/', config.siteUrl);
+  unsubscribeUrl.searchParams.set('token', unsubscribeToken);
+  unsubscribeUrl.searchParams.set('lang', locale);
+  const content = locale === 'en'
+    ? [
+        message,
+        '',
+        'You receive this email because you confirmed pilot updates from IFTIIN Skills Navigator.',
+        'Unsubscribe and delete your pilot sign-up:',
+        unsubscribeUrl.toString(),
+      ]
+    : [
+        message,
+        '',
+        'Du erhältst diese E-Mail, weil du Pilot-Updates zum IFTIIN Skills Navigator bestätigt hast.',
+        'Pilotanmeldung beenden und Daten löschen:',
+        unsubscribeUrl.toString(),
+      ];
+  await sendPlainTextEmail(
+    config,
+    email,
+    `${subject} – IFTIIN Skills Navigator`,
     content,
   );
 }

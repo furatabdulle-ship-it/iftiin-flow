@@ -1,5 +1,8 @@
 import { defineMiddleware } from 'astro:middleware';
 import type { Locale } from './lib/i18n';
+import { scheduleWaitlistCleanup } from './lib/skills-navigator-waitlist';
+
+scheduleWaitlistCleanup();
 
 function isLocale(value: string | undefined): value is Locale {
   return value === 'de' || value === 'en';

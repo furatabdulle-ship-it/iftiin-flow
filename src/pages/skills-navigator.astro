@@ -1,0 +1,161 @@
+---
+import ArrowIcon from '../components/ArrowIcon.astro';
+import Base from '../layouts/Base.astro';
+import { localeHref, t } from '../lib/i18n';
+import { isSkillsNavigatorEmailConfigured } from '../lib/password-reset-email';
+
+const locale = Astro.locals.locale;
+const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
+const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
+const emailConfigured = isSkillsNavigatorEmailConfigured();
+---
+
+<Base title={copy('waitlist.title')} description={copy('waitlist.metaDescription')}>
+  <section class="navigator-hero wrap">
+    <div class="section-label">{copy('waitlist.eyebrow')}</div>
+    <div class="navigator-content">
+      <h1>{copy('waitlist.title')}</h1>
+      <h2>{copy('waitlist.question')}</h2>
+      <p class="navigator-description">{copy('waitlist.description')}</p>
+      <p class="navigator-timeline">{copy('waitlist.timeline')}</p>
+      {!emailConfigured && <p class="waitlist-configuration-warning" role="alert">{copy('waitlist.mailUnavailable')}</p>}
+      <form class="waitlist-form" data-waitlist-form action={root('api/skills-navigator-waitlist/')} method="post">
+        <label for="waitlist-email">{copy('waitlist.emailLabel')}</label>
+        <input id="waitlist-email" name="email" type="email" autocomplete="email" maxlength="254" required />
+        <label class="waitlist-consent">
+          <input name="consent" type="checkbox" required />
+          <span>{copy('waitlist.consent')} <a href={root('datenschutz/')}>{copy('waitlist.privacyLink')}</a>.</span>
+        </label>
+        <div class="waitlist-trap" aria-hidden="true">
+          <label for="company-website">Website</label>
+          <input id="company-website" name="companyWebsite" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <button class="pill-link" type="submit" data-waitlist-submit disabled={!emailConfigured}><span data-waitlist-label>{copy('waitlist.submit')}</span> <ArrowIcon /></button>
+        <p class="waitlist-message" data-waitlist-message role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .navigator-hero {
+    display: grid;
+    grid-template-columns: minmax(180px, .7fr) minmax(0, 1.3fr);
+    gap: clamp(2rem, 7vw, 7rem);
+    padding-top: clamp(4rem, 10vw, 9rem);
+    padding-bottom: clamp(5rem, 12vw, 10rem);
+  }
+  .navigator-content { max-width: 760px; }
+  .navigator-content h1 {
+    max-width: 16ch;
+    margin: 0;
+    font-size: clamp(2.8rem, 6.5vw, 6rem);
+    letter-spacing: -.065em;
+    line-height: .98;
+  }
+  .navigator-content h2 {
+    max-width: 24ch;
+    margin: 1.5rem 0 0;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    line-height: 1.15;
+  }
+  .navigator-description {
+    max-width: 620px;
+    margin: 1.5rem 0 2.5rem;
+    color: var(--muted);
+    font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+    line-height: 1.65;
+  }
+  .navigator-timeline { margin: -1.5rem 0 2rem; color: var(--muted); line-height: 1.6; }
+  .waitlist-form { display: grid; max-width: 540px; gap: .75rem; }
+  .waitlist-form > label:first-child { font-size: .9rem; font-weight: 700; }
+  .waitlist-form input[type="email"] {
+    width: 100%;
+    min-height: 54px;
+    padding: .8rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+  }
+  .waitlist-consent { display: flex; align-items: flex-start; gap: .7rem; margin: .5rem 0 .4rem; line-height: 1.55; }
+  .waitlist-consent input { flex: 0 0 auto; width: 1.1rem; height: 1.1rem; margin-top: .2rem; accent-color: var(--violet); }
+  .waitlist-consent a { color: inherit; text-underline-offset: .2em; }
+  .waitlist-form .pill-link { justify-self: start; border: 0; cursor: pointer; font: inherit; }
+  .waitlist-form .pill-link:disabled { opacity: .5; cursor: not-allowed; }
+  .waitlist-message { min-height: 1.5em; margin: .25rem 0 0; color: var(--muted); }
+  .waitlist-message[data-error="true"] { color: #a32323; }
+  .waitlist-configuration-warning { padding: .8rem 1rem; border: 1px solid var(--line); color: var(--muted); line-height: 1.5; }
+  .waitlist-trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  @media (max-width: 700px) {
+    .navigator-hero { grid-template-columns: 1fr; gap: 2rem; }
+    .navigator-content h1 { font-size: clamp(2.7rem, 11vw, 4.5rem); }
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-waitlist-form]');
+  const message = document.querySelector<HTMLElement>('[data-waitlist-message]');
+  const submit = form?.querySelector<HTMLButtonElement>('[data-waitlist-submit]');
+  const submitLabel = form?.querySelector<HTMLElement>('[data-waitlist-label]');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity() || !message || !submit || !submitLabel) return;
+
+    const formData = new FormData(form);
+    const locale = document.documentElement.lang === 'en' ? 'en' : 'de';
+    const submittingText = locale === 'en' ? 'Submitting …' : 'Wird gesendet …';
+    const previousLabel = submitLabel.textContent;
+    submit.disabled = true;
+    submitLabel.textContent = submittingText;
+    message.textContent = '';
+    delete message.dataset.error;
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.get('email'),
+          consent: formData.get('consent') === 'on',
+          companyWebsite: formData.get('companyWebsite'),
+        }),
+      });
+      const result: unknown = await response.json();
+      if (
+        response.ok
+        && typeof result === 'object'
+        && result !== null
+        && 'success' in result
+        && result.success === true
+      ) {
+        message.textContent = locale === 'en'
+          ? 'Thank you. If the sign-up still needs confirmation, we will send a confirmation link. Please check your inbox.'
+          : 'Danke. Wenn die Anmeldung noch nicht bestätigt ist, senden wir einen Bestätigungslink. Bitte prüfe dein Postfach.';
+        form.reset();
+        return;
+      }
+
+      const error = typeof result === 'object'
+        && result !== null
+        && 'error' in result
+        && typeof result.error === 'string'
+        ? result.error
+        : locale === 'en'
+          ? 'Sign-up is temporarily unavailable. Please try again later.'
+          : 'Die Anmeldung ist momentan nicht verfügbar. Bitte versuche es später erneut.';
+      message.textContent = error;
+      message.dataset.error = 'true';
+    } catch {
+      message.textContent = locale === 'en'
+        ? 'Sign-up is temporarily unavailable. Please try again later.'
+        : 'Die Anmeldung ist momentan nicht verfügbar. Bitte versuche es später erneut.';
+      message.dataset.error = 'true';
+    } finally {
+      submit.disabled = false;
+      submitLabel.textContent = previousLabel;
+    }
+  });
+</script>

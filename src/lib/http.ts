@@ -110,3 +110,43 @@ export async function requestJson(request: Request, maxBytes = 512_000): Promise
     throw new RequestInputError('Die Anfrage enthält kein gültiges JSON.');
   }
 }
+
+export async function requestForm(request: Request, maxBytes = 4_096): Promise<Record<string, string>> {
+  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/x-www-form-urlencoded')) {
+    throw new RequestInputError('Die Anfrage muss Formulardaten enthalten.');
+  }
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > maxBytes) {
+    throw new RequestInputError('Die Anfrage ist zu groß.', 413);
+  }
+
+  const reader = request.body?.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  if (reader) {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        totalBytes += value.byteLength;
+        if (totalBytes > maxBytes) {
+          reader.cancel().catch((error: unknown) => {
+            console.error('Übergroßer Formular-Body konnte nicht abgebrochen werden:', error instanceof Error ? error.name : 'unknown');
+          });
+          throw new RequestInputError('Die Anfrage ist zu groß.', 413);
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return Object.fromEntries(new URLSearchParams(new TextDecoder().decode(bytes)));
+}
