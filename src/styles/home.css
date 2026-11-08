@@ -177,12 +177,6 @@
   font: 800 clamp(58px, 7.2vw, 104px)/.93 Manrope, Arial, sans-serif;
   letter-spacing: -.065em;
 }
-.hero-title--statement {
-  max-width: 16ch;
-  font-size: clamp(38px, 3.7vw, 50px);
-  letter-spacing: -.055em;
-  line-height: 1.08;
-}
 .hero-subheading {
   margin: 20px 0 0;
   color: var(--yellow);
