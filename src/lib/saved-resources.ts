@@ -50,7 +50,7 @@ export async function listSavedResources(userId: string, isAdmin = false): Promi
          $2::boolean
          OR (
            item.visibility = 'community'
-           AND NOT EXISTS (SELECT 1 FROM product_content pc WHERE pc.content_id = item.id)
+           AND NOT EXISTS (SELECT 1 FROM product_content pc WHERE pc.content_item_id = item.id)
          )
          OR EXISTS (
            SELECT 1

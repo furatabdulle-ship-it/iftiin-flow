@@ -86,7 +86,7 @@ if (account && hasAccess) {
          AND ci.visibility IN ('public', 'community')
          AND ci.content_type <> 'article'
          AND NOT EXISTS (
-           SELECT 1 FROM product_content pc WHERE pc.content_id = ci.id
+           SELECT 1 FROM product_content pc WHERE pc.content_item_id = ci.id
          )
        ORDER BY ci.position ASC, ci.updated_at DESC
        LIMIT 4`,
