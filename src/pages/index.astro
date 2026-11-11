@@ -2,28 +2,44 @@
 import ArrowIcon from '../components/ArrowIcon.astro';
 import Base from '../layouts/Base.astro';
 import ArticleCard from '../components/ArticleCard.astro';
-import IftiinSun from '../components/brand/IftiinSun.astro';
-import { localeHref, localizedFormatNames, t } from '../lib/i18n';
+import StorePriceOptions from '../components/StorePriceOptions.astro';
+import { localeHref, t } from '../lib/i18n';
 import { exploreArticles } from '../lib/articles';
-import { getSessionAccount } from '../lib/auth';
+import { listPublicProducts } from '../lib/commerce';
+import { isCheckoutConfigured } from '../lib/stripe';
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
-const formatNames = localizedFormatNames(locale);
-const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
-if (account) Astro.response.headers.set('Cache-Control', 'private, no-store');
-const highlighted = await exploreArticles(locale, 3, Boolean(account));
-const feature = highlighted[0];
+const articles = await exploreArticles(locale, 3);
+const availableProducts = isCheckoutConfigured() ? await listPublicProducts() : [];
+const products = availableProducts
+  .filter((product) =>
+    product.description.trim()
+    && product.content.length > 0
+    && (locale !== 'en' || (
+      product.nameEn
+      && product.descriptionEn
+      && product.content.every((item) => item.titleEn)
+    )),
+  )
+  .slice(0, 3);
+const typeNames: Record<string, string> = {
+  digital_download: copy('store.digitalDownload'),
+  premium_article: copy('store.premiumArticle'),
+  online_course: copy('store.onlineCourse'),
+  bundle: copy('store.bundle'),
+  membership: copy('store.membership'),
+};
 const root = (path = '') => localeHref(import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''), locale);
 const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/images/about/${file}`;
 ---
 <Base home description={copy('home.metaDescription')}>
   <nav class="home-section-nav" aria-label={copy('home.navLabel')}>
-    <a href={root('explore/')}><span>01</span> {copy('common.explore')}</a>
-    <a href={root('store/')}><span>02</span> {copy('common.shop')}</a>
-    <a href={root('skills-navigator/')}><span>03</span> {copy('waitlist.title')}</a>
+    <a href="#community"><span>01</span> {copy('common.community')}</a>
+    <a href="#ideas"><span>02</span> {copy('common.explore')}</a>
+    <a href={root('store/')}><span>03</span> {copy('common.shop')}</a>
   </nav>
 
-  <section class="hero" id="top" data-parallax>
+  <section class="hero hero--statement" id="top" data-parallax>
     <div class="orbit" aria-hidden="true" data-orbit>
       <svg viewBox="0 0 1000 1000">
         <g class="orbit-dotted"><circle cx="500" cy="500" r="470" fill="none" stroke="#fff" stroke-width="1" stroke-dasharray="1 12" opacity=".35" /></g>
@@ -45,129 +61,58 @@ const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/
       </svg>
     </div>
 
-    <div class="hero-layout">
+    <div class="hero-layout hero-layout--single">
       <div class="hero-copy">
-        <div class="section-label hero-kicker">{copy('common.explore')}</div>
-        <h1 class="hero-title">
-          <span class="sr-only">{copy('home.heroTitle')}</span>
-          <span class="hero-line" aria-hidden="true"><span>{locale === 'en' ? 'Make sense' : 'Verstehe'}</span></span>
-          {locale === 'en' && <span class="hero-line" aria-hidden="true"><span class="outline">of</span></span>}
-          <span class="hero-line rotator" aria-hidden="true"><span><span class="rotator-track" data-rotator>
-            {(locale === 'en'
-              ? ['noise.', 'AI.', 'power.', 'change.', 'Future Skills.']
-              : ['Medien.', 'KI.', 'Macht.', 'Wandel.', 'Future Skills.']
-            ).map((term) => <span>{term}</span>)}
-          </span></span></span>
-        </h1>
+        <div class="section-label hero-kicker">{copy('home.heroEyebrow')}</div>
+        <h1 class="hero-title hero-title--statement">{copy('home.heroTitle')}</h1>
         <p class="hero-description">{copy('home.heroDescription')}</p>
         <div class="hero-ctas">
-          <a class="pill-link hero-cta-primary" href={root('explore/')}>{copy('home.pillarsCta')} <ArrowIcon /></a>
-          <a class="hero-cta-secondary" href={root('skills-navigator/')}>{copy('home.navigatorCta')} <ArrowIcon /></a>
+          <a class="pill-link hero-cta-primary" href={root('community/')}>{copy('home.communityCta')} <ArrowIcon /></a>
+          <a class="hero-cta-secondary" href={root('explore/')}>{copy('home.exploreCta')} <ArrowIcon /></a>
         </div>
-        <ul class="hero-topics" aria-label={copy('home.topicsLabel')}>
-          {(['education', 'technology', 'storytelling'] as const).map((pillar) => <li>{copy(`home.pillar.${pillar}`)}</li>)}
+        <p class="home-hero-access-note">{copy('home.heroAccessNote')}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-community" id="community" aria-labelledby="home-community-title">
+    <div class="wrap home-community-grid">
+      <div class="home-community-copy">
+        <p class="section-label">{copy('home.communitySectionEyebrow')}</p>
+        <h2 id="home-community-title">{copy('home.communitySectionTitle')}</h2>
+        <p class="home-community-lede">{copy('home.communitySectionDescription')}</p>
+        <a class="pill-link home-community-cta" href={root('community/')}>{copy('home.communityCta')} <ArrowIcon /></a>
+      </div>
+      <div class="home-community-panel">
+        <ul class="home-community-benefits">
+          <li>{copy('home.communityBenefitSkills')}</li>
+          <li>{copy('home.communityBenefitPossibilities')}</li>
+          <li>{copy('home.communityBenefitExchange')}</li>
         </ul>
+        <p class="home-community-note">{copy('home.communityAccessNote')}</p>
+        <a class="home-community-free-link" href={root('explore/')}>{copy('home.freeContentLink')} <ArrowIcon /></a>
       </div>
-
-      <div class="hero-feature-column">
-        {feature ? <a class="hero-feature-card" href={root(`articles/${feature.slug}/`)}>
-          <div class="hero-feature-art">
-            <span>{formatNames[feature.data.format] || copy('article.formatFallback')}</span>
-            <h2>{feature.data.title}</h2>
-            <IftiinSun size={124} class="hero-feature-sun" />
-          </div>
-          <div class="hero-feature-body">
-            <div class="hero-feature-meta">{formatNames[feature.data.format] || copy('article.formatFallback')}</div>
-            <p>{feature.data.description}</p>
-            <span class="hero-feature-link">{copy('home.articleRead')} <ArrowIcon /></span>
-          </div>
-        </a> : <a class="hero-feature-card" href={root('explore/')}>
-          <div class="hero-feature-art">
-            <span>{copy('common.explore')}</span>
-            <h2>{copy('common.explore')}</h2>
-            <IftiinSun size={124} class="hero-feature-sun" />
-          </div>
-          <div class="hero-feature-body">
-            <div class="hero-feature-meta">{copy('explore.allArticles')}</div>
-            <p>{copy('explore.description')}</p>
-            <span class="hero-feature-link">{copy('home.discoverTopics')} <ArrowIcon /></span>
-          </div>
-        </a>}
-
-        <a class="hero-shop-card" href={root('store/')}>
-          <div class="hero-shop-copy">
-            <div class="section-label">{copy('store.label')}</div>
-            <h2>{copy('store.tagline')}</h2>
-            <p>{copy('home.shopDescription')}</p>
-            <span>{copy('home.shopCta')} <ArrowIcon /></span>
-          </div>
-          <div class="hero-workbook" aria-hidden="true"><IftiinSun size={88} color="var(--violet)" /></div>
-        </a>
-      </div>
-    </div>
-
-    <div class="hero-foot">
-      <span class="hero-foot-side">{copy('common.announcement')}</span>
-      <a class="badge" href="#pillars" aria-label={copy('home.discoverTopics')}>
-        <svg viewBox="0 0 140 140" aria-hidden="true">
-          <defs><path id="badge-circle" d="M70,70 m-54,0 a54,54 0 1,1 108,0 a54,54 0 1,1 -108,0" /></defs>
-          <text><textPath href="#badge-circle">UNDERSTAND · QUESTION · ACT · </textPath></text>
-        </svg>
-        <span class="badge-arrow" aria-hidden="true"><ArrowIcon direction="down" /></span>
-      </a>
-      <span class="hero-foot-side hero-foot-side--right">{copy('home.understand')}</span>
     </div>
   </section>
 
-  <section class="home-navigator section wrap" id="skills-navigator" aria-labelledby="home-navigator-title">
-    <div class="section-label">{copy('waitlist.eyebrow')}</div>
-    <div class="home-navigator-content">
-      <h2 id="home-navigator-title">{copy('waitlist.title')}</h2>
-      <p class="home-navigator-question">{copy('waitlist.question')}</p>
-      <p>{copy('waitlist.description')}</p>
-      <p>{copy('waitlist.timeline')}</p>
-      <a class="pill-link" href={root('skills-navigator/')}>{copy('waitlist.cta')} <ArrowIcon /></a>
+  <section class="section articles-section home-free-section" id="ideas">
+    <div class="wrap">
+      <div class="section-heading">
+        <div>
+          <div class="section-label">01 / {copy('home.freeKnowledgeEyebrow')}</div>
+          <h2>{copy('home.freeKnowledgeTitle')}</h2>
+          <p>{copy('home.freeKnowledgeDescription')}</p>
+        </div>
+        <a href={root('explore/')} class="text-link">{copy('home.allArticles')} <ArrowIcon /></a>
+      </div>
+      {articles.length > 0
+        ? <div class="card-grid">{articles.map(article => <ArticleCard article={article} />)}</div>
+        : <p class="home-free-empty">{copy('explore.emptyDescription')}</p>}
     </div>
   </section>
-
-  {highlighted.length > 1 && <section class="section articles-section" id="ideas"><div class="wrap">
-    <div class="section-heading"><div><div class="section-label">01 / {copy('home.visions')}</div><h2>Thoughts worth<br /><em>exploring.</em></h2></div><a href={root('explore/')} class="text-link">{copy('home.allArticles')} <ArrowIcon /></a></div>
-    <div class="card-grid">{highlighted.slice(1).map(article => <ArticleCard article={article} />)}</div>
-  </div></section>}
-
-  <section class="dark-section" id="perspective"><div class="wrap intro-layout">
-    <div class="section-label light">02 / Our perspective</div>
-    <div>
-      <h2>Think deeply.<br /><i>Create what’s next.</i></h2>
-      <p>{copy('home.perspectiveCopyFirst')}</p>
-      <p>{copy('home.perspectiveCopySecond')}</p>
-      <p>{copy('home.perspectiveCopyThird')}</p>
-      <a class="text-link light" href={root('about/')}>{copy('home.perspectiveLink')} <ArrowIcon /></a>
-    </div>
-  </div></section>
-
-  {locale === 'en' && <section class="home-founder" aria-labelledby="home-founder-title">
-    <div class="wrap home-founder-inner">
-      <figure class="home-founder-portrait">
-        <img
-          src={media('furat-summit.jpg')}
-          alt="Furat Abdulle at the Black Girls Tech Summit 2025"
-          loading="lazy"
-          decoding="async"
-        />
-        <figcaption>Black Girls Tech Summit 2025</figcaption>
-      </figure>
-      <div class="home-founder-copy">
-        <div class="section-label">{copy('home.founderEyebrow')}</div>
-        <h2 id="home-founder-title">Furat Abdulle</h2>
-        <p>{copy('home.founderDescription')}</p>
-        <a class="text-link light" href={root('about/')}>{copy('home.founderLink')} <ArrowIcon /></a>
-      </div>
-    </div>
-  </section>}
 
   <section class="worlds home-pillars-section" id="pillars">
-    <div class="worlds-head"><div><div class="section-label">03 / {copy('home.pillarsLabel')}</div><h2>{copy('home.pillarsTitle')}</h2></div>
+    <div class="worlds-head"><div><div class="section-label">02 / {copy('home.pillarsLabel')}</div><h2>{copy('home.pillarsTitle')}</h2></div>
       <p>{copy('home.pillarsIntro')}</p>
     </div>
     <ul class="world-list home-pillars">
@@ -181,9 +126,62 @@ const media = (file: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/
     </ul>
   </section>
 
-  <section class="manifesto wrap" id="invitation"><div class="section-label">05 / {copy('home.invitation')}</div><div>
-    <IftiinSun size={56} class="manifesto-sun" /><h2>Better questions.<br />Clearer thinking.<br /><em>More agency.</em></h2>
-    <p>{copy('home.manifestoDescription')}</p>
-    <a class="pill-link" href={root('explore/')}>{copy('home.discoverTopics')} <ArrowIcon /></a>
-  </div></section>
+  {products.length > 0 && <section class="section home-resources" id="resources" aria-labelledby="home-resources-title">
+    <div class="wrap">
+      <div class="section-heading">
+        <div>
+          <div class="section-label">03 / {copy('home.resourcesEyebrow')}</div>
+          <h2 id="home-resources-title">{copy('home.resourcesTitle')}</h2>
+          <p>{copy('home.resourcesDescription')}</p>
+        </div>
+        <a href={root('store/')} class="text-link">{copy('home.shopCta')} <ArrowIcon /></a>
+      </div>
+      <div class="home-products-grid">
+        {products.map((product) => {
+          const name = locale === 'en' ? product.nameEn ?? product.name : product.name;
+          const description = locale === 'en' ? product.descriptionEn : product.description;
+          return <article class="home-product-card">
+            {product.coverAssetId && <img
+              class="home-product-cover"
+              src={root(`api/store/products/${encodeURIComponent(product.slug)}/cover/`)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />}
+            <p class="home-product-type">{typeNames[product.productType]}</p>
+            <h3>{name}</h3>
+            <p class="home-product-description">{description}</p>
+            <StorePriceOptions product={product} mode="summary" />
+            <a class="home-product-link" href={root(`store/${encodeURIComponent(product.slug)}/`)}>
+              {copy('store.viewProduct')} <ArrowIcon />
+            </a>
+          </article>;
+        })}
+      </div>
+    </div>
+  </section>}
+
+  <section class="home-founder home-proof" aria-labelledby="home-founder-title">
+    <div class="wrap home-founder-inner">
+      <figure class="home-founder-portrait">
+        <img
+          src={media('furat-summit.jpg')}
+          alt={copy('home.founderImageAlt')}
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>{copy('home.founderImageCaption')}</figcaption>
+      </figure>
+      <div class="home-founder-copy">
+        <div class="section-label">{copy('home.founderEyebrow')}</div>
+        <h2 id="home-founder-title">Furat Abdulle</h2>
+        <p>{copy('home.founderDescription')}</p>
+        <div class="home-references">
+          <p class="section-label">{copy('home.referencesEyebrow')}</p>
+          <p>{copy('home.referencesDescription')}</p>
+        </div>
+        <a class="text-link light" href={root('about/#appearances')}>{copy('home.founderLink')} <ArrowIcon /></a>
+      </div>
+    </div>
+  </section>
 </Base>

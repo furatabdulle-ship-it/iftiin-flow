@@ -154,7 +154,8 @@ const firstName = account?.displayName.trim().split(/\s+/)[0] || (locale === 'en
           <h1>{localized('community.landingHeadline')}</h1>
           <p class="community-lede">{localized('community.landingDescription')}</p>
           <div class="community-actions">
-            <a class="pill-link" href={root('store/?type=online_course')}>{localized('community.courseCta')}<ArrowIcon /></a>
+            <a class="pill-link" href={root('explore/')}>{localized('community.exploreCta')}<ArrowIcon /></a>
+            <a class="community-secondary-link" href={root('store/?type=online_course')}>{localized('community.courseCta')}<ArrowIcon /></a>
             <a class="community-secondary-link" href={root('community/sprints/')}>{localized('community.sprintsCta')}<ArrowIcon /></a>
             {!account && <a class="community-secondary-link" href={root('login/?next=%2Fcommunity%2F')}>{localized('community.signInCta')}<ArrowIcon /></a>}
           </div>
@@ -173,6 +174,7 @@ const firstName = account?.displayName.trim().split(/\s+/)[0] || (locale === 'en
           <h2>{localized('community.knowledgeTitle')}</h2>
           <p>{localized('community.knowledgeDescription')}</p>
           <div class="community-pillar-topics"><span>Future Skills</span><span>AI Literacy</span><span>Media Literacy</span><span>Storytelling &amp; Communication</span></div>
+          <a href={root('explore/')}>{localized('community.exploreCta')}<ArrowIcon /></a>
         </article>
         <article class="community-pillar">
           <span class="community-pillar-number">02</span>
