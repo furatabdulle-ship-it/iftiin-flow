@@ -1,7 +1,7 @@
 ---
 import ArrowIcon from './ArrowIcon.astro';
 import type { ProductRecord } from '../lib/commerce';
-import { t } from '../lib/i18n';
+import { localeHref, t } from '../lib/i18n';
 
 interface Props {
   product: ProductRecord;
@@ -24,30 +24,42 @@ const formatPrice = (amount: number, currency: string) => new Intl.NumberFormat(
   style: 'currency',
   currency: currency.toUpperCase(),
 }).format(amount / 100);
+const courseRequiresAccount = product.productType === 'online_course';
+const registrationNext = encodeURIComponent(`${Astro.url.pathname}${Astro.url.search}`);
+const registerHref = localeHref(`/register/?next=${registrationNext}`, locale);
+const loginHref = localeHref(`/login/?next=${registrationNext}`, locale);
 ---
 <div class:list={['store-price-options', `store-price-options--${mode}`]} data-store-price-options data-checkout-preparing={copy('store.checkoutPreparing')} data-checkout-error={copy('store.checkoutError')}>
   {product.prices.map((price) => <div class="store-price-option">
     <strong>{formatPrice(price.amountCents, price.currency)}{price.billingInterval !== 'one_time' ? ` / ${price.billingInterval === 'month' ? copy('store.month') : copy('store.year')}` : ` ${copy('store.oneTime')}`}</strong>
     {mode === 'checkout' && <>
-      {!signedIn && <label class="guest-email-label">
-        {copy('store.emailForAccess')}
-        <input class="guest-email" type="email" autocomplete="email" maxlength="254" required />
-      </label>}
-      <button
-        class="pill-link checkout-button"
-        type="button"
-        data-product-id={product.id}
-        data-price-id={price.priceId}
-        disabled={!checkoutReady || (!signedIn && !guestAccessReady)}
-      >
-        {checkoutReady
-          ? (!signedIn && !guestAccessReady
-            ? copy('store.emailAccessUnavailable')
-            : signedIn
-            ? (price.billingInterval === 'one_time' ? copy('store.buySecurely') : copy('store.startSubscription'))
-            : (price.billingInterval === 'one_time' ? copy('store.buyWithoutAccount') : copy('store.startGuestSubscription')))
-          : copy('store.checkoutUnavailable')} <ArrowIcon />
-      </button>
+      {courseRequiresAccount && !signedIn ? (
+        <div class="course-account-required">
+          <p>{copy('store.courseAccountRequired')}</p>
+          <a class="pill-link" href={registerHref}>{copy('account.createAccount')} <ArrowIcon /></a>
+          <a class="course-sign-in" href={loginHref}>{copy('community.signInCta')} <ArrowIcon /></a>
+        </div>
+      ) : <>
+        {!signedIn && <label class="guest-email-label">
+          {copy('store.emailForAccess')}
+          <input class="guest-email" type="email" autocomplete="email" maxlength="254" required />
+        </label>}
+        <button
+          class="pill-link checkout-button"
+          type="button"
+          data-product-id={product.id}
+          data-price-id={price.priceId}
+          disabled={!checkoutReady || (!signedIn && !guestAccessReady)}
+        >
+          {checkoutReady
+            ? (!signedIn && !guestAccessReady
+              ? copy('store.emailAccessUnavailable')
+              : signedIn
+              ? (price.billingInterval === 'one_time' ? copy('store.buySecurely') : copy('store.startSubscription'))
+              : (price.billingInterval === 'one_time' ? copy('store.buyWithoutAccount') : copy('store.startGuestSubscription')))
+            : copy('store.checkoutUnavailable')} <ArrowIcon />
+        </button>
+      </>}
     </>}
   </div>)}
 </div>
@@ -97,4 +109,8 @@ const formatPrice = (amount: number, currency: string) => new Intl.NumberFormat(
   .guest-email-label { display: grid; width: 100%; gap: .35rem; font-size: .9rem; }
   .guest-email { width: 100%; min-height: 42px; padding: .5rem .7rem; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: inherit; font: inherit; }
   .store-checkout-status { margin: .75rem 0 0; }
+  .course-account-required { display: grid; justify-items: start; gap: .75rem; }
+  .course-account-required p { margin: 0; color: var(--muted); line-height: 1.6; }
+  .course-account-required .pill-link { justify-content: center; }
+  .course-sign-in { font-weight: 700; text-underline-offset: 3px; }
 </style>

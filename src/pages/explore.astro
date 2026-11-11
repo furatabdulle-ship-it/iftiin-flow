@@ -4,9 +4,12 @@ import ArticleCard from '../components/ArticleCard.astro';
 import IftiinSun from '../components/brand/IftiinSun.astro';
 import { t } from '../lib/i18n';
 import { exploreArticles } from '../lib/articles';
+import { getSessionAccount } from '../lib/auth';
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
-const articles = await exploreArticles(locale);
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (account) Astro.response.headers.set('Cache-Control', 'private, no-store');
+const articles = await exploreArticles(locale, undefined, Boolean(account));
 ---
 <Base title={copy('explore.title')} description={copy('explore.description')}>
   <section class="explore-opening wrap">

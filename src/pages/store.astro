@@ -12,9 +12,11 @@ import { localeHref, t } from '../lib/i18n';
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const availableProducts = await listPublicProducts();
+const courseOnly = Astro.url.searchParams.get('type') === 'online_course';
 const products = availableProducts.filter((product) =>
   product.description.trim()
   && product.content.length > 0
+  && (!courseOnly || product.productType === 'online_course')
   && (locale !== 'en' || (
     product.nameEn
     && product.descriptionEn
@@ -77,8 +79,8 @@ const typeNames: Record<string, string> = {
       })}
     </div> : <div class="empty-state">
       <IftiinSun class="empty-symbol" color="var(--violet)" />
-      <h2>{copy('store.emptyTitle')}</h2>
-      <p>{copy('store.emptyDescription')}</p>
+      <h2>{courseOnly ? copy('store.noOnlineCoursesTitle') : copy('store.emptyTitle')}</h2>
+      <p>{courseOnly ? copy('store.noOnlineCoursesDescription') : copy('store.emptyDescription')}</p>
     </div>}
     {!account && checkoutReady && guestAccessReady && <p class="guest-access-note">
       {copy('store.accessAfterPurchase')}

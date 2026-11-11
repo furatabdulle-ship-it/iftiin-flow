@@ -1,0 +1,78 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { communityInterestValues, listCommunityMembers, type CommunityInterest } from '../../lib/community';
+import { localeHref } from '../../lib/i18n';
+
+const locale = Astro.locals.locale;
+const en = locale === 'en';
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect(localeHref('/login/?next=/community/members/', locale), 302);
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+const search = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 80);
+const requestedInterest = Astro.url.searchParams.get('interest') ?? '';
+const interest = communityInterestValues.includes(requestedInterest as CommunityInterest)
+  ? requestedInterest as CommunityInterest
+  : '';
+const members = await listCommunityMembers({ search, interest });
+const interestLabels: Record<string, string> = {
+  'future-skills': en ? 'Future Skills' : 'Zukunftskompetenzen',
+  'ai-literacy': en ? 'AI Literacy' : 'KI-Kompetenz',
+  'media-literacy': en ? 'Media Literacy' : 'Medienkompetenz',
+  storytelling: 'Storytelling',
+};
+const interestOptions = communityInterestValues.map((value) => ({
+  value,
+  label: interestLabels[value],
+}));
+---
+<Base title={en ? 'Community members' : 'Community-Mitglieder'}>
+  <section class="interior-hero wrap community-hero">
+    <div class="section-label">{en ? 'Member directory' : 'Mitgliederverzeichnis'}</div>
+    <h1>{en ? 'Meet the community.' : 'Lerne die Community kennen.'}</h1>
+    <p>{en
+      ? 'Profiles are shared only by members who choose to appear here. Each person controls which details are visible.'
+      : 'Hier erscheinen nur Mitglieder, die ihr Profil bewusst teilen. Jede Person entscheidet selbst, welche Angaben sichtbar sind.'}</p>
+    <p class="community-actions"><a class="pill-link" href={localeHref('/community/profile/', locale)}>{en ? 'Manage my profile' : 'Mein Profil verwalten'}</a></p>
+    <form class="community-member-filters" method="get" action={localeHref('/community/members/', locale)}>
+      <label>
+        {en ? 'Search shared profiles' : 'Freigegebene Profile durchsuchen'}
+        <input type="search" name="q" maxlength="80" value={search} placeholder={en ? 'Name, focus or expertise' : 'Name, Schwerpunkt oder Fachgebiet'} />
+      </label>
+      <label>
+        {en ? 'Interest' : 'Interesse'}
+        <select name="interest">
+          <option value="">{en ? 'All interests' : 'Alle Interessen'}</option>
+          {interestOptions.map((option) => <option value={option.value} selected={interest === option.value}>{option.label}</option>)}
+        </select>
+      </label>
+      <button class="pill-link" type="submit">{en ? 'Filter members' : 'Mitglieder filtern'}</button>
+    </form>
+    {members.length ? <div class="community-members">
+      {members.map((member) => <article class="community-member">
+        {member.profilePictureUrl && <img class="community-member-photo" src={member.profilePictureUrl} alt={member.displayName || (en ? 'Community member' : 'Community-Mitglied')} loading="lazy" referrerpolicy="no-referrer" />}
+        <h2>{member.displayName || (en ? 'Community member' : 'Community-Mitglied')}</h2>
+        {member.headline && <p><strong>{member.headline}</strong></p>}
+        {member.bio && <p>{member.bio}</p>}
+        {member.location && <p>{member.location}</p>}
+        {member.website && <p><a href={member.website} target="_blank" rel="noopener noreferrer">{member.website}</a></p>}
+        {member.linkedinUrl && <p><a href={member.linkedinUrl} target="_blank" rel="noopener noreferrer">LinkedIn</a></p>}
+        {member.interests?.length && <p><strong>{en ? 'Interests' : 'Interessen'}:</strong> {member.interests.map((interest) => interestLabels[interest] ?? interest).join(', ')}</p>}
+        {member.expertise?.length && <p><strong>{en ? 'Areas of expertise' : 'Fachgebiete'}:</strong> {member.expertise.join(', ')}</p>}
+      </article>)}
+    </div> : <p class="community-empty">{en
+      ? 'No members have chosen to share a profile yet.'
+      : 'Noch hat niemand entschieden, ein Profil zu teilen.'}</p>}
+  </section>
+</Base>
+
+<style>
+  @import '../../styles/account.css';
+  .community-member-photo{display:block;width:88px;height:88px;margin-bottom:16px;border-radius:50%;object-fit:cover;background:var(--line)}
+  .community-member-filters{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(180px,.8fr) auto;align-items:end;gap:12px;margin:26px 0}
+  .community-member-filters label{display:grid;gap:6px;font-size:13px;font-weight:700}
+  .community-member-filters input,.community-member-filters select{min-width:0;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:5px;background:var(--paper);color:var(--ink);font:inherit;font-weight:400}
+  .community-member-filters .pill-link{justify-content:center;min-height:44px;padding:12px 16px;white-space:nowrap}
+  @media(max-width:700px){.community-member-filters{grid-template-columns:1fr}.community-member-filters .pill-link{justify-self:start}}
+</style>

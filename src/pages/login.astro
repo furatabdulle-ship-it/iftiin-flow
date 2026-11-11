@@ -3,27 +3,30 @@ import ArrowIcon from '../components/ArrowIcon.astro';
 import AuthForm from '../components/AuthForm.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
-import { isPasswordResetEmailConfigured } from '../lib/password-reset-email';
 import { localeHref, t } from '../lib/i18n';
+import { safeNextPath } from '../lib/safe-next';
 
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 if (account) return Astro.redirect(localeHref(account.role === 'admin' ? '/admin/' : '/account/', locale), 302);
-const requestedNext = Astro.url.searchParams.get('next');
-const redirectTo = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\')
-  ? requestedNext
-  : localeHref('/account/', locale);
-const passwordResetEnabled = isPasswordResetEmailConfigured();
+const safeNext = safeNextPath(Astro.url.searchParams.get('next'));
+const redirectTo = safeNext ?? localeHref('/account/', locale);
+const forgotPasswordPath = safeNext
+  ? `/forgot-password/?next=${encodeURIComponent(safeNext)}`
+  : '/forgot-password/';
+const registerPath = safeNext
+  ? `/register/?next=${encodeURIComponent(safeNext)}`
+  : '/register/';
 ---
 <Base title={copy('auth.loginTitle')} description={copy('auth.loginDescription')}>
   <section class="interior-hero wrap account-hero">
     <div class="section-label">{copy('auth.loginLabel')}</div>
     <h1>{copy('auth.welcomeBack')}</h1>
-    <p>{copy('auth.loginPrompt')}</p>
+    <p>{locale === 'en' ? 'Your space to explore, learn and connect.' : 'Dein Raum zum Entdecken, Lernen und Vernetzen.'}</p>
     <AuthForm mode="login" redirectTo={redirectTo} />
-    {passwordResetEnabled && <p class="account-switch"><a href={localeHref('/forgot-password/', locale)}>{copy('auth.forgotPassword')} <ArrowIcon /></a></p>}
-    <p class="account-switch">{copy('auth.noAccount')} <a href={localeHref('/register/', locale)}>{copy('auth.registerNow')} <ArrowIcon /></a></p>
+    <p class="account-switch"><a href={localeHref(forgotPasswordPath, locale)}>{copy('auth.forgotPassword')} <ArrowIcon /></a></p>
+    <p class="account-switch">{locale === 'en' ? 'New to IFTIIN? ' : 'Neu bei IFTIIN? '}<a href={localeHref(registerPath, locale)}>{locale === 'en' ? 'Join the community.' : 'Werde Teil der Community.'} <ArrowIcon /></a></p>
   </section>
 </Base>
 

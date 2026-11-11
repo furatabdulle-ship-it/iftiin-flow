@@ -23,6 +23,7 @@ if (!pillar) {
   return Astro.redirect(root(legacyTarget ?? 'explore/'), legacyTarget ? 301 : 302);
 }
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (account) Astro.response.headers.set('Cache-Control', 'private, no-store');
 const articles = (await publishedArticles(Boolean(account), locale)).filter(a => a.data.pillar === pillar.slug);
 ---
 <Base title={pillar.name} description={pillar.description}>

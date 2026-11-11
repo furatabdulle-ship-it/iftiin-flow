@@ -1,0 +1,282 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { localeHref } from '../../lib/i18n';
+
+const locale = Astro.locals.locale;
+const en = locale === 'en';
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect(localeHref('/login/?next=/community/discussions/', locale), 302);
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+---
+<Base title={en ? 'Knowledge exchange' : 'Wissensaustausch'}>
+  <section class="interior-hero wrap discussions-page">
+    <div class="section-label">{en ? 'IFTIIN Community' : 'IFTIIN Community'}</div>
+    <h1>{en ? 'Questions. Knowledge. Perspectives.' : 'Fragen. Wissen. Perspektiven.'}</h1>
+    <p>{en
+      ? 'Ask questions, share experience and learn from other perspectives. Keep the exchange respectful and focused on knowledge.'
+      : 'Stelle Fragen, teile Erfahrungen und lerne unterschiedliche Perspektiven kennen. Achte auf einen respektvollen und wissensorientierten Austausch.'}</p>
+
+    <form id="discussion-create" class="discussion-form">
+      <h2>{en ? 'Start a discussion' : 'Diskussion starten'}</h2>
+      <label>{en ? 'Topic' : 'Themenbereich'}
+        <select name="category" required>
+          <option value="future-skills">Future Skills</option>
+          <option value="ai-literacy">AI Literacy</option>
+          <option value="media-literacy">Media Literacy</option>
+          <option value="storytelling">Storytelling &amp; Communication</option>
+        </select>
+      </label>
+      <label>{en ? 'Title' : 'Titel'}
+        <input name="title" minlength="5" maxlength="160" required />
+      </label>
+      <label>{en ? 'Your question or perspective' : 'Deine Frage oder Perspektive'}
+        <textarea name="body" minlength="20" maxlength="4000" rows="5" required></textarea>
+      </label>
+      <p class="discussion-note">{en
+        ? 'Do not share private contact details or sensitive personal information.'
+        : 'Teile keine privaten Kontaktdaten oder sensiblen persönlichen Informationen.'}</p>
+      <button class="pill-link" type="submit">{en ? 'Publish discussion' : 'Diskussion veröffentlichen'}</button>
+    </form>
+
+    <p id="discussion-message" class="discussion-message" role="status" aria-live="polite"></p>
+    <section class="discussion-list-section" aria-labelledby="discussion-list-title">
+      <div class="discussion-list-heading">
+        <div>
+          <div class="section-label">{en ? 'Community exchange' : 'Austausch in der Community'}</div>
+          <h2 id="discussion-list-title">{en ? 'Explore discussions' : 'Diskussionen entdecken'}</h2>
+        </div>
+        <label class="discussion-filter">{en ? 'Topic' : 'Themenbereich'}
+          <select id="discussion-filter">
+            <option value="">{en ? 'All topics' : 'Alle Themen'}</option>
+            <option value="future-skills">Future Skills</option>
+            <option value="ai-literacy">AI Literacy</option>
+            <option value="media-literacy">Media Literacy</option>
+            <option value="storytelling">Storytelling &amp; Communication</option>
+          </select>
+        </label>
+      </div>
+      <div id="discussion-list" class="discussion-list" aria-live="polite"></div>
+      <button id="discussion-more" class="discussion-more" type="button" hidden>
+        {en ? 'Load more' : 'Weitere laden'}
+      </button>
+    </section>
+  </section>
+</Base>
+
+<script define:vars={{ en }}>
+  const copy = en ? {
+    loadError: 'Discussions could not be loaded.',
+    publishError: 'The discussion could not be published.',
+    replyError: 'Your reply could not be published.',
+    reportError: 'The report could not be submitted.',
+    reportSuccess: 'Thank you. The moderation team will review this report.',
+    alreadyReported: 'You have already reported this discussion.',
+    reply: 'Reply',
+    writeReply: 'Share a useful response',
+    sendReply: 'Post reply',
+    report: 'Report',
+    reportReason: 'Why are you reporting this discussion?',
+    sendReport: 'Send report',
+    reported: 'Reported',
+    noDiscussions: 'No discussions here yet. Start the exchange with a question or perspective.',
+    category: { 'future-skills': 'Future Skills', 'ai-literacy': 'AI Literacy', 'media-literacy': 'Media Literacy', storytelling: 'Storytelling & Communication' },
+    replies: 'replies',
+  } : {
+    loadError: 'Diskussionen konnten nicht geladen werden.',
+    publishError: 'Die Diskussion konnte nicht veröffentlicht werden.',
+    replyError: 'Deine Antwort konnte nicht veröffentlicht werden.',
+    reportError: 'Die Meldung konnte nicht gesendet werden.',
+    reportSuccess: 'Danke. Das Moderationsteam prüft die Meldung.',
+    alreadyReported: 'Du hast diese Diskussion bereits gemeldet.',
+    reply: 'Antworten',
+    writeReply: 'Teile eine hilfreiche Antwort',
+    sendReply: 'Antwort veröffentlichen',
+    report: 'Melden',
+    reportReason: 'Warum meldest du diese Diskussion?',
+    sendReport: 'Meldung senden',
+    reported: 'Gemeldet',
+    noDiscussions: 'Hier gibt es noch keine Diskussionen. Beginne den Austausch mit einer Frage oder Perspektive.',
+    category: { 'future-skills': 'Future Skills', 'ai-literacy': 'AI Literacy', 'media-literacy': 'Media Literacy', storytelling: 'Storytelling & Communication' },
+    replies: 'Antworten',
+  };
+  const form = document.querySelector('#discussion-create');
+  const list = document.querySelector('#discussion-list');
+  const message = document.querySelector('#discussion-message');
+  const filter = document.querySelector('#discussion-filter');
+  const more = document.querySelector('#discussion-more');
+  let page = 1;
+  let total = 0;
+
+  function node(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+  async function request(url, method = 'GET', data) {
+    const response = await fetch(url, {
+      method,
+      headers: data ? { 'Content-Type': 'application/json' } : {},
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Request failed');
+    return result;
+  }
+  function dateLabel(value) {
+    return new Date(value).toLocaleDateString(en ? 'en' : 'de', { dateStyle: 'medium' });
+  }
+  function addReplyForm(discussion, card) {
+    const form = node('form', 'discussion-reply-form');
+    const label = node('label', '', copy.writeReply);
+    const textarea = document.createElement('textarea');
+    textarea.rows = 3;
+    textarea.maxLength = 2000;
+    textarea.required = true;
+    label.append(textarea);
+    const button = node('button', 'discussion-small-button', copy.sendReply);
+    button.type = 'submit';
+    form.append(label, button);
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      message.textContent = '';
+      try {
+        await request(`/api/community/discussions/${discussion.id}/replies/`, 'POST', { body: textarea.value });
+        await load(true);
+      } catch (error) {
+        message.textContent = error.message || copy.replyError;
+      }
+    });
+    card.append(form);
+  }
+  function renderDiscussion(discussion) {
+    const card = node('article', 'discussion-card');
+    const meta = node('div', 'discussion-meta');
+    meta.append(
+      node('span', 'discussion-category', copy.category[discussion.category]),
+      node('span', 'discussion-author', `${discussion.author} · ${dateLabel(discussion.createdAt)}`),
+    );
+    card.append(meta, node('h3', '', discussion.title), node('p', 'discussion-body', discussion.body));
+
+    const replies = node('section', 'discussion-replies');
+    const replyTitle = node('h4', '', `${discussion.replyCount} ${copy.replies}`);
+    replies.append(replyTitle);
+    for (const reply of discussion.replies) {
+      const item = node('article', 'discussion-reply');
+      item.append(
+        node('p', 'discussion-reply-meta', `${reply.author} · ${dateLabel(reply.createdAt)}`),
+        node('p', 'discussion-body', reply.body),
+      );
+      replies.append(item);
+    }
+    addReplyForm(discussion, replies);
+    card.append(replies);
+
+    const report = node('details', 'discussion-report');
+    const summary = node('summary', '', discussion.reportedByMe ? copy.reported : copy.report);
+    if (discussion.reportedByMe) summary.setAttribute('aria-disabled', 'true');
+    report.append(summary);
+    if (!discussion.reportedByMe) {
+      const reportForm = node('form', 'discussion-report-form');
+      const label = node('label', '', copy.reportReason);
+      const reason = document.createElement('textarea');
+      reason.minLength = 10;
+      reason.maxLength = 500;
+      reason.required = true;
+      label.append(reason);
+      const button = node('button', 'discussion-text-button', copy.sendReport);
+      button.type = 'submit';
+      reportForm.append(label, button);
+      reportForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        message.textContent = '';
+        try {
+          const result = await request(`/api/community/discussions/${discussion.id}/reports/`, 'POST', { reason: reason.value });
+          message.textContent = result.alreadyReported ? copy.alreadyReported : copy.reportSuccess;
+          await load(true);
+        } catch (error) {
+          message.textContent = error.message || copy.reportError;
+        }
+      });
+      report.append(reportForm);
+    }
+    card.append(report);
+    return card;
+  }
+  async function load(reset = false) {
+    if (reset) {
+      page = 1;
+      list.replaceChildren();
+    }
+    message.textContent = '';
+    try {
+      const params = new URLSearchParams({ page: String(page) });
+      if (filter.value) params.set('category', filter.value);
+      const result = await request(`/api/community/discussions/?${params}`);
+      total = result.total;
+      if (reset && !result.discussions.length) list.append(node('p', 'community-empty', copy.noDiscussions));
+      for (const discussion of result.discussions) list.append(renderDiscussion(discussion));
+      more.hidden = page * result.pageSize >= total;
+    } catch (error) {
+      message.textContent = error.message || copy.loadError;
+    }
+  }
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    message.textContent = '';
+    const values = new FormData(form);
+    try {
+      await request('/api/community/discussions/', 'POST', {
+        category: values.get('category'),
+        title: values.get('title'),
+        body: values.get('body'),
+      });
+      form.reset();
+      await load(true);
+    } catch (error) {
+      message.textContent = error.message || copy.publishError;
+    }
+  });
+  filter.addEventListener('change', () => load(true));
+  more.addEventListener('click', () => { page += 1; load(); });
+  load(true);
+</script>
+
+<style>
+  @import '../../styles/account.css';
+  .discussions-page{max-width:980px}
+  .discussion-form,.discussion-card{margin-top:24px;padding:clamp(18px,3vw,26px);border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .discussion-form{display:grid;gap:14px}
+  .discussion-form h2{margin:0 0 2px;font-size:24px}
+  .discussion-form label,.discussion-filter,.discussion-reply-form label,.discussion-report-form label{display:grid;gap:7px;font-size:14px;font-weight:700}
+  .discussion-form input,.discussion-form select,.discussion-form textarea,.discussion-filter select,.discussion-reply-form textarea,.discussion-report-form textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);font:inherit}
+  .discussion-form textarea,.discussion-reply-form textarea,.discussion-report-form textarea{resize:vertical}
+  .discussion-form input:focus,.discussion-form select:focus,.discussion-form textarea:focus,.discussion-filter select:focus,.discussion-reply-form textarea:focus,.discussion-report-form textarea:focus{outline:2px solid var(--violet);outline-offset:2px}
+  .discussion-form .pill-link{justify-self:start;border:0;cursor:pointer}
+  .discussion-note{margin:0;color:var(--muted);font-size:13px}
+  .discussion-message{min-height:1.5em;color:#9b2c2c}
+  .discussion-list-section{margin-top:52px}
+  .discussion-list-heading{display:flex;align-items:end;justify-content:space-between;gap:20px}
+  .discussion-list-heading h2{margin:8px 0 0;font-size:clamp(2rem,4vw,3rem)}
+  .discussion-filter{min-width:min(100%,240px)}
+  .discussion-list{display:grid;gap:14px;margin-top:18px}
+  .discussion-card{margin:0;overflow-wrap:anywhere}
+  .discussion-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+  .discussion-category{color:var(--violet);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .discussion-author,.discussion-reply-meta{color:var(--muted);font-size:13px}
+  .discussion-card h3{margin:12px 0;font-size:clamp(1.3rem,3vw,1.8rem)}
+  .discussion-body{white-space:pre-wrap;line-height:1.7}
+  .discussion-replies{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+  .discussion-replies h4{margin:0 0 12px}
+  .discussion-reply{margin:12px 0;padding-left:14px;border-left:2px solid var(--line)}
+  .discussion-reply p{margin:5px 0}
+  .discussion-reply-form,.discussion-report-form{display:grid;gap:10px;margin-top:14px}
+  .discussion-small-button,.discussion-text-button,.discussion-more{justify-self:start;padding:9px 13px;border:1px solid var(--violet);border-radius:999px;background:var(--violet);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+  .discussion-report{margin-top:18px;color:var(--muted);font-size:13px}
+  .discussion-report summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .discussion-text-button{background:transparent;color:var(--ink);border-color:var(--line)}
+  .discussion-more{margin-top:20px}
+  @media(max-width:620px){.discussion-list-heading{align-items:flex-start;flex-direction:column}.discussion-filter{width:100%}}
+</style>

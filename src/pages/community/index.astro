@@ -1,0 +1,391 @@
+---
+import ArrowIcon from '../../components/ArrowIcon.astro';
+import SaveResourceButton from '../../components/SaveResourceButton.astro';
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { hasCommunityAccess } from '../../lib/community-access';
+import { query } from '../../lib/db';
+import { localeHref, t } from '../../lib/i18n';
+
+const locale = Astro.locals.locale;
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+const hasAccess = account ? await hasCommunityAccess(account.id, account.role) : false;
+const localized = (key: Parameters<typeof t>[1]) => t(locale, key);
+const root = (path = '') => localeHref(
+  import.meta.env.BASE_URL.replace(/\/$/, '/') + path.replace(/^\//, ''),
+  locale,
+);
+type Resource = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  kind: string;
+  href: string;
+  resourceType: 'article' | 'learning';
+};
+type RecentDiscussion = {
+  id: string;
+  category: 'future-skills' | 'ai-literacy' | 'media-literacy' | 'storytelling';
+  title: string;
+  body: string;
+  author: string;
+  createdAt: string;
+  replyCount: number;
+};
+type GoalPreview = { title: string; skillArea: string; status: 'Planned' | 'In Progress' | 'Achieved' };
+const categoryLabels = {
+  'future-skills': 'community.category.future-skills',
+  'ai-literacy': 'community.category.ai-literacy',
+  'media-literacy': 'community.category.media-literacy',
+  storytelling: 'community.category.storytelling',
+} as const;
+const goalStatusLabels = {
+  Planned: 'community.status.planned',
+  'In Progress': 'community.status.inProgress',
+  Achieved: 'community.status.achieved',
+} as const;
+
+let resources: Resource[] = [];
+let recentDiscussions: RecentDiscussion[] = [];
+let goalPreviews: GoalPreview[] = [];
+let savedCount = 0;
+if (account && hasAccess) {
+  Astro.response.headers.set('Cache-Control', 'private, no-store');
+  Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  const [articles, contentItems, discussions, goals, savedResources] = await Promise.all([
+    query<{
+      id: string;
+      slug: string;
+      title: string;
+      title_en: string | null;
+      description: string;
+      description_en: string | null;
+      format: string;
+    }>(
+      `SELECT id, slug, title, title_en, description, description_en, format
+       FROM articles
+       WHERE status = 'published'
+         AND visibility IN ('public', 'community')
+         AND requires_purchase = FALSE
+       ORDER BY featured DESC, date DESC, created_at DESC
+       LIMIT 4`,
+    ),
+    query<{
+      id: string;
+      slug: string;
+      title: string;
+      title_en: string | null;
+      description: string;
+      description_en: string | null;
+      content_type: string;
+    }>(
+      `SELECT ci.id, ci.slug, ci.title, ci.title_en, ci.description, ci.description_en, ci.content_type
+       FROM content_items ci
+       WHERE ci.status = 'published'
+         AND ci.visibility IN ('public', 'community')
+         AND ci.content_type <> 'article'
+         AND NOT EXISTS (
+           SELECT 1 FROM product_content pc WHERE pc.content_id = ci.id
+         )
+       ORDER BY ci.position ASC, ci.updated_at DESC
+       LIMIT 4`,
+    ),
+    query<RecentDiscussion>(
+      `SELECT d.id, d.category, d.title, d.body,
+              COALESCE(NULLIF(u.display_name, ''), 'Community member') AS author,
+              d.created_at AS "createdAt",
+              (SELECT COUNT(*)::int FROM community_discussion_replies r WHERE r.discussion_id = d.id) AS "replyCount"
+       FROM community_discussions d
+       JOIN users u ON u.id = d.user_id
+       WHERE d.status = 'visible'
+       ORDER BY d.created_at DESC, d.id DESC
+       LIMIT 3`,
+    ),
+    query<GoalPreview>(
+      `SELECT title, skill_area AS "skillArea", status
+       FROM community_learning_goals
+       WHERE user_id = $1 AND status IN ('Planned', 'In Progress')
+       ORDER BY created_at DESC
+       LIMIT 3`,
+      [account.id],
+    ),
+    query<{ total: string }>(
+      'SELECT COUNT(*)::text AS total FROM saved_resources WHERE user_id = $1',
+      [account.id],
+    ),
+  ]);
+  recentDiscussions = discussions.rows;
+  goalPreviews = goals.rows;
+  savedCount = Number(savedResources.rows[0]?.total ?? 0);
+  resources = [
+    ...articles.rows.map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      title: locale === 'en' ? item.title_en || item.title : item.title,
+      description: locale === 'en' ? item.description_en || item.description : item.description,
+      kind: item.format === 'map' ? (locale === 'en' ? 'Research Map' : 'Research Map') : (locale === 'en' ? 'Essay' : 'Essay'),
+      href: root(`articles/${item.slug}/`),
+      resourceType: 'article' as const,
+    })),
+    ...contentItems.rows.map((item) => ({
+      id: item.id,
+      slug: item.slug,
+      title: locale === 'en' ? item.title_en || item.title : item.title,
+      description: locale === 'en' ? item.description_en || item.description : item.description,
+      kind: locale === 'en' ? 'Learning resource' : 'Lernressource',
+      href: item.content_type === 'download'
+        ? root(`api/content/${item.id}/file/`)
+        : root(`learn/${item.slug}/`),
+      resourceType: 'learning' as const,
+    })),
+  ].slice(0, 6);
+}
+
+const firstName = account?.displayName.trim().split(/\s+/)[0] || (locale === 'en' ? 'there' : 'dir');
+---
+
+<Base title={localized('community.metaTitle')} description={localized('community.metaDescription')}>
+  {!hasAccess ? (
+    <section class="community-public">
+      <div class="wrap community-public-inner">
+        <div class="community-public-copy">
+          <p class="section-label">{localized('community.eyebrow')}</p>
+          <h1>{localized('community.landingHeadline')}</h1>
+          <p class="community-lede">{localized('community.landingDescription')}</p>
+          <div class="community-actions">
+            <a class="pill-link" href={root('store/?type=online_course')}>{localized('community.courseCta')}<ArrowIcon /></a>
+            <a class="community-secondary-link" href={root('community/sprints/')}>{localized('community.sprintsCta')}<ArrowIcon /></a>
+            {!account && <a class="community-secondary-link" href={root('login/?next=%2Fcommunity%2F')}>{localized('community.signInCta')}<ArrowIcon /></a>}
+          </div>
+          <p class="community-privacy-note">{localized('community.accessRequirement')}</p>
+          <p class="community-privacy-note">{localized('community.privateProfileNote')}</p>
+        </div>
+        <div class="community-public-art" aria-hidden="true">
+          <span class="community-art-orbit community-art-orbit-one"></span>
+          <span class="community-art-orbit community-art-orbit-two"></span>
+          <span class="community-art-center">IFTIIN</span>
+        </div>
+      </div>
+      <div class="wrap community-pillars">
+        <article class="community-pillar">
+          <span class="community-pillar-number">01</span>
+          <h2>{localized('community.knowledgeTitle')}</h2>
+          <p>{localized('community.knowledgeDescription')}</p>
+          <div class="community-pillar-topics"><span>Future Skills</span><span>AI Literacy</span><span>Media Literacy</span><span>Storytelling &amp; Communication</span></div>
+        </article>
+        <article class="community-pillar">
+          <span class="community-pillar-number">02</span>
+          <h2>{localized('community.exchangeTitle')}</h2>
+          <p>{localized('community.exchangeDescription')}</p>
+          <a href={root('community/sprints/')}>{localized('community.sprintsCta')}<ArrowIcon /></a>
+        </article>
+        <article class="community-pillar">
+          <span class="community-pillar-number">03</span>
+          <h2>{localized('community.actionTitle')}</h2>
+          <p>{localized('community.actionDescription')}</p>
+          <a href={root('store/?type=online_course')}>{localized('community.courseCta')}<ArrowIcon /></a>
+        </article>
+      </div>
+    </section>
+  ) : (
+    <div class="community-dashboard">
+      <section class="community-welcome">
+        <div class="wrap community-welcome-inner">
+          <div>
+            <p class="section-label">{localized('community.eyebrow')}</p>
+            <h1>{localized('community.welcome')} <em>{firstName}</em></h1>
+            <p>{localized('community.dashboardDescription')}</p>
+          </div>
+          <a class="community-profile-shortcut" href={root('community/profile/')}>{localized('community.profileCta')}<ArrowIcon /></a>
+        </div>
+      </section>
+
+      <section class="wrap community-dashboard-section" aria-labelledby="community-discover-heading">
+        <header class="community-section-heading">
+          <div>
+            <p class="section-label">{localized('community.featuredKnowledge')}</p>
+            <h2 id="community-discover-heading">{localized('community.knowledgeTitle')}</h2>
+          </div>
+          <a href={root('explore/')}>{localized('community.discovery')}<ArrowIcon /></a>
+        </header>
+        <p class="community-section-intro">{localized('community.knowledgeDescription')}</p>
+        {resources.length > 0 ? (
+          <div class="community-resource-grid">
+            {resources.map((resource) => (
+              <article class="community-resource-card">
+                <p class="community-resource-kind">{resource.kind || localized('community.resourceLabel')}</p>
+                <h3>{resource.title}</h3>
+                <p>{resource.description}</p>
+                <a href={resource.href}>{localized('community.readResource')}<ArrowIcon /></a>
+                <SaveResourceButton resourceType={resource.resourceType} resourceId={resource.id} />
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div class="community-empty-state">
+            <p>{localized('community.emptyResources')}</p>
+            <a href={root('explore/')}>{localized('community.discovery')}<ArrowIcon /></a>
+          </div>
+        )}
+      </section>
+
+      <section class="community-exchange">
+        <div class="wrap">
+          <header class="community-section-heading">
+            <div>
+              <p class="section-label">{localized('community.exchangeTitle')}</p>
+              <h2>{localized('community.discussionsTitle')}</h2>
+            </div>
+            <a href={root('community/discussions/')}>{localized('community.discussionsCta')}<ArrowIcon /></a>
+          </header>
+          <p class="community-section-intro">{localized('community.discussionsDescription')}</p>
+          {recentDiscussions.length ? (
+            <div class="community-discussion-grid">
+              {recentDiscussions.map((discussion) => (
+                <article class="community-discussion-preview">
+                  <p class="community-resource-kind">{localized(categoryLabels[discussion.category])}</p>
+                  <h3>{discussion.title}</h3>
+                  <p>{discussion.body.length > 180 ? `${discussion.body.slice(0, 180)}…` : discussion.body}</p>
+                  <span>{discussion.author} · {discussion.replyCount} {localized('community.replyCount')}</span>
+                </article>
+              ))}
+            </div>
+          ) : <p class="community-dashboard-empty">{localized('community.noDiscussions')}</p>}
+          <a class="community-discussions-cta pill-link" href={root('community/discussions/')}>{localized('community.discussionsCta')}<ArrowIcon /></a>
+        </div>
+      </section>
+
+      <section class="community-myspace">
+        <div class="wrap">
+          <header class="community-section-heading">
+            <div>
+              <p class="section-label">{localized('community.actionTitle')}</p>
+              <h2>{localized('community.goalsTitle')}</h2>
+            </div>
+            <a href={root('community/goals/')}>{localized('community.goalsCta')}<ArrowIcon /></a>
+          </header>
+          <p class="community-section-intro">{localized('community.goalsDescription')}</p>
+          <div class="community-personal-grid">
+            <a class="community-personal-card" href={root('community/goals/')}>
+              <span class="community-card-index">01</span>
+              <h3>{localized('community.goalsTitle')}</h3>
+              {goalPreviews.length ? (
+                <div class="community-goal-preview-list">
+                  {goalPreviews.map((goal) => <p><strong>{goal.title}</strong><span>{goal.skillArea} · {localized(goalStatusLabels[goal.status])}</span></p>)}
+                </div>
+              ) : <p>{localized('community.noGoals')}</p>}
+              <span class="community-card-link">{localized('community.goalsCta')}<ArrowIcon /></span>
+            </a>
+            <a class="community-personal-card" href={root('community/saved-resources/')}>
+              <span class="community-card-index">02</span>
+              <h3>{localized('community.savedTitle')}</h3>
+              <p>{localized('community.savedCount').replace('{count}', String(savedCount))}</p>
+              <span class="community-card-link">{localized('community.savedCta')}<ArrowIcon /></span>
+            </a>
+            <a class="community-personal-card community-connect-card" href={root('community/members/')}>
+              <span class="community-card-index">03</span>
+              <h3>{localized('community.networkTitle')}</h3>
+              <p>{localized('community.networkDescription')}</p>
+              <span class="community-card-link">{localized('community.networkCta')}<ArrowIcon /></span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+  )}
+</Base>
+
+<style>
+  .community-public { min-height: calc(100vh - 130px); overflow: hidden; background: var(--cream); }
+  .community-public-inner { display: grid; min-height: 580px; grid-template-columns: minmax(0, 1fr) minmax(300px, .75fr); align-items: center; gap: clamp(2rem, 8vw, 8rem); padding-block: clamp(4rem, 8vw, 7rem); }
+  .community-public-copy { max-width: 760px; }
+  .community-public-copy h1 { max-width: 15ch; margin: 1.15rem 0 1.5rem; font: 800 clamp(3rem, 5.7vw, 5.4rem)/1 Manrope, Arial, sans-serif; letter-spacing: -.075em; }
+  .community-lede { max-width: 620px; color: var(--muted); font-size: clamp(1.05rem, 1.5vw, 1.25rem); line-height: 1.75; }
+  .community-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.6rem; margin-top: 2rem; }
+  .community-actions .pill-link { gap: 2rem; }
+  .community-secondary-link,.community-section-heading > a,.community-resource-card a,.community-empty-state a,.community-profile-shortcut {
+    display: inline-flex; align-items: center; gap: .55rem; font-size: .9rem; font-weight: 700; text-underline-offset: .2em;
+  }
+  .community-secondary-link:hover,.community-section-heading > a:hover,.community-resource-card a:hover,.community-empty-state a:hover,.community-profile-shortcut:hover { color: var(--violet); text-decoration: underline; }
+  .community-privacy-note { margin: 1.25rem 0 0; color: var(--muted); font-size: .82rem; }
+  .community-public-art { position: relative; display: grid; width: min(100%, 430px); aspect-ratio: 1; place-items: center; justify-self: center; }
+  .community-art-orbit { position: absolute; width: 76%; aspect-ratio: 1; border: 1px solid var(--violet); border-radius: 50%; }
+  .community-art-orbit-one { transform: scaleX(.48) rotate(40deg); }
+  .community-art-orbit-two { transform: scaleX(.48) rotate(-40deg); }
+  .community-art-center { display: grid; width: 38%; aspect-ratio: 1; place-items: center; border-radius: 50%; background: var(--ink); color: var(--yellow); font: 800 clamp(1rem, 2vw, 1.5rem) Manrope, Arial, sans-serif; letter-spacing: .12em; }
+  .community-pillars { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; padding-block: 1.5rem clamp(3.5rem,7vw,6rem); }
+  .community-pillar { min-width: 0; padding: clamp(1.3rem,2.4vw,2rem); border: 1px solid var(--line); background: var(--paper); }
+  .community-pillar-number { color: var(--violet); font-size: .72rem; font-weight: 800; letter-spacing: .1em; }
+  .community-pillar h2 { margin: 1.1rem 0 .65rem; font: 750 clamp(1.35rem,2vw,1.8rem)/1.15 Manrope,Arial,sans-serif; letter-spacing: -.04em; }
+  .community-pillar p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.7; }
+  .community-pillar > a { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1.2rem; font-size: .84rem; font-weight: 700; text-underline-offset: .2em; }
+  .community-pillar > a:hover { color: var(--violet); text-decoration: underline; }
+  .community-pillar-topics { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1rem; }
+  .community-pillar-topics span { padding: .3rem .55rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .7rem; font-weight: 700; }
+  .community-welcome { background: var(--ink); color: var(--paper); }
+  .community-welcome-inner { display: flex; align-items: end; justify-content: space-between; gap: 2rem; padding-block: clamp(3.5rem, 7vw, 6rem); }
+  .community-welcome .section-label { color: var(--yellow); }
+  .community-welcome h1 { margin: .8rem 0 .6rem; font: 800 clamp(2.6rem, 6vw, 5rem)/1.04 Manrope, Arial, sans-serif; letter-spacing: -.07em; }
+  .community-welcome h1 em { color: var(--violet); font-style: normal; }
+  .community-welcome p:not(.section-label) { margin: 0; color: rgba(255,255,255,.72); font-size: 1.05rem; }
+  .community-profile-shortcut { flex: none; padding: .8rem 1rem; border: 1px solid rgba(255,255,255,.35); color: var(--paper); }
+  .community-dashboard-section { padding-block: clamp(3.5rem, 7vw, 6rem); }
+  .community-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; }
+  .community-section-heading .section-label { color: var(--violet); }
+  .community-section-heading h2 { max-width: 19ch; margin: .55rem 0 0; font: 750 clamp(2rem, 4vw, 3.4rem)/1.05 Manrope, Arial, sans-serif; letter-spacing: -.06em; }
+  .community-section-heading > a { flex: none; padding-bottom: .3rem; }
+  .community-section-intro { max-width: 650px; margin: 1rem 0 2rem; color: var(--muted); line-height: 1.7; }
+  .community-resource-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+  .community-resource-card { display: flex; min-height: 250px; flex-direction: column; align-items: flex-start; padding: clamp(1.3rem,2.4vw,2rem); border: 1px solid var(--line); background: var(--paper); }
+  .community-resource-kind { margin: 0 0 1.3rem; color: var(--violet); font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  .community-resource-card h3 { margin: 0 0 .7rem; font: 750 1.35rem/1.2 Manrope, Arial, sans-serif; letter-spacing: -.035em; }
+  .community-resource-card > p:not(.community-resource-kind) { margin: 0 0 1.5rem; color: var(--muted); font-size: .9rem; line-height: 1.65; }
+  .community-resource-card a { margin-top: auto; }
+  .community-empty-state { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.4rem; border: 1px dashed var(--line); }
+  .community-empty-state p { margin: 0; color: var(--muted); }
+  .community-exchange { padding-block: clamp(3.5rem,7vw,6rem); background: var(--cream); }
+  .community-exchange .community-section-heading { margin-bottom: .8rem; }
+  .community-discussions-cta { display: inline-flex; margin-top: .2rem; }
+  .community-discussion-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin: 1.5rem 0; }
+  .community-discussion-preview { display: flex; min-width: 0; flex-direction: column; padding: 1.4rem; border: 1px solid var(--line); background: var(--paper); }
+  .community-discussion-preview h3 { margin: 0 0 .65rem; font: 750 1.2rem/1.25 Manrope,Arial,sans-serif; }
+  .community-discussion-preview > p:not(.community-resource-kind) { display: -webkit-box; overflow: hidden; margin: 0 0 1rem; color: var(--muted); font-size: .88rem; line-height: 1.6; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
+  .community-discussion-preview > span { margin-top: auto; color: var(--muted); font-size: .75rem; }
+  .community-dashboard-empty { margin: 1.5rem 0; padding: 1.25rem; border: 1px dashed var(--line); color: var(--muted); }
+  .community-myspace { padding-block: clamp(3.5rem,7vw,6rem); background: #f0ede6; }
+  .community-myspace .community-section-heading { margin-bottom: .5rem; }
+  .community-personal-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+  .community-personal-card { display: flex; min-height: 245px; flex-direction: column; align-items: flex-start; padding: 1.5rem; border: 1px solid var(--line); background: var(--paper); transition: transform .18s ease, border-color .18s ease; }
+  .community-personal-card:hover { transform: translateY(-3px); border-color: var(--violet); }
+  .community-card-index { color: var(--violet); font-size: .72rem; font-weight: 800; letter-spacing: .1em; }
+  .community-personal-card h3 { margin: 1.3rem 0 .6rem; font: 750 1.45rem Manrope,Arial,sans-serif; letter-spacing: -.04em; }
+  .community-personal-card > p { margin: 0 0 1.4rem; color: var(--muted); font-size: .9rem; line-height: 1.65; }
+  .community-goal-preview-list { display: grid; gap: .75rem; width: 100%; margin-bottom: 1rem; }
+  .community-goal-preview-list p { display: grid; gap: .25rem; margin: 0; font-size: .86rem; line-height: 1.4; }
+  .community-goal-preview-list span { color: var(--muted); font-size: .75rem; }
+  .community-card-link { display: inline-flex; align-items: center; gap: .5rem; margin-top: auto; color: var(--ink); font-size: .84rem; font-weight: 700; }
+  .community-connect-card { background: var(--ink); color: var(--paper); }
+  .community-connect-card > p { color: rgba(255,255,255,.7); }
+  .community-connect-card .community-card-link { color: var(--yellow); }
+  @media (max-width: 800px) {
+    .community-public-inner { min-height: 0; grid-template-columns: 1fr; gap: 1rem; }
+    .community-public-art { width: min(72%, 300px); }
+    .community-pillars { grid-template-columns: 1fr; }
+    .community-resource-grid,.community-personal-grid,.community-discussion-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  }
+  @media (max-width: 560px) {
+    .community-public-inner { padding-block: 3.5rem 2rem; }
+    .community-public-copy h1 { font-size: clamp(3rem,12vw,4.2rem); }
+    .community-pillars { padding-block: .5rem 3.5rem; }
+    .community-welcome-inner { align-items: flex-start; flex-direction: column; }
+    .community-profile-shortcut { align-self: flex-start; }
+    .community-section-heading { align-items: flex-start; flex-direction: column; }
+    .community-resource-grid,.community-personal-grid,.community-discussion-grid { grid-template-columns: 1fr; }
+    .community-resource-card,.community-personal-card { min-height: 215px; }
+    .community-empty-state { align-items: flex-start; flex-direction: column; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .community-personal-card { transition: none; }
+  }
+</style>

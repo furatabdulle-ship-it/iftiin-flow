@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSessionAccount } from '../../../../lib/auth';
-import { hasContentAccess, hasGuestContentAccess } from '../../../../lib/commerce';
+import { hasGuestContentAccess, hasMemberContentAccess } from '../../../../lib/commerce';
 import { query } from '../../../../lib/db';
 import { getGuestAccessEmail } from '../../../../lib/guest-access';
 import { json } from '../../../../lib/http';
@@ -16,18 +16,23 @@ export const GET: APIRoute = async (context) => {
   if (!account && !guestEmail) return json({ error: 'Bitte öffne deinen persönlichen Zugangslink.' }, 401);
 
   try {
-    const result = await query<{ storage_asset_id: string | null; content_type: string }>(
-      `SELECT storage_asset_id, content_type FROM content_items
+    const result = await query<{ storage_asset_id: string | null; content_type: string; visibility: 'public' | 'community' }>(
+      `SELECT storage_asset_id, content_type, visibility FROM content_items
        WHERE id = $1 AND status = 'published'
          AND content_type IN ('download', 'video')`,
       [id],
     );
+    if (result.rows[0]?.visibility === 'community' && !account) {
+      return json({ error: 'Bitte melde dich mit einem Community-Konto an.' }, 403);
+    }
     const assetId = result.rows[0]?.storage_asset_id;
     if (!assetId) return json({ error: 'Datei nicht gefunden.' }, 404);
     const accountAllowed = Boolean(account && (
-      account.role === 'admin' || await hasContentAccess(account.id, id)
+      await hasMemberContentAccess(account.id, id, result.rows[0].visibility, account.role)
     ));
-    const guestAllowed = Boolean(guestEmail && await hasGuestContentAccess(guestEmail, id));
+    const guestAllowed = Boolean(
+      result.rows[0].visibility === 'public' && guestEmail && await hasGuestContentAccess(guestEmail, id),
+    );
     if (!accountAllowed && !guestAllowed) {
       return json({ error: 'Für diese Datei besitzt dein Konto keinen Zugriff.' }, 403);
     }

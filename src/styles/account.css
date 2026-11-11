@@ -5,6 +5,17 @@
 .account-form input,.article-editor input,.article-editor select,.article-editor textarea{width:100%;border:1px solid var(--line);border-radius:0;background:#fff;color:var(--ink);padding:13px 14px;font:inherit}
 .account-form input:focus,.article-editor input:focus,.article-editor select:focus,.article-editor textarea:focus{outline:2px solid var(--violet);outline-offset:2px}
 .account-form .pill-link{justify-self:start;border:0;cursor:pointer}
+.account-hero .auth-form{gap:10px;max-width:500px;margin-top:30px}
+.auth-form>label{margin-top:5px}
+.auth-form input{min-height:50px;border-radius:12px}
+.password-control{position:relative}
+.password-control input{padding-right:125px}
+.password-toggle{position:absolute;top:50%;right:10px;min-height:38px;transform:translateY(-50%);border:0;border-radius:8px;background:transparent;color:var(--violet);font:inherit;font-size:13px;font-weight:700;padding:6px 9px;cursor:pointer}
+.password-toggle:hover{text-decoration:underline;text-underline-offset:3px}
+.password-toggle:focus-visible,.auth-form .pill-link:focus-visible{outline:2px solid var(--violet);outline-offset:3px}
+.auth-form .form-hint{margin:0}
+.auth-form .form-message{margin:3px 0 0}
+.auth-form[aria-busy="true"] .pill-link{opacity:.7}
 .form-hint,.form-message,.account-switch,.account-role{font-size:14px;color:var(--muted)}
 .form-message{min-height:1.4em}
 .account-switch{margin-top:25px}
@@ -28,4 +39,29 @@
 .editor-actions .pill-link{border:0;cursor:pointer}
 .editor-delete{background:none;border:0;color:#922;cursor:pointer;text-decoration:underline}
 .admin-message{min-height:1.4em;font-size:14px;white-space:pre-line}
+.community-hero{padding-bottom:70px}
+.community-panel{max-width:760px;margin:32px 0 0;padding:clamp(20px,5vw,36px);border:1px solid var(--line);border-radius:20px;background:var(--paper)}
+.community-form{display:grid;gap:12px}
+.community-form>label,.community-field{font-size:14px;font-weight:700}
+.community-form input[type="text"],.community-form input[type="url"],.community-form textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);padding:13px 14px;font:inherit}
+.community-form textarea{min-height:135px;resize:vertical}
+.community-form input:focus,.community-form textarea:focus{outline:2px solid var(--violet);outline-offset:2px}
+.community-field{display:grid;gap:7px}
+.community-visibility,.community-share-option{display:flex;align-items:flex-start;gap:11px;font-size:14px;line-height:1.5}
+.community-visibility{margin:8px 0;padding:15px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.community-visibility input,.community-share-option input{width:18px;height:18px;flex:0 0 auto;margin:2px 0 0;accent-color:var(--violet)}
+.community-share-options{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:12px}
+.community-share-options legend{padding:0 6px;font-size:14px;font-weight:700}
+.community-field-hint,.community-privacy-note,.community-empty{color:var(--muted);font-size:14px;line-height:1.6}
+.community-field-hint{margin:-5px 0 2px}
+.community-privacy-note{margin:0}
+.community-form .form-message{margin:4px 0 0}
+.community-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:5px}
+.community-actions .pill-link{border:0;cursor:pointer}
+.community-members{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;margin-top:30px}
+.community-member{min-width:0;padding:22px;border:1px solid var(--line);border-radius:16px;background:var(--paper);overflow-wrap:anywhere}
+.community-member h2{margin:0 0 12px;font-size:21px}
+.community-member p{margin:9px 0;line-height:1.6}
+.community-member a{color:var(--violet);text-decoration:underline;text-underline-offset:3px}
 @media(max-width:760px){.admin-grid{grid-template-columns:1fr;gap:35px}.article-editor .editor-meta{grid-template-columns:1fr}}
+@media(max-width:480px){.password-control input{padding-right:115px}.community-actions{align-items:stretch;flex-direction:column}.community-actions .pill-link{align-self:flex-start}}

@@ -46,6 +46,7 @@ const isAdminPage = Astro.url.pathname.startsWith('/admin/');
           <nav class="home-nav" aria-label={locale === 'en' ? 'Main navigation' : 'Hauptnavigation'}>
             <a href={root('explore/')}>{t(locale, 'common.explore')}</a>
             <a href={root('store/')}>{t(locale, 'common.shop')}</a>
+            <a href={root('community/')}>{t(locale, 'common.community')}</a>
             <a href={root('skills-navigator/')}>{t(locale, 'waitlist.title')}</a>
           </nav>
           <div class="header-actions">
@@ -56,6 +57,7 @@ const isAdminPage = Astro.url.pathname.startsWith('/admin/');
         </> : <nav aria-label={locale === 'en' ? 'Main navigation' : 'Hauptnavigation'}>
           <a href={root('explore/')}>{t(locale, 'common.explore')}</a>
           <a href={root('store/')}>{t(locale, 'common.shop')}</a>
+          <a href={root('community/')}>{t(locale, 'common.community')}</a>
           <a href={root('skills-navigator/')}>{t(locale, 'waitlist.title')}</a>
         </nav>}
       {showLanguageSwitch && <div class="language-switch" role="group" aria-label={t(locale, 'common.language')}>
@@ -67,13 +69,14 @@ const isAdminPage = Astro.url.pathname.startsWith('/admin/');
     {home && <nav class="site-menu" id="site-menu" aria-label={locale === 'en' ? 'Main menu' : 'Hauptmenü'} inert>
       <a href={root('explore/')}>{t(locale, 'common.explore')}</a>
       <a href={root('store/')}>{t(locale, 'common.shop')}</a>
+      <a href={root('community/')}>{t(locale, 'common.community')}</a>
       <a href={root('skills-navigator/')}>{t(locale, 'waitlist.title')}</a>
     </nav>}
     <main id="content"><slot /></main>
     {!isAdminPage && <footer class="footer">
       <div class="wrap footer-grid">
         <div><a class="wordmark" href={root('')}><IftiinSun class="wordmark-sun" /><span class="wordmark-text">iftiin<span class="wordmark-accent"> flow.</span></span></a><p>{t(locale, 'common.footerLine1')}<br/>{t(locale, 'common.footerLine2')}</p></div>
-        <div class="footer-links"><a href={root('explore/')}>{t(locale, 'common.explore')}</a><a href={root('store/')}>{t(locale, 'common.shop')}</a><a href={root('skills-navigator/')}>{t(locale, 'waitlist.title')}</a><a href={root('about/')}>{t(locale, 'common.about')}</a><a href={root('account/')}>{t(locale, 'common.account')}</a><a href={root('impressum/')}>{t(locale, 'common.legal')}</a><a href={root('datenschutz/')}>{t(locale, 'common.privacy')}</a>{site.email && <a href={`mailto:${site.email}`}>{t(locale, 'common.contact')}</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter <ArrowIcon /></a>}</div>
+        <div class="footer-links"><a href={root('explore/')}>{t(locale, 'common.explore')}</a><a href={root('store/')}>{t(locale, 'common.shop')}</a><a href={root('community/')}>{t(locale, 'common.community')}</a><a href={root('skills-navigator/')}>{t(locale, 'waitlist.title')}</a><a href={root('about/')}>{t(locale, 'common.about')}</a><a href={root('account/')}>{t(locale, 'common.account')}</a><a href={root('impressum/')}>{t(locale, 'common.legal')}</a><a href={root('datenschutz/')}>{t(locale, 'common.privacy')}</a>{site.email && <a href={`mailto:${site.email}`}>{t(locale, 'common.contact')}</a>}{site.showNewsletter && site.newsletterUrl && <a href={site.newsletterUrl}>Newsletter <ArrowIcon /></a>}</div>
         <div class="footer-bottom">© {new Date().getFullYear()} iftiin flow. · {locale === 'en' ? 'Independent knowledge platform' : 'Unabhängige Wissensplattform'}</div>
       </div>
     </footer>}
@@ -130,3 +133,21 @@ const isAdminPage = Astro.url.pathname.startsWith('/admin/');
     </script>}
   </body>
 </html>
+
+<style>
+  @media (max-width: 600px) {
+    :global(body:not(.home-page) .site-header > nav) {
+      min-width: 0;
+      flex: 1;
+      justify-content: flex-start;
+      gap: 10px;
+      overflow-x: auto;
+      margin-inline: 6px;
+      scrollbar-width: none;
+    }
+    :global(body:not(.home-page) .site-header > nav::-webkit-scrollbar) { display: none; }
+    :global(body:not(.home-page) .site-header > nav a) { flex: none; font-size: 11px; white-space: nowrap; }
+    :global(body:not(.home-page) .site-header > nav a[href*="/community/"]) { order: -1; }
+    :global(body:not(.home-page) .site-header .language-switch) { flex: none; }
+  }
+</style>

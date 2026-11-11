@@ -1,0 +1,317 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { localeHref } from '../../lib/i18n';
+
+const locale = Astro.locals.locale;
+const en = locale === 'en';
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect(localeHref('/login/?next=/community/goals/', locale), 302);
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+---
+<Base title={en ? 'My learning goals' : 'Meine Lernziele'}>
+  <section class="interior-hero wrap goals-page">
+    <div class="section-label">{en ? 'Your private learning space' : 'Dein privater Lernbereich'}</div>
+    <h1>{en ? 'Personal learning goals.' : 'Persönliche Lernziele.'}</h1>
+    <p>{en
+      ? 'Only you can see your goals and the resources you connect to them. Set up to three active goals; achieved goals do not count toward the limit.'
+      : 'Nur du kannst deine Ziele und verknüpften Ressourcen sehen. Lege bis zu drei aktive Ziele fest; erreichte Ziele zählen nicht zum Limit.'}</p>
+
+    <form id="goal-create" class="goal-form">
+      <h2>{en ? 'Create a goal' : 'Lernziel erstellen'}</h2>
+      <label>{en ? 'Title' : 'Titel'}<input name="title" maxlength="120" required /></label>
+      <label>{en ? 'Description' : 'Beschreibung'}<textarea name="description" maxlength="2000" rows="3"></textarea></label>
+      <div class="goal-fields">
+        <label>{en ? 'Skill area' : 'Kompetenzbereich'}
+          <select name="skillArea" required>
+            <option>Future Skills</option>
+            <option>AI Literacy</option>
+            <option>Media Literacy</option>
+            <option>Storytelling &amp; Communication</option>
+          </select>
+        </label>
+        <label>{en ? 'Target date (optional)' : 'Zieldatum (optional)'}<input type="date" name="targetDate" /></label>
+      </div>
+      <button class="goal-button" type="submit">{en ? 'Add goal' : 'Ziel hinzufügen'}</button>
+    </form>
+
+    <p id="goal-message" class="goal-message" role="status" aria-live="polite"></p>
+    <div id="goal-list" class="goal-list" aria-live="polite"></div>
+  </section>
+</Base>
+
+<script define:vars={{ en }}>
+  const copy = en ? {
+    loadError: 'Could not load your goals.',
+    saveError: 'Could not save your goal.',
+    deleteError: 'Could not delete this goal.',
+    linkError: 'Could not update the resource link.',
+    deleteConfirm: 'Delete this goal?',
+    save: 'Save changes',
+    remove: 'Delete goal',
+    status: 'Status',
+    targetDate: 'Target date',
+    skillArea: 'Skill area',
+    description: 'Description',
+    resources: 'Saved resources',
+    noResources: 'No saved resources yet.',
+    chooseResource: 'Choose a saved resource',
+    link: 'Link resource',
+    unlink: 'Unlink',
+    none: 'No resources linked.',
+    empty: 'You have no learning goals yet.',
+    title: 'Title',
+  } : {
+    loadError: 'Deine Lernziele konnten nicht geladen werden.',
+    saveError: 'Dein Lernziel konnte nicht gespeichert werden.',
+    deleteError: 'Dieses Lernziel konnte nicht gelöscht werden.',
+    linkError: 'Die Verknüpfung konnte nicht aktualisiert werden.',
+    deleteConfirm: 'Dieses Lernziel löschen?',
+    save: 'Änderungen speichern',
+    remove: 'Lernziel löschen',
+    status: 'Status',
+    targetDate: 'Zieldatum',
+    skillArea: 'Kompetenzbereich',
+    description: 'Beschreibung',
+    resources: 'Gespeicherte Ressourcen',
+    noResources: 'Noch keine gespeicherten Ressourcen.',
+    chooseResource: 'Gespeicherte Ressource wählen',
+    link: 'Ressource verknüpfen',
+    unlink: 'Lösen',
+    none: 'Keine Ressourcen verknüpft.',
+    empty: 'Du hast noch keine Lernziele.',
+    title: 'Titel',
+  };
+  const labels = {
+    Planned: en ? 'Planned' : 'Geplant',
+    'In Progress': en ? 'In Progress' : 'In Bearbeitung',
+    Achieved: en ? 'Achieved' : 'Erreicht',
+  };
+  const form = document.querySelector('#goal-create');
+  const list = document.querySelector('#goal-list');
+  const message = document.querySelector('#goal-message');
+
+  function node(tag, className, text) {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+  async function request(url, method, data) {
+    const response = await fetch(url, {
+      method,
+      headers: data ? { 'Content-Type': 'application/json' } : {},
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Request failed');
+    return result;
+  }
+  function resourceLabel(resource) {
+    const saved = resource.savedResource;
+    return saved ? (en ? (saved.titleEn || saved.title) : saved.title)
+      : `${resource.resourceType === 'article' ? (en ? 'Article' : 'Artikel') : (en ? 'Learning resource' : 'Lernressource')} · ${resource.resourceId}`;
+  }
+  function render(data) {
+    list.replaceChildren();
+    if (!data.goals.length) {
+      list.append(node('p', 'community-empty', copy.empty));
+      return;
+    }
+    for (const goal of data.goals) {
+      const card = node('article', 'goal-card');
+      const heading = node('h2', '', goal.title);
+      card.append(heading);
+      const fields = node('form', 'goal-edit');
+      const titleLabel = node('label', '', copy.title);
+      const title = node('input');
+      title.value = goal.title;
+      title.maxLength = 120;
+      title.required = true;
+      titleLabel.append(title);
+      fields.append(titleLabel);
+
+      const descriptionLabel = node('label', '', copy.description);
+      const description = node('textarea');
+      description.rows = 3;
+      description.maxLength = 2000;
+      description.value = goal.description;
+      descriptionLabel.append(description);
+      fields.append(descriptionLabel);
+
+      const row = node('div', 'goal-fields');
+      const areaLabel = node('label', '', copy.skillArea);
+      const area = document.createElement('select');
+      for (const option of ['Future Skills', 'AI Literacy', 'Media Literacy', 'Storytelling & Communication']) {
+        const item = node('option', '', option);
+        item.value = option;
+        area.append(item);
+      }
+      area.value = goal.skillArea;
+      areaLabel.append(area);
+      row.append(areaLabel);
+
+      const statusLabel = node('label', '', copy.status);
+      const status = document.createElement('select');
+      for (const option of ['Planned', 'In Progress', 'Achieved']) {
+        const item = node('option', '', labels[option]);
+        item.value = option;
+        status.append(item);
+      }
+      status.value = goal.status;
+      statusLabel.append(status);
+      row.append(statusLabel);
+      const dateLabel = node('label', '', copy.targetDate);
+      const date = document.createElement('input');
+      date.type = 'date';
+      date.value = goal.targetDate || '';
+      dateLabel.append(date);
+      row.append(dateLabel);
+      fields.append(row);
+
+      const actions = node('div', 'goal-actions');
+      const save = node('button', 'goal-button', copy.save);
+      save.type = 'submit';
+      actions.append(save);
+      const remove = node('button', 'goal-button goal-danger', copy.remove);
+      remove.type = 'button';
+      remove.addEventListener('click', async () => {
+        if (!window.confirm(copy.deleteConfirm)) return;
+        try {
+          await request(`/api/community/goals/${goal.id}/`, 'DELETE');
+          await load();
+        } catch (error) {
+          message.textContent = error.message || copy.deleteError;
+        }
+      });
+      actions.append(remove);
+      fields.append(actions);
+      fields.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        message.textContent = '';
+        try {
+          await request(`/api/community/goals/${goal.id}/`, 'PATCH', {
+            title: title.value,
+            description: description.value,
+            skillArea: area.value,
+            status: status.value,
+            targetDate: date.value || null,
+          });
+          await load();
+        } catch (error) {
+          message.textContent = error.message || copy.saveError;
+        }
+      });
+      card.append(fields);
+
+      const resourceSection = node('section', 'goal-resources');
+      resourceSection.append(node('h3', '', copy.resources));
+      const linked = node('ul', 'goal-resource-list');
+      for (const resource of goal.resources) {
+        const line = node('li');
+        line.append(node('span', '', resourceLabel(resource)));
+        const unlink = node('button', 'goal-link-button', copy.unlink);
+        unlink.type = 'button';
+        unlink.addEventListener('click', async () => {
+          try {
+            await request(`/api/community/goals/${goal.id}/resources/`, 'DELETE', {
+              resourceType: resource.resourceType,
+              resourceId: resource.resourceId,
+            });
+            await load();
+          } catch (error) {
+            message.textContent = error.message || copy.linkError;
+          }
+        });
+        line.append(unlink);
+        linked.append(line);
+      }
+      if (!goal.resources.length) linked.append(node('li', '', copy.none));
+      resourceSection.append(linked);
+
+      const linkForm = node('form', 'goal-link-form');
+      const select = document.createElement('select');
+      select.required = true;
+      select.append(node('option', '', copy.chooseResource));
+      select.options[0].value = '';
+      const alreadyLinked = new Set(goal.resources.map((item) => `${item.resourceType}:${item.resourceId}`));
+      for (const resource of data.savedResources) {
+        const key = `${resource.resourceType}:${resource.resourceId}`;
+        if (alreadyLinked.has(key)) continue;
+        const option = node('option', '', `${resource.resourceType === 'article' ? (en ? 'Article' : 'Artikel') : (en ? 'Learning resource' : 'Lernressource')}: ${en ? (resource.titleEn || resource.title) : resource.title}`);
+        option.value = key;
+        select.append(option);
+      }
+      const linkButton = node('button', 'goal-link-button', copy.link);
+      linkButton.type = 'submit';
+      linkForm.append(select, linkButton);
+      linkForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const resource = data.savedResources.find((item) => `${item.resourceType}:${item.resourceId}` === select.value);
+        if (!resource) return;
+        try {
+          await request(`/api/community/goals/${goal.id}/resources/`, 'POST', {
+            resourceType: resource.resourceType,
+            resourceId: resource.resourceId,
+          });
+          await load();
+        } catch (error) {
+          message.textContent = error.message || copy.linkError;
+        }
+      });
+      if (!data.savedResources.length) resourceSection.append(node('p', 'goal-note', copy.noResources));
+      else resourceSection.append(linkForm);
+      card.append(resourceSection);
+      list.append(card);
+    }
+  }
+  async function load() {
+    try {
+      const data = await request('/api/community/goals/', 'GET');
+      render(data);
+    } catch (error) {
+      message.textContent = error.message || copy.loadError;
+    }
+  }
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    message.textContent = '';
+    const values = new FormData(form);
+    try {
+      await request('/api/community/goals/', 'POST', {
+        title: values.get('title'),
+        description: values.get('description'),
+        skillArea: values.get('skillArea'),
+        targetDate: values.get('targetDate') || null,
+      });
+      form.reset();
+      await load();
+    } catch (error) {
+      message.textContent = error.message || copy.saveError;
+    }
+  });
+  load();
+</script>
+
+<style>
+  @import '../../styles/account.css';
+  .goals-page{max-width:920px}
+  .goal-form,.goal-card{margin-top:24px;padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .goal-form h2,.goal-card h2{margin:0 0 18px;font-size:24px}
+  .goal-form label,.goal-edit label{display:grid;gap:7px;margin:12px 0;font-weight:600}
+  .goal-form input,.goal-form textarea,.goal-form select,.goal-edit input,.goal-edit textarea,.goal-edit select,.goal-link-form select{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);font:inherit}
+  .goal-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .goal-button,.goal-link-button{padding:10px 15px;border:1px solid var(--violet);border-radius:999px;background:var(--violet);color:white;font:inherit;font-weight:700;cursor:pointer}
+  .goal-danger{background:transparent;color:var(--ink);border-color:var(--line)}
+  .goal-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .goal-message{min-height:1.5em;color:#9b2c2c}
+  .goal-resources{margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+  .goal-resources h3{margin:0 0 10px;font-size:18px}
+  .goal-resource-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+  .goal-resource-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;overflow-wrap:anywhere}
+  .goal-link-form{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .goal-link-form select{flex:1}
+  .goal-note{color:var(--muted)}
+  @media(max-width:600px){.goal-form,.goal-card{padding:18px}.goal-fields{grid-template-columns:1fr}.goal-link-form,.goal-resource-list li{align-items:stretch;flex-direction:column}.goal-link-button{align-self:flex-start}}
+</style>

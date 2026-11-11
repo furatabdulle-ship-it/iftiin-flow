@@ -21,6 +21,7 @@ export type ArticleRecord = {
     pillar: string;
     format: string;
     status: ArticleStatus;
+    visibility: 'public' | 'community';
     featured: boolean;
     videoUrl: string | null;
     loginRequired: boolean;
@@ -43,6 +44,7 @@ type ArticleRow = QueryResultRow & {
   pillar: string;
   format: string;
   status: ArticleStatus;
+  visibility: 'public' | 'community';
   featured: boolean;
   video_url: string | null;
   login_required: boolean;
@@ -53,7 +55,7 @@ type ArticleRow = QueryResultRow & {
 };
 
 const articleColumns = `id, slug, title, title_en, description, description_en, body_en, date, updated, pillar,
-  format, status, featured, video_url, login_required, requires_purchase, tags, sources, body`;
+  format, status, visibility, featured, video_url, login_required, requires_purchase, tags, sources, body`;
 const exploreTopicPatterns = [
   '%future skill%',
   '%skills literacy%',
@@ -90,6 +92,7 @@ function fromRow(row: ArticleRow): ArticleRecord {
       pillar: row.pillar,
       format: row.format,
       status: row.status,
+      visibility: row.visibility,
       featured: row.featured,
       videoUrl: row.video_url,
       loginRequired: row.login_required,
@@ -120,25 +123,27 @@ function englishTranslationFilter(locale: Locale): string {
           AND (NULLIF(BTRIM(body), '') IS NULL OR NULLIF(BTRIM(body_en), '') IS NOT NULL)`;
 }
 
-export async function publishedArticles(includeLoginRequired = false, locale: Locale = 'de'): Promise<ArticleRecord[]> {
+export async function publishedArticles(includeRestricted = false, locale: Locale = 'de'): Promise<ArticleRecord[]> {
   const result = await query<ArticleRow>(
     `SELECT ${articleColumns} FROM articles
      WHERE status = 'published' AND ($1::boolean OR login_required = FALSE)
+       AND ($1::boolean OR visibility = 'public')
        ${englishTranslationFilter(locale)}
      ORDER BY date DESC, created_at DESC`,
-    [includeLoginRequired],
+    [includeRestricted],
   );
   return result.rows.map(fromRow).map((article) => localizeArticle(article, locale));
 }
 
-export async function featuredArticles(limit = 3, includeLoginRequired = false, locale: Locale = 'de'): Promise<ArticleRecord[]> {
+export async function featuredArticles(limit = 3, includeRestricted = false, locale: Locale = 'de'): Promise<ArticleRecord[]> {
   const result = await query<ArticleRow>(
     `SELECT ${articleColumns} FROM articles
      WHERE status = 'published' AND ($2::boolean OR login_required = FALSE)
+       AND ($2::boolean OR visibility = 'public')
        ${englishTranslationFilter(locale)}
      ORDER BY featured DESC, date DESC
      LIMIT $1`,
-    [limit, includeLoginRequired],
+    [limit, includeRestricted],
   );
   return result.rows.map(fromRow).map((article) => localizeArticle(article, locale));
 }
@@ -146,13 +151,15 @@ export async function featuredArticles(limit = 3, includeLoginRequired = false, 
 export async function exploreArticles(
   locale: Locale = 'de',
   limit?: number,
+  includeCommunity = false,
 ): Promise<ArticleRecord[]> {
-  const limitClause = limit === undefined ? '' : 'LIMIT $3';
-  const values: unknown[] = [['essay', 'map'], exploreTopicPatterns];
+  const limitClause = limit === undefined ? '' : 'LIMIT $4';
+  const values: unknown[] = [['essay', 'map'], exploreTopicPatterns, includeCommunity];
   if (limit !== undefined) values.push(limit);
   const result = await query<ArticleRow>(
     `SELECT ${articleColumns} FROM articles
      WHERE status = 'published' AND login_required = FALSE AND requires_purchase = FALSE
+       AND ($3::boolean OR visibility = 'public')
        AND format = ANY($1::text[])
        AND lower(concat_ws(' ', slug, title, title_en, description, description_en, array_to_string(tags, ' ')))
          LIKE ANY($2::text[])
@@ -172,12 +179,17 @@ export async function allArticles(): Promise<ArticleRecord[]> {
   return result.rows.map(fromRow);
 }
 
-export async function getPublishedArticle(slug: string, locale: Locale = 'de'): Promise<ArticleRecord | null> {
+export async function getPublishedArticle(
+  slug: string,
+  locale: Locale = 'de',
+  includeCommunity = false,
+): Promise<ArticleRecord | null> {
   const result = await query<ArticleRow>(
     `SELECT ${articleColumns} FROM articles
      WHERE slug = $1 AND status = 'published'
+       AND ($2::boolean OR visibility = 'public')
        ${englishTranslationFilter(locale)}`,
-    [slug],
+    [slug, includeCommunity],
   );
   return result.rows[0] ? localizeArticle(fromRow(result.rows[0]), locale) : null;
 }

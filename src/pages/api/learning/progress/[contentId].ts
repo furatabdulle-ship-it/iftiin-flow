@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getSessionAccount } from '../../../../lib/auth';
-import { hasContentAccess } from '../../../../lib/commerce';
+import { hasMemberContentAccess } from '../../../../lib/commerce';
 import { query } from '../../../../lib/db';
 import { json, rejectCrossOriginWrite, requestJson, RequestInputError } from '../../../../lib/http';
 import { learningProgressSchema } from '../../../../lib/validation';
@@ -17,13 +17,13 @@ export const PUT: APIRoute = async (context) => {
     if (!contentId || !uuidPattern.test(contentId)) return json({ error: 'Ungültige Inhalts-ID.' }, 400);
     const parsed = learningProgressSchema.safeParse(await requestJson(context.request));
     if (!parsed.success) return json({ error: 'Der Lernfortschritt ist ungültig.' }, 400);
-    const item = await query<{ id: string }>(
-      `SELECT id FROM content_items
+    const item = await query<{ id: string; visibility: 'public' | 'community' }>(
+      `SELECT id, visibility FROM content_items
        WHERE id = $1 AND status = 'published' AND content_type IN ('lesson', 'video')`,
       [contentId],
     );
     if (!item.rowCount) return json({ error: 'Lektion nicht gefunden.' }, 404);
-    if (account.role !== 'admin' && !(await hasContentAccess(account.id, contentId))) {
+    if (!(await hasMemberContentAccess(account.id, contentId, item.rows[0].visibility, account.role))) {
       return json({ error: 'Für diese Lektion besitzt dein Konto keinen Zugriff.' }, 403);
     }
 

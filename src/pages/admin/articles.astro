@@ -11,7 +11,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
   <section class="section wrap admin-layout">
     <div class="section-label">Admin / Redaktion</div>
     <h1>Artikel <em>verwalten.</em></h1>
-    <p>Beiträge werden als Entwurf gespeichert und erst mit Status „Veröffentlicht“ öffentlich angezeigt.</p>
+    <p>Veröffentlichte Beiträge werden gemäß ihrer Sichtbarkeit öffentlich oder nur für Community-Konten angezeigt.</p>
     <a class="pill-link" href="/admin/">Zum Dashboard <ArrowIcon /></a>
     <a class="pill-link" href="/admin/products/">Shop-Produkte &amp; Inhalte verwalten <ArrowIcon /></a>
     <a class="pill-link" href="/admin/studio-inquiries/">Studio-Anfragen verwalten <ArrowIcon /></a>
@@ -69,6 +69,9 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
           <label>Status
             <select name="status"><option value="draft">Entwurf</option><option value="published">Veröffentlicht</option></select>
           </label>
+          <label>Sichtbarkeit
+            <select name="visibility"><option value="public">Öffentlich</option><option value="community">Nur Community-Konten</option></select>
+          </label>
           <label><span>Beitragsinhalt (Deutsch, Markdown)</span><textarea name="body" rows="16"></textarea></label>
           <label><span>Article content (English, Markdown)</span><textarea name="bodyEn" rows="16"></textarea></label>
           <label>Tags (durch Komma trennen)<input name="tags" /></label>
@@ -102,6 +105,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
       pillar: string;
       format: string;
       status: 'draft' | 'published';
+      visibility: 'public' | 'community';
       featured: boolean;
       videoUrl: string | null;
       loginRequired: boolean;
@@ -164,7 +168,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
         title.textContent = article.data.title;
         const status = document.createElement('small');
         status.className = 'article-status';
-        status.textContent = article.data.status === 'published' ? 'Veröffentlicht' : 'Entwurf';
+        status.textContent = `${article.data.status === 'published' ? 'Veröffentlicht' : 'Entwurf'} · ${article.data.visibility === 'community' ? 'Community' : 'Öffentlich'}`;
         button.append(title, status);
         button.addEventListener('click', () => editArticle(article));
         list.append(button);
@@ -189,6 +193,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
     if (source('pillar')) source('pillar')!.value = article.data.pillar;
     if (source('format')) source('format')!.value = article.data.format;
     if (source('status')) source('status')!.value = article.data.status;
+    if (source('visibility')) source('visibility')!.value = article.data.visibility;
     if (source('videoUrl')) source('videoUrl')!.value = article.data.videoUrl ?? '';
     if (source('body')) source('body')!.value = article.body;
     if (source('bodyEn')) source('bodyEn')!.value = article.bodyEn ?? '';
@@ -228,6 +233,7 @@ if (account.role !== 'admin') return Astro.redirect('/account/', 302);
       pillar: get('pillar'),
       format: get('format'),
       status: get('status'),
+      visibility: get('visibility'),
       featured: (field('featured') as HTMLInputElement | null)?.checked ?? false,
       videoUrl: get('videoUrl') || null,
       loginRequired: (field('loginRequired') as HTMLInputElement | null)?.checked ?? false,

@@ -1,0 +1,124 @@
+---
+import type { SavedResourceType } from '../lib/saved-resources';
+
+const { resourceType, resourceId } = Astro.props as {
+  resourceType: SavedResourceType;
+  resourceId: string;
+};
+const en = Astro.locals.locale === 'en';
+---
+<div class="save-resource-control">
+  <button
+    type="button"
+    class="save-resource-button"
+    data-save-resource
+    data-resource-type={resourceType}
+    data-resource-id={resourceId}
+    data-save-label={en ? 'Save resource' : 'Ressource speichern'}
+    data-remove-label={en ? 'Remove saved resource' : 'Aus Merkliste entfernen'}
+    data-loading-label={en ? 'Checking…' : 'Wird geprüft …'}
+    data-login-label={en ? 'Sign in to save' : 'Anmelden zum Speichern'}
+    data-saved-message={en ? 'Saved to your resources.' : 'In deinen Ressourcen gespeichert.'}
+    data-removed-message={en ? 'Removed from your saved resources.' : 'Aus deinen gespeicherten Ressourcen entfernt.'}
+    data-error-message={en ? 'Could not update saved resources. Please try again.' : 'Gespeicherte Ressourcen konnten nicht aktualisiert werden. Bitte versuche es erneut.'}
+    aria-pressed="false"
+  >{en ? 'Checking…' : 'Wird geprüft …'}</button>
+  <span class="save-resource-status" role="status" aria-live="polite"></span>
+</div>
+
+<script>
+  type SavedResource = { resourceType: string; resourceId: string };
+  let savedResourcesRequest: Promise<Set<string> | null> | undefined;
+
+  function loadSavedResources(): Promise<Set<string> | null> {
+    savedResourcesRequest ??= fetch('/api/community/saved-resources/')
+      .then(async (response) => {
+        if (response.status === 401) return null;
+        if (!response.ok) throw new Error('Could not load saved resources.');
+        const result = await response.json() as { resources: SavedResource[] };
+        return new Set(result.resources.map((item) => `${item.resourceType}:${item.resourceId}`));
+      });
+    return savedResourcesRequest;
+  }
+
+  function setButtonState(button: HTMLButtonElement, isSaved: boolean) {
+    button.setAttribute('aria-pressed', String(isSaved));
+    button.textContent = isSaved
+      ? button.dataset.removeLabel ?? 'Remove saved resource'
+      : button.dataset.saveLabel ?? 'Save resource';
+    button.dataset.authenticated = 'true';
+    button.disabled = false;
+  }
+
+  function signInToSave() {
+    const next = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.location.assign(`/login/?next=${encodeURIComponent(next)}`);
+  }
+
+  const saveButtons = document.querySelectorAll<HTMLButtonElement>('[data-save-resource]');
+  loadSavedResources().then((savedResources) => {
+    for (const button of saveButtons) {
+      if (!savedResources) {
+        button.textContent = button.dataset.loginLabel ?? 'Sign in to save';
+        button.dataset.authenticated = 'false';
+        button.disabled = false;
+        continue;
+      }
+      const key = `${button.dataset.resourceType}:${button.dataset.resourceId}`;
+      setButtonState(button, savedResources.has(key));
+    }
+  }).catch(() => {
+    for (const button of saveButtons) {
+      const status = button.nextElementSibling;
+      if (status) status.textContent = button.dataset.errorMessage ?? 'Could not load saved resources.';
+      button.disabled = true;
+    }
+  });
+
+  for (const button of saveButtons) {
+    button.addEventListener('click', async () => {
+      if (button.dataset.authenticated === 'false') {
+        signInToSave();
+        return;
+      }
+      if (button.disabled) return;
+      const wasSaved = button.getAttribute('aria-pressed') === 'true';
+      const status = button.nextElementSibling;
+      button.disabled = true;
+      if (status) status.textContent = button.dataset.loadingLabel ?? 'Saving…';
+      try {
+        const response = await fetch('/api/community/saved-resources/', {
+          method: wasSaved ? 'DELETE' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resourceType: button.dataset.resourceType,
+            resourceId: button.dataset.resourceId,
+          }),
+        });
+        if (response.status === 401) {
+          signInToSave();
+          return;
+        }
+        if (!response.ok) throw new Error();
+        setButtonState(button, !wasSaved);
+        if (status) {
+          status.textContent = wasSaved
+            ? button.dataset.removedMessage ?? 'Removed from your saved resources.'
+            : button.dataset.savedMessage ?? 'Saved to your resources.';
+        }
+      } catch {
+        button.disabled = false;
+        if (status) status.textContent = button.dataset.errorMessage ?? 'Could not update saved resources. Please try again.';
+      }
+    });
+  }
+</script>
+
+<style>
+  .save-resource-control{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .save-resource-button{border:1px solid var(--violet);border-radius:999px;background:transparent;color:var(--violet);padding:10px 15px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+  .save-resource-button:hover{background:var(--violet);color:#fff}
+  .save-resource-button:focus-visible{outline:2px solid var(--violet);outline-offset:3px}
+  .save-resource-button:disabled{opacity:.65;cursor:wait}
+  .save-resource-status{color:var(--muted);font-size:13px}
+</style>

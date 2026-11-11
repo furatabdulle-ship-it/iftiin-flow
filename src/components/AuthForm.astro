@@ -6,7 +6,7 @@ const register = mode === 'register';
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 ---
-<form class="account-form" id="auth-form" data-endpoint={mode} data-redirect-to={localeHref(redirectTo, locale)} data-locale={locale} data-wait={copy('account.wait')} data-request-failed={copy('auth.requestFailed')} data-server-unavailable={copy('account.serverUnavailable')}>
+<form class="account-form auth-form" id="auth-form" data-endpoint={mode} data-redirect-to={localeHref(redirectTo, locale)} data-locale={locale} data-wait={copy('account.wait')} data-request-failed={copy('auth.requestFailed')} data-server-unavailable={copy('account.serverUnavailable')} data-show-password={locale === 'en' ? 'Show password' : 'Passwort anzeigen'} data-hide-password={locale === 'en' ? 'Hide password' : 'Passwort verbergen'}>
   {register && <>
     <label for="display-name">{copy('auth.name')}</label>
     <input id="display-name" name="displayName" type="text" autocomplete="name" maxlength="80" required />
@@ -14,16 +14,20 @@ const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
   <label for="email">{copy('auth.email')}</label>
   <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required />
   <label for="password">{copy('auth.password')}</label>
-  <input
-    id="password"
-    name="password"
-    type="password"
-    autocomplete={register ? 'new-password' : 'current-password'}
-    minlength="12"
-    maxlength="128"
-    required
-  />
-  {register && <p class="form-hint">{copy('auth.passwordHint')}</p>}
+  <div class="password-control">
+    <input
+      id="password"
+      name="password"
+      type="password"
+      autocomplete={register ? 'new-password' : 'current-password'}
+      minlength="12"
+      maxlength="128"
+      required
+      aria-describedby={register ? 'password-hint' : undefined}
+    />
+    <button class="password-toggle" type="button" aria-controls="password" aria-pressed="false">{locale === 'en' ? 'Show password' : 'Passwort anzeigen'}</button>
+  </div>
+  {register && <p class="form-hint" id="password-hint">{copy('auth.passwordHint')}</p>}
   <p class="form-message" id="auth-message" role="status" aria-live="polite"></p>
   <button class="pill-link" type="submit">{register ? copy('auth.createAccount') : copy('auth.login')} <ArrowIcon /></button>
 </form>
@@ -31,6 +35,18 @@ const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 <script>
   const form = document.querySelector<HTMLFormElement>('#auth-form');
   const message = document.querySelector<HTMLElement>('#auth-message');
+  const password = form?.querySelector<HTMLInputElement>('#password');
+  const passwordToggle = form?.querySelector<HTMLButtonElement>('.password-toggle');
+
+  passwordToggle?.addEventListener('click', () => {
+    if (!password || !form) return;
+    const visible = password.type === 'password';
+    password.type = visible ? 'text' : 'password';
+    passwordToggle.setAttribute('aria-pressed', String(visible));
+    passwordToggle.textContent = visible
+      ? form.dataset.hidePassword ?? 'Hide password'
+      : form.dataset.showPassword ?? 'Show password';
+  });
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -39,6 +55,7 @@ const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
     const endpoint = form.dataset.endpoint;
     const data = new FormData(form);
     message.textContent = form.dataset.wait ?? 'Please wait …';
+    form.setAttribute('aria-busy', 'true');
     try {
       const response = await fetch(`/api/auth/${endpoint}/`, {
         method: 'POST',
@@ -61,11 +78,101 @@ const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
                 ? 'Too many attempts. Please wait a moment and try again.'
                 : form.dataset.requestFailed ?? 'The request failed.')
           : result.error ?? 'Die Anfrage ist fehlgeschlagen.';
+        form.removeAttribute('aria-busy');
         return;
       }
       window.location.assign(form.dataset.redirectTo ?? '/account/');
     } catch {
       message.textContent = form.dataset.serverUnavailable ?? 'The server is unavailable right now. Please try again.';
+      form.removeAttribute('aria-busy');
     }
   });
 </script>
+
+<style>
+  .auth-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 480px;
+    margin: 38px 0 0;
+    box-sizing: border-box;
+  }
+
+  .auth-form > label {
+    display: block;
+    width: 100%;
+    margin-top: 5px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .auth-form > input,
+  .auth-form .password-control input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 50px;
+    box-sizing: border-box;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ink);
+    padding: 13px 14px;
+    font: inherit;
+  }
+
+  .auth-form > input:focus,
+  .auth-form .password-control input:focus {
+    outline: 2px solid var(--violet);
+    outline-offset: 2px;
+  }
+
+  .auth-form .password-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .auth-form .password-toggle {
+    position: static;
+    justify-self: end;
+    min-height: 40px;
+    transform: none;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--violet);
+    padding: 6px 9px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .auth-form .password-toggle:focus-visible,
+  .auth-form .pill-link:focus-visible {
+    outline: 2px solid var(--violet);
+    outline-offset: 3px;
+  }
+
+  .auth-form .form-hint,
+  .auth-form .form-message {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .auth-form .form-message {
+    min-height: 1.4em;
+  }
+
+  .auth-form .pill-link {
+    justify-self: start;
+    border: 0;
+    cursor: pointer;
+  }
+</style>

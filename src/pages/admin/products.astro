@@ -135,6 +135,7 @@ const initialTab = Astro.url.searchParams.get('tab') === 'products' ? 'products'
             <h3>Veröffentlichung</h3>
             <div class="cms-form-grid">
               <label>Status<select name="status"><option value="draft">Entwurf</option><option value="published">Veröffentlicht</option><option value="archived">Archiviert</option></select></label>
+              <label>Sichtbarkeit<select name="visibility"><option value="public">Öffentlich</option><option value="community">Nur Community-Konten</option></select></label>
               <label>Reihenfolge<input name="position" type="number" min="0" max="10000" value="0" required /></label>
             </div>
           </section>
@@ -247,6 +248,7 @@ const initialTab = Astro.url.searchParams.get('tab') === 'products' ? 'products'
     description: string; descriptionEn: string | null; body: string; bodyEn: string | null;
     contentType: string; status: string; storageAssetId: string | null;
     originalFilename: string | null; articleId: string | null; position: number;
+    visibility: 'public' | 'community';
   };
   type ProductRecord = {
     id: string; slug: string; name: string; nameEn: string | null;
@@ -504,7 +506,7 @@ const initialTab = Astro.url.searchParams.get('tab') === 'products' ? 'products'
       const cardTitle = document.createElement('h3');
       cardTitle.textContent = item.title;
       const cardMeta = document.createElement('p');
-      cardMeta.textContent = contentTypeNames[item.contentType] ?? item.contentType;
+      cardMeta.textContent = `${contentTypeNames[item.contentType] ?? item.contentType} · ${item.visibility === 'community' ? 'Community' : 'Öffentlich'}`;
       const cardStatus = document.createElement('span');
       setStatusBadge(cardStatus, item.status);
       const cardActions = document.createElement('div');
@@ -648,6 +650,7 @@ const initialTab = Astro.url.searchParams.get('tab') === 'products' ? 'products'
       formField<HTMLTextAreaElement>(contentForm, 'body')!.value = item.body;
       formField<HTMLTextAreaElement>(contentForm, 'bodyEn')!.value = item.bodyEn ?? '';
       formField<HTMLSelectElement>(contentForm, 'status')!.value = item.status;
+      formField<HTMLSelectElement>(contentForm, 'visibility')!.value = item.visibility;
       formField<HTMLInputElement>(contentForm, 'position')!.value = String(item.position);
       if (contentUploadStatus) contentUploadStatus.textContent = item.originalFilename
         ? `Aktuelle Datei: ${item.originalFilename}`
@@ -858,6 +861,7 @@ const initialTab = Astro.url.searchParams.get('tab') === 'products' ? 'products'
         bodyEn: data.get('bodyEn'),
         storageAssetId,
         status: data.get('status'),
+        visibility: data.get('visibility'),
         position: Number(data.get('position')),
       };
       await api(`${root}content/${id ? `${encodeURIComponent(id)}/` : ''}`, {

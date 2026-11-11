@@ -1,0 +1,142 @@
+---
+import ArrowIcon from '../../components/ArrowIcon.astro';
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect('/login/', 302);
+if (account.role !== 'admin') return Astro.redirect('/account/', 302);
+---
+<Base title="Community-Diskussionen moderieren">
+  <section class="section wrap admin-layout discussion-admin">
+    <div class="section-label">Admin / Community</div>
+    <h1>Diskussionen <em>moderieren.</em></h1>
+    <p>Prüfe gemeldete Beiträge und blende Inhalte bei Bedarf aus oder wieder ein.</p>
+    <p><a class="pill-link" href="/admin/">Zur Admin-Übersicht <ArrowIcon /></a></p>
+    <p id="moderation-message" class="admin-message" role="status" aria-live="polite"></p>
+    <label class="moderation-filter">Ansicht
+      <select id="moderation-filter">
+        <option value="reported">Offene Meldungen</option>
+        <option value="recent">Neueste</option>
+        <option value="hidden">Ausgeblendet</option>
+        <option value="all">Alle</option>
+      </select>
+    </label>
+    <div id="moderation-list" class="moderation-list" aria-live="polite"></div>
+    <button id="moderation-more" class="pill-link" type="button" hidden>Weitere laden</button>
+  </section>
+</Base>
+
+<script>
+  type AdminDiscussion = {
+    id: string;
+    category: string;
+    title: string;
+    body: string;
+    author: string;
+    createdAt: string;
+    status: 'visible' | 'hidden';
+    reportCount: number;
+    reports: Array<{ reason: string; createdAt: string }>;
+  };
+  type DiscussionList = { discussions: AdminDiscussion[]; pageSize: number; total: number };
+  const filter = document.querySelector<HTMLSelectElement>('#moderation-filter')!;
+  const list = document.querySelector<HTMLDivElement>('#moderation-list')!;
+  const message = document.querySelector<HTMLParagraphElement>('#moderation-message')!;
+  const more = document.querySelector<HTMLButtonElement>('#moderation-more')!;
+  let page = 1;
+  let total = 0;
+
+  function node<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className = '',
+    text?: string,
+  ): HTMLElementTagNameMap[K] {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+  async function request<T>(url: string, method = 'GET', data?: unknown): Promise<T> {
+    const response = await fetch(url, {
+      method,
+      headers: data ? { 'Content-Type': 'application/json' } : {},
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Anfrage fehlgeschlagen.');
+    return result;
+  }
+  function render(item: AdminDiscussion): HTMLElement {
+    const card = node('article', 'moderation-card');
+    const meta = node('div', 'moderation-meta');
+    meta.append(
+      node('span', '', item.category),
+      node('span', '', `${item.author} · ${new Date(item.createdAt).toLocaleString('de')}`),
+      node('strong', item.status === 'hidden' ? 'is-hidden' : 'is-visible', item.status === 'hidden' ? 'Ausgeblendet' : 'Sichtbar'),
+    );
+    card.append(meta, node('h2', '', item.title), node('p', 'moderation-body', item.body));
+    if (item.reports?.length) {
+      const reports = node('details', 'moderation-reports');
+      reports.append(node('summary', '', `${item.reportCount} offene Meldung${item.reportCount === 1 ? '' : 'en'}`));
+      for (const report of item.reports) {
+        reports.append(node('p', '', `${report.reason} · ${new Date(report.createdAt).toLocaleString('de')}`));
+      }
+      card.append(reports);
+    }
+    const action = node('button', 'moderation-action', item.status === 'hidden' ? 'Wieder einblenden' : 'Ausblenden');
+    action.type = 'button';
+    action.addEventListener('click', async () => {
+      message.textContent = '';
+      try {
+        await request(`/api/admin/community-discussions/${item.id}/`, 'PATCH', {
+          status: item.status === 'hidden' ? 'visible' : 'hidden',
+        });
+        await load(true);
+      } catch (error) {
+        message.textContent = error instanceof Error ? error.message : 'Die Moderation konnte nicht gespeichert werden.';
+      }
+    });
+    card.append(action);
+    return card;
+  }
+  async function load(reset = false) {
+    if (reset) {
+      page = 1;
+      list.replaceChildren();
+    }
+    message.textContent = '';
+    try {
+      const params = new URLSearchParams({ status: filter.value, page: String(page) });
+      const result = await request<DiscussionList>(`/api/admin/community-discussions/?${params}`);
+      total = result.total;
+      if (reset && !result.discussions.length) list.append(node('p', '', 'Keine Diskussionen in dieser Ansicht.'));
+      result.discussions.forEach((item) => list.append(render(item)));
+      more.hidden = page * result.pageSize >= total;
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : 'Diskussionen konnten nicht geladen werden.';
+    }
+  }
+  filter.addEventListener('change', () => load(true));
+  more.addEventListener('click', () => { page += 1; load(); });
+  load(true);
+</script>
+
+<style>
+  @import '../../styles/account.css';
+  .discussion-admin{max-width:900px}
+  .moderation-filter{display:grid;max-width:300px;gap:7px;font-size:14px;font-weight:700}
+  .moderation-filter select{min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font:inherit}
+  .moderation-list{display:grid;gap:14px;margin:20px 0}
+  .moderation-card{padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow-wrap:anywhere}
+  .moderation-meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;color:var(--muted);font-size:13px}
+  .moderation-meta strong{padding:4px 8px;border-radius:999px}
+  .moderation-meta .is-visible{background:#e8f1e7;color:#335f39}
+  .moderation-meta .is-hidden{background:#f8e8e5;color:#8f342b}
+  .moderation-card h2{margin:14px 0 8px;font-size:23px}
+  .moderation-body{white-space:pre-wrap;line-height:1.65}
+  .moderation-reports{margin:16px 0;color:var(--muted)}
+  .moderation-reports summary{cursor:pointer;font-weight:700}
+  .moderation-action{padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+  .moderation-action:hover{border-color:var(--violet)}
+</style>

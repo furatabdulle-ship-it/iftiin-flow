@@ -41,6 +41,8 @@ const navigation = [
   { label: 'Inhalte', href: root('admin/products/?tab=contents'), icon: 'content' as const },
   { label: 'Produkte', href: root('admin/products/?tab=products'), icon: 'product' as const },
   { label: 'Pilotanmeldungen', href: root('admin/skills-navigator-waitlist/'), icon: 'people' as const },
+  { label: 'Ziel-Sprints', href: root('admin/goal-sprints/'), icon: 'people' as const },
+  { label: 'Community-Moderation', href: root('admin/community-discussions/'), icon: 'people' as const },
   { label: 'Anfragen', href: root('admin/studio-inquiries/'), icon: 'mail' as const },
 ];
 
@@ -86,6 +88,24 @@ const areas = [
     icon: 'people' as const,
     primary: `${waitlistCounts.confirmed} bestätigt`,
     secondary: `${waitlistCounts.pending} offen`,
+    warning: '',
+  },
+  {
+    label: 'Ziel-Sprints',
+    description: 'Sprints und Community-Zugang verwalten',
+    href: root('admin/goal-sprints/'),
+    icon: 'people' as const,
+    primary: 'Anmeldungen bestätigen',
+    secondary: 'Zugänge freigeben oder entziehen',
+    warning: '',
+  },
+  {
+    label: 'Community-Moderation',
+    description: 'Fragen und Diskussionen prüfen',
+    href: root('admin/community-discussions/'),
+    icon: 'people' as const,
+    primary: 'Diskussionen moderieren',
+    secondary: 'Meldungen und Sichtbarkeit',
     warning: '',
   },
   {

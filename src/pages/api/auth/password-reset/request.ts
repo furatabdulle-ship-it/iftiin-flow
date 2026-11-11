@@ -5,6 +5,7 @@ import { rateLimit } from '../../../../lib/rate-limit';
 import { isPasswordResetEmailConfigured, sendPasswordResetEmail } from '../../../../lib/password-reset-email';
 import { passwordResetRequestSchema } from '../../../../lib/validation';
 import { t } from '../../../../lib/i18n';
+import { safeNextPath } from '../../../../lib/safe-next';
 
 export const POST: APIRoute = async (context) => {
   const confirmationMessage = t(context.locals.locale, 'auth.resetRequestSent');
@@ -19,10 +20,13 @@ export const POST: APIRoute = async (context) => {
   try {
     const parsed = passwordResetRequestSchema.safeParse(await requestJson(context.request));
     if (!parsed.success) return json({ error: 'Bitte gib eine gültige E-Mail-Adresse ein.' }, 400);
+    if (parsed.data.next && !safeNextPath(parsed.data.next)) {
+      return json({ error: 'Der Rückweg ist ungültig.' }, 400);
+    }
 
     const reset = await issuePasswordReset(parsed.data.email);
     if (reset) {
-      void sendPasswordResetEmail(reset.email, reset.token, context.locals.locale)
+      void sendPasswordResetEmail(reset.email, reset.token, context.locals.locale, parsed.data.next || undefined)
         .then(() => console.info('Passwort-Reset-E-Mail von Gmail API angenommen.'))
         .catch(async (error: unknown) => {
           console.error(

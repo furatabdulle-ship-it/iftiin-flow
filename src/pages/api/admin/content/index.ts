@@ -12,6 +12,7 @@ export const GET: APIRoute = async (context) => {
       `SELECT ci.id, ci.content_type AS "contentType", ci.slug, ci.title, ci.title_en AS "titleEn",
               ci.description, ci.description_en AS "descriptionEn", ci.body, ci.body_en AS "bodyEn",
               ci.article_id AS "articleId", ci.storage_asset_id AS "storageAssetId",
+              ci.visibility,
               sa.original_filename AS "originalFilename",
               ci.status, ci.position
        FROM content_items ci
@@ -54,13 +55,13 @@ export const POST: APIRoute = async (context) => {
       const created = await client.query<{ id: string }>(
         `INSERT INTO content_items
          (content_type, slug, title, title_en, description, description_en, body, body_en,
-          storage_asset_id, status, position)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          storage_asset_id, status, visibility, position)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING id`,
         [
           item.contentType, item.slug, item.title, item.titleEn, item.description,
           item.descriptionEn, item.body, item.bodyEn, item.storageAssetId, item.status,
-          item.position,
+          item.visibility, item.position,
         ],
       );
       return { id: created.rows[0].id };

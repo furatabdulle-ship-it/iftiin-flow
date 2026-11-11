@@ -2,7 +2,8 @@
 import ArrowIcon from '../../components/ArrowIcon.astro';
 import Base from '../../layouts/Base.astro';
 import { getSessionAccount } from '../../lib/auth';
-import { hasContentAccess, hasGuestContentAccess } from '../../lib/commerce';
+import { hasCommunityAccess } from '../../lib/community-access';
+import { hasGuestContentAccess, hasMemberContentAccess } from '../../lib/commerce';
 import { getGuestAccessEmail } from '../../lib/guest-access';
 import { query } from '../../lib/db';
 import { renderArticleMarkdown } from '../../lib/articles';
@@ -24,11 +25,13 @@ const result = slug ? await query<{
   body: string;
   body_en: string | null;
   contentType: 'lesson' | 'video';
+  visibility: 'public' | 'community';
   storageAssetId: string | null;
   progressPercent: number | null;
   lastPositionSeconds: number | null;
 }>(`SELECT ci.id, ci.title, ci.title_en, ci.description, ci.description_en, ci.body, ci.body_en,
            ci.content_type AS "contentType",
+           ci.visibility,
            ci.storage_asset_id AS "storageAssetId",
            lp.progress_percent AS "progressPercent",
            lp.last_position_seconds AS "lastPositionSeconds"
@@ -37,10 +40,16 @@ const result = slug ? await query<{
     WHERE ci.slug = $1 AND ci.status = 'published' AND ci.content_type IN ('lesson', 'video')`,
   [slug, account?.id ?? null]) : null;
 const lesson = result?.rows[0];
+if (lesson?.visibility === 'community' && !account) {
+  return Astro.redirect(localeHref('/login/', locale), 302);
+}
+if (lesson?.visibility === 'community' && account && !(await hasCommunityAccess(account.id, account.role))) {
+  return Astro.redirect(localeHref('/community/', locale), 302);
+}
 const englishAvailable = Boolean(lesson?.title_en && (!lesson.body.trim() || lesson.body_en?.trim()));
 const allowed = lesson && (
-  (account && (account.role === 'admin' || await hasContentAccess(account.id, lesson.id))) ||
-  (guestEmail && await hasGuestContentAccess(guestEmail, lesson.id))
+  (account && await hasMemberContentAccess(account.id, lesson.id, lesson.visibility, account.role)) ||
+  (lesson.visibility === 'public' && guestEmail && await hasGuestContentAccess(guestEmail, lesson.id))
 );
 if (lesson && !allowed) return Astro.redirect(localeHref(guestEmail ? '/guest-library/' : '/store/', locale), 302);
 if (!lesson) Astro.response.status = 404;

@@ -1,0 +1,133 @@
+---
+import ArrowIcon from '../../components/ArrowIcon.astro';
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { listOpenGoalSprints } from '../../lib/goal-sprints';
+import { localeHref } from '../../lib/i18n';
+
+const locale = Astro.locals.locale;
+const en = locale === 'en';
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+const sprints = await listOpenGoalSprints(account?.id ?? null);
+if (account) {
+  Astro.response.headers.set('Cache-Control', 'private, no-store');
+  Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+}
+const courseHref = localeHref('/store/?type=online_course', locale);
+const communityHref = localeHref('/community/', locale);
+const loginHref = localeHref('/login/?next=/community/sprints/', locale);
+const registerHref = localeHref('/register/?next=/community/sprints/', locale);
+const formatDate = (value: string | null) => value
+  ? new Intl.DateTimeFormat(en ? 'en-IE' : 'de-DE', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${value.slice(0, 10)}T12:00:00Z`))
+  : null;
+---
+<Base title={en ? 'IFTIIN Goal Sprints' : 'IFTIIN Ziel-Sprints'}>
+  <section class="interior-hero wrap sprint-page">
+    <div class="section-label">IFTIIN COMMUNITY</div>
+    <h1>{en ? 'Goal sprints.' : 'Ziel-Sprints.'}</h1>
+    <p>{en
+      ? 'A focused space to work toward a personal or professional goal together. Community access begins after your sprint registration is approved.'
+      : 'Ein fokussierter Rahmen, um gemeinsam an einem persönlichen oder beruflichen Ziel zu arbeiten. Zugang zur Community erhältst du nach der Bestätigung deiner Sprint-Anmeldung.'}</p>
+    <p class="sprint-access-note">{en
+      ? 'The Community is reserved for active IFTIIN course participants and approved goal-sprint participants.'
+      : 'Die Community ist Teilnehmenden aktiver IFTIIN-Kurse und bestätigten Ziel-Sprints vorbehalten.'}</p>
+    <p><a class="sprint-course-link" href={courseHref}>{en ? 'Explore online courses' : 'Online-Kurse ansehen'} <ArrowIcon /></a></p>
+
+    <div class="sprint-list" aria-live="polite">
+      {sprints.length ? sprints.map((sprint) => (
+        <article class="sprint-card">
+          <div class="section-label">{en ? 'Registration open' : 'Anmeldung offen'}</div>
+          <h2>{sprint.title}</h2>
+          {sprint.description && <p>{sprint.description}</p>}
+          {(sprint.startsOn || sprint.endsOn) && <p class="sprint-dates">
+            {sprint.startsOn && <span>{en ? 'Starts' : 'Start'}: {formatDate(sprint.startsOn)}</span>}
+            {sprint.endsOn && <span>{en ? 'Ends' : 'Ende'}: {formatDate(sprint.endsOn)}</span>}
+          </p>}
+          {sprint.registrationStatus === 'approved' ? (
+            <p class="sprint-status" role="status">{en ? 'Your participation is confirmed.' : 'Deine Teilnahme ist bestätigt.'}
+              {' '}<a href={communityHref}>{en ? 'Go to the Community' : 'Zur Community'} <ArrowIcon /></a>
+            </p>
+          ) : sprint.registrationStatus === 'pending' ? (
+            <p class="sprint-status" role="status">{en
+              ? 'Your registration is being reviewed. We will update its status here.'
+              : 'Deine Anmeldung wird geprüft. Den Status findest du hier wieder.'}</p>
+          ) : account ? (
+            <form class="sprint-registration" data-sprint-id={sprint.id}>
+              {sprint.registrationStatus && <p class="sprint-status">{en
+                ? 'Your previous application was not approved. You may apply again.'
+                : 'Deine vorherige Anmeldung wurde nicht bestätigt. Du kannst dich erneut anmelden.'}</p>}
+              <label>{en ? 'What would you like to work toward?' : 'Woran möchtest du im Sprint arbeiten?'}
+                <textarea name="motivation" maxlength="1000" rows="3"></textarea>
+              </label>
+              <button class="pill-link" type="submit">{en ? 'Apply for this sprint' : 'Für diesen Sprint anmelden'} <ArrowIcon /></button>
+              <p class="sprint-status" role="status" aria-live="polite"></p>
+            </form>
+          ) : (
+            <div class="sprint-sign-in">
+              <p>{en ? 'Sign in or create an account to apply.' : 'Melde dich an oder erstelle ein Konto, um dich anzumelden.'}</p>
+              <a class="pill-link" href={registerHref}>{en ? 'Create account' : 'Konto erstellen'} <ArrowIcon /></a>
+              <a class="sprint-course-link" href={loginHref}>{en ? 'Already have an account? Sign in' : 'Du hast schon ein Konto? Anmelden'} <ArrowIcon /></a>
+            </div>
+          )}
+        </article>
+      )) : (
+        <div class="sprint-empty">
+          <h2>{en ? 'No open goal sprints yet.' : 'Aktuell gibt es keine offenen Ziel-Sprints.'}</h2>
+          <p>{en
+            ? 'When registration opens, the sprint will appear here. You can also explore online courses.'
+            : 'Sobald die Anmeldung startet, findest du den Sprint hier. Alternativ kannst du dir die Online-Kurse ansehen.'}</p>
+        </div>
+      )}
+    </div>
+  </section>
+</Base>
+
+<script define:vars={{ en }}>
+  document.querySelectorAll('.sprint-registration').forEach((form) => {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const element = form;
+      const status = element.querySelector('[role="status"]');
+      const button = element.querySelector('button[type="submit"]');
+      const sprintId = element.dataset.sprintId;
+      const motivation = new FormData(element).get('motivation');
+      if (!status || !button || !sprintId) return;
+      status.textContent = en ? 'Sending your application…' : 'Anmeldung wird gesendet …';
+      button.disabled = true;
+      try {
+        const response = await fetch(`/api/community/sprints/${encodeURIComponent(sprintId)}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ motivation }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || (en ? 'Could not submit your application.' : 'Die Anmeldung konnte nicht gesendet werden.'));
+        status.textContent = result.message || (en ? 'Your application was submitted.' : 'Deine Anmeldung wurde eingereicht.');
+        button.textContent = en ? 'Application submitted' : 'Anmeldung eingereicht';
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : (en ? 'Could not submit your application.' : 'Die Anmeldung konnte nicht gesendet werden.');
+        button.disabled = false;
+      }
+    });
+  });
+</script>
+
+<style>
+  @import '../../styles/account.css';
+  .sprint-page{max-width:900px}
+  .sprint-access-note{margin-top:24px;padding:14px 16px;border-left:3px solid var(--violet);background:var(--cream)}
+  .sprint-course-link{display:inline-flex;align-items:center;gap:7px;font-weight:700;text-underline-offset:3px}
+  .sprint-list{display:grid;gap:16px;margin-top:30px}
+  .sprint-card,.sprint-empty{padding:clamp(20px,4vw,30px);border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .sprint-card h2,.sprint-empty h2{margin:8px 0;font-size:clamp(1.5rem,3vw,2rem)}
+  .sprint-card>p,.sprint-empty p{color:var(--muted);line-height:1.65}
+  .sprint-dates{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px}
+  .sprint-registration,.sprint-sign-in{display:grid;justify-items:start;gap:12px;margin-top:18px}
+  .sprint-registration label{display:grid;width:100%;gap:7px;font-weight:700}
+  .sprint-registration textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);font:inherit}
+  .sprint-registration textarea:focus{outline:2px solid var(--violet);outline-offset:2px}
+  .sprint-registration .pill-link,.sprint-sign-in .pill-link{border:0;cursor:pointer}
+  .sprint-status{color:var(--muted);font-size:14px}
+  .sprint-status a{color:var(--ink);font-weight:700}
+  @media(max-width:560px){.sprint-page{padding-bottom:50px}}
+</style>

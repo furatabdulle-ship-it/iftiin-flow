@@ -1,5 +1,6 @@
 import type { QueryResultRow } from 'pg';
 import type { ProductCategory } from './product-categories';
+import { hasCommunityAccess } from './community-access';
 import { query } from './db';
 
 export const availableProductTypes = [
@@ -78,7 +79,8 @@ type ProductRow = QueryResultRow & {
   content: ProductRecord['content'];
 };
 
-const productSelection = `
+function productSelection(includeCommunity: boolean) {
+  return `
   SELECT p.id, p.slug, p.product_type, p.store_category, p.name, p.name_en, p.description, p.description_en, p.status,
          p.cover_asset_id,
          COALESCE((
@@ -120,9 +122,11 @@ const productSelection = `
            JOIN content_items ci ON ci.id = pc.content_item_id
            LEFT JOIN storage_assets sa ON sa.id = ci.storage_asset_id AND sa.status = 'ready'
            WHERE pc.product_id = p.id
+             AND (${includeCommunity ? 'TRUE' : "ci.visibility = 'public'"})
          ), '[]'::json) AS content
   FROM products p
-`;
+  `;
+}
 
 function mapProduct(row: ProductRow): ProductRecord {
   return {
@@ -146,7 +150,7 @@ function mapProduct(row: ProductRow): ProductRecord {
 
 export async function listPublicProducts(): Promise<ProductRecord[]> {
   const result = await query<ProductRow>(
-    `${productSelection}
+    `${productSelection(false)}
      WHERE p.status = 'active'
        AND EXISTS (SELECT 1 FROM prices pr WHERE pr.product_id = p.id AND pr.active = TRUE)
        AND p.product_type = ANY($1::text[])
@@ -163,7 +167,7 @@ export async function listPublicProducts(): Promise<ProductRecord[]> {
 
 export async function listAdminProducts(): Promise<ProductRecord[]> {
   const result = await query<ProductRow>(
-    `${productSelection}
+    `${productSelection(true)}
      ORDER BY p.updated_at DESC`,
   );
   return result.rows.map(mapProduct);
@@ -171,7 +175,7 @@ export async function listAdminProducts(): Promise<ProductRecord[]> {
 
 export async function getCheckoutProduct(productId: string, priceId: string): Promise<CheckoutProduct | null> {
   const result = await query<ProductRow>(
-    `${productSelection}
+    `${productSelection(false)}
      WHERE p.id = $1 AND p.status = 'active'
        AND EXISTS (
          SELECT 1 FROM prices selected_price
@@ -208,6 +212,26 @@ export async function hasContentAccess(userId: string, contentItemId: string): P
     [contentItemId, userId],
   );
   return result.rows[0]?.allowed === true;
+}
+
+export async function hasMemberContentAccess(
+  userId: string,
+  contentItemId: string,
+  visibility: 'public' | 'community',
+  role: 'user' | 'admin',
+): Promise<boolean> {
+  if (role === 'admin') return true;
+  if (visibility === 'community') {
+    if (!(await hasCommunityAccess(userId, role))) return false;
+    const productLink = await query<{ requiresPurchase: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM product_content WHERE content_id = $1
+       ) AS "requiresPurchase"`,
+      [contentItemId],
+    );
+    if (!productLink.rows[0]?.requiresPurchase) return true;
+  }
+  return hasContentAccess(userId, contentItemId);
 }
 
 export async function hasArticleAccess(userId: string, articleId: string): Promise<boolean> {
@@ -301,7 +325,8 @@ export async function listGuestLibrary(email: string) {
      JOIN products p ON p.id = oi.product_id
      JOIN prices pr ON pr.id = oi.price_id
      LEFT JOIN order_item_content oic ON oic.order_item_id = oi.id
-     LEFT JOIN content_items ci ON ci.id = oic.content_item_id AND ci.status = 'published'
+     LEFT JOIN content_items ci ON ci.id = oic.content_item_id
+       AND ci.status = 'published' AND ci.visibility = 'public'
      WHERE o.user_id IS NULL AND o.guest_email = $1 AND o.status = 'paid'
        AND (
          pr.billing_interval = 'one_time'

@@ -13,6 +13,7 @@ export const registrationSchema = credentialsSchema.extend({
 
 export const passwordResetRequestSchema = z.object({
   email: z.string().trim().max(254).pipe(z.email()).transform((email) => email.toLowerCase()),
+  next: z.string().max(2048).optional(),
 });
 
 export const passwordResetConfirmSchema = z.object({
@@ -65,6 +66,7 @@ export const contentItemInputSchema = z.object({
   bodyEn: z.string().max(100_000).default(''),
   storageAssetId: z.uuid().nullable(),
   status: z.enum(['draft', 'published', 'archived']),
+  visibility: z.enum(['public', 'community']).default('public'),
   position: z.number().int().min(0).max(10_000),
 }).refine((item) => item.status !== 'published'
   || (item.titleEn.length > 0
@@ -164,6 +166,7 @@ export const articleInputSchema = z.object({
   pillar: z.enum(pillarSlugs),
   format: z.enum(articleFormats),
   status: z.enum(['draft', 'published']),
+  visibility: z.enum(['public', 'community']).default('public'),
   featured: z.boolean(),
   videoUrl: z.url({ protocol: /^https?$/ }).max(2048).nullable(),
   loginRequired: z.boolean(),

@@ -1,0 +1,288 @@
+---
+import AdminIcon from '../../components/AdminIcon.astro';
+import ArrowIcon from '../../components/ArrowIcon.astro';
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect('/login/', 302);
+if (account.role !== 'admin') return Astro.redirect('/account/', 302);
+---
+<Base title="Ziel-Sprints verwalten">
+  <div class="admin-dashboard">
+    <aside class="admin-sidebar">
+      <a class="admin-brand" href="/admin/" aria-label="IFTIIN Admin-Übersicht"><strong>iftiin</strong><span>/ admin</span></a>
+      <nav class="admin-nav" aria-label="Admin-Navigation">
+        <a class="admin-nav-link" href="/admin/"><AdminIcon name="overview" size={20} /><span>Übersicht</span></a>
+        <a class="admin-nav-link" href="/admin/articles/"><AdminIcon name="article" size={20} /><span>Artikel</span></a>
+        <a class="admin-nav-link" href="/admin/products/"><AdminIcon name="product" size={20} /><span>Produkte &amp; Inhalte</span></a>
+        <a class="admin-nav-link is-active" href="/admin/goal-sprints/" aria-current="page"><AdminIcon name="people" size={20} /><span>Ziel-Sprints</span></a>
+        <a class="admin-nav-link" href="/admin/skills-navigator-waitlist/"><AdminIcon name="people" size={20} /><span>Pilotanmeldungen</span></a>
+        <a class="admin-nav-link" href="/admin/studio-inquiries/"><AdminIcon name="mail" size={20} /><span>Anfragen</span></a>
+      </nav>
+      <a class="admin-sidebar-website" href="/"> <AdminIcon name="external" size={19} /><span>Website öffnen</span></a>
+    </aside>
+    <main class="admin-main">
+      <header class="admin-page-header">
+        <div>
+          <p class="admin-eyebrow">Administration / Community</p>
+          <h1>Ziel-Sprints</h1>
+          <p class="admin-intro">Sprints veröffentlichen und Teilnahme-Anfragen bestätigen oder ablehnen.</p>
+        </div>
+        <a class="admin-website-button" href="/">Website öffnen <ArrowIcon size={16} /></a>
+      </header>
+      <section class="sprint-create-panel" aria-labelledby="create-sprint-title">
+        <h2 id="create-sprint-title">Neuen Ziel-Sprint anlegen</h2>
+        <form id="sprint-create-form" class="sprint-admin-form">
+          <label>Titel<input name="title" minlength="3" maxlength="120" required /></label>
+          <label>Beschreibung<textarea name="description" maxlength="2000" rows="3"></textarea></label>
+          <div class="sprint-admin-dates">
+            <label>Startdatum (optional)<input name="startsOn" type="date" /></label>
+            <label>Enddatum (optional)<input name="endsOn" type="date" /></label>
+          </div>
+          <label>Status
+            <select name="status"><option value="draft">Entwurf</option><option value="open">Anmeldung offen</option><option value="closed">Geschlossen</option></select>
+          </label>
+          <button class="admin-primary-button" type="submit">Sprint speichern</button>
+        </form>
+      </section>
+      <p id="sprint-admin-message" class="admin-message" role="status" aria-live="polite"></p>
+      <section class="sprint-admin-list-section" aria-labelledby="sprint-list-heading">
+        <h2 id="sprint-list-heading">Sprints und Anmeldungen</h2>
+        <div id="sprint-admin-list" class="sprint-admin-list" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+</Base>
+
+<script>
+  type Enrollment = {
+    id: string;
+    displayName: string;
+    email: string;
+    motivation: string;
+    status: 'pending' | 'approved' | 'rejected' | 'revoked';
+    requestedAt: string;
+  };
+  type Sprint = {
+    id: string;
+    title: string;
+    description: string;
+    status: 'draft' | 'open' | 'closed';
+    startsOn: string | null;
+    endsOn: string | null;
+    enrollments: Enrollment[];
+  };
+  const form = document.querySelector<HTMLFormElement>('#sprint-create-form')!;
+  const list = document.querySelector<HTMLDivElement>('#sprint-admin-list')!;
+  const message = document.querySelector<HTMLElement>('#sprint-admin-message')!;
+
+  function node<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className = '',
+    text?: string,
+  ): HTMLElementTagNameMap[K] {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+  async function request<T>(url: string, method = 'GET', data?: unknown): Promise<T> {
+    const response = await fetch(url, {
+      method,
+      headers: data ? { 'Content-Type': 'application/json' } : {},
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Anfrage fehlgeschlagen.');
+    return result;
+  }
+  function sprintForm(sprint: Sprint): HTMLFormElement {
+    const edit = node('form', 'sprint-admin-form');
+    const titleLabel = node('label', '', 'Titel');
+    const title = node('input');
+    title.name = 'title';
+    title.required = true;
+    title.minLength = 3;
+    title.maxLength = 120;
+    title.value = sprint.title;
+    titleLabel.append(title);
+    const descriptionLabel = node('label', '', 'Beschreibung');
+    const description = node('textarea');
+    description.name = 'description';
+    description.maxLength = 2000;
+    description.rows = 3;
+    description.value = sprint.description;
+    descriptionLabel.append(description);
+    const dates = node('div', 'sprint-admin-dates');
+    const startLabel = node('label', '', 'Startdatum');
+    const start = node('input');
+    start.type = 'date';
+    start.value = sprint.startsOn?.slice(0, 10) ?? '';
+    startLabel.append(start);
+    const endLabel = node('label', '', 'Enddatum');
+    const end = node('input');
+    end.type = 'date';
+    end.value = sprint.endsOn?.slice(0, 10) ?? '';
+    endLabel.append(end);
+    dates.append(startLabel, endLabel);
+    const statusLabel = node('label', '', 'Status');
+    const status = node('select');
+    for (const [value, label] of [['draft', 'Entwurf'], ['open', 'Anmeldung offen'], ['closed', 'Geschlossen']]) {
+      const option = node('option', '', label);
+      option.value = value;
+      status.append(option);
+    }
+    status.value = sprint.status;
+    statusLabel.append(status);
+    const save = node('button', 'admin-primary-button', 'Änderungen speichern');
+    save.type = 'submit';
+    edit.append(titleLabel, descriptionLabel, dates, statusLabel, save);
+    edit.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      message.textContent = '';
+      try {
+        await request(`/api/admin/goal-sprints/${sprint.id}/`, 'PATCH', {
+          title: title.value,
+          description: description.value,
+          status: status.value,
+          startsOn: start.value || null,
+          endsOn: end.value || null,
+        });
+        await load();
+      } catch (error) {
+        message.textContent = error instanceof Error ? error.message : 'Sprint konnte nicht gespeichert werden.';
+      }
+    });
+    return edit;
+  }
+  function enrollmentCard(enrollment: Enrollment): HTMLElement {
+    const card = node('article', 'sprint-enrollment');
+    const heading = node('div', 'sprint-enrollment-heading');
+    heading.append(
+      node('strong', '', enrollment.displayName),
+      node('span', '', enrollment.email),
+      node('span', `sprint-enrollment-status sprint-status-${enrollment.status}`, enrollment.status),
+    );
+    card.append(heading);
+    if (enrollment.motivation) card.append(node('p', 'sprint-enrollment-motivation', enrollment.motivation));
+    const actions = node('div', 'sprint-enrollment-actions');
+    const options: Array<[Enrollment['status'], string]> = enrollment.status === 'pending'
+      ? [['approved', 'Bestätigen'], ['rejected', 'Ablehnen']]
+      : enrollment.status === 'approved'
+        ? [['revoked', 'Zugang entziehen']]
+        : [['approved', 'Bestätigen']];
+    for (const [status, label] of options) {
+      const button = node('button', 'sprint-review-button', label);
+      button.type = 'button';
+      button.addEventListener('click', async () => {
+        message.textContent = '';
+        try {
+          await request(`/api/admin/goal-sprints/registrations/${enrollment.id}/`, 'PATCH', { status });
+          await load();
+        } catch (error) {
+          message.textContent = error instanceof Error ? error.message : 'Anmeldung konnte nicht bearbeitet werden.';
+        }
+      });
+      actions.append(button);
+    }
+    card.append(actions);
+    return card;
+  }
+  function render(sprint: Sprint): HTMLElement {
+    const card = node('article', 'sprint-admin-card');
+    const header = node('header', 'sprint-admin-card-heading');
+    header.append(node('h3', '', sprint.title), node('span', `sprint-status sprint-status-${sprint.status}`, sprint.status));
+    card.append(header, sprintForm(sprint));
+    const applications = node('section', 'sprint-enrollments');
+    applications.append(node('h4', '', `Anmeldungen (${sprint.enrollments.length})`));
+    const enrollments = [...sprint.enrollments].sort((a, b) =>
+      (a.status === 'pending' ? -1 : 0) - (b.status === 'pending' ? -1 : 0)
+      || b.requestedAt.localeCompare(a.requestedAt),
+    );
+    if (enrollments.length) enrollments.forEach((item) => applications.append(enrollmentCard(item)));
+    else applications.append(node('p', 'sprint-empty-applications', 'Noch keine Anmeldungen.'));
+    card.append(applications);
+    return card;
+  }
+  async function load() {
+    try {
+      const result = await request<{ sprints: Sprint[] }>('/api/admin/goal-sprints/');
+      list.replaceChildren();
+      if (!result.sprints.length) list.append(node('p', '', 'Es gibt noch keine Ziel-Sprints.'));
+      result.sprints.forEach((sprint) => list.append(render(sprint)));
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : 'Ziel-Sprints konnten nicht geladen werden.';
+    }
+  }
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    message.textContent = '';
+    const values = new FormData(form);
+    try {
+      await request('/api/admin/goal-sprints/', 'POST', {
+        title: values.get('title'),
+        description: values.get('description'),
+        status: values.get('status'),
+        startsOn: values.get('startsOn') || null,
+        endsOn: values.get('endsOn') || null,
+      });
+      form.reset();
+      await load();
+    } catch (error) {
+      message.textContent = error instanceof Error ? error.message : 'Sprint konnte nicht angelegt werden.';
+    }
+  });
+  load();
+</script>
+
+<style>
+  @import '../../styles/account.css';
+  :global(body.admin-page){background:#f5f4f0}
+  .admin-dashboard{--admin-ink:#171815;--admin-muted:#66675f;--admin-line:#dedbd4;display:grid;min-height:100vh;grid-template-columns:192px minmax(0,1fr);color:var(--admin-ink);background:#f5f4f0}
+  .admin-sidebar{position:sticky;top:0;display:flex;height:100vh;flex-direction:column;padding:27px 12px 18px;border-right:1px solid var(--admin-line);background:rgba(255,255,255,.36)}
+  .admin-brand{display:flex;align-items:baseline;gap:7px;padding:0 14px;color:var(--admin-ink);font-size:19px;text-decoration:none}
+  .admin-brand strong{font-family:Manrope,Arial,sans-serif;font-weight:800;letter-spacing:-.06em}
+  .admin-brand span{font-size:15px}
+  .admin-nav{display:grid;gap:5px;margin-top:35px}
+  .admin-sidebar-website{display:flex;align-items:center;gap:8px;margin:auto 14px 0;color:var(--admin-ink);font-size:13px;text-decoration:none}
+  .admin-main{min-width:0;max-width:1280px;margin:0 auto;padding:clamp(24px,5vw,56px)}
+  .admin-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:28px}
+  .admin-eyebrow{margin:0;color:#66675f;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+  .admin-page-header h1{margin:8px 0;font-size:clamp(2rem,4vw,3rem)}
+  .admin-intro{margin:0;color:#66675f}
+  .admin-website-button,.admin-sidebar-website{display:inline-flex;align-items:center;gap:8px}
+  .admin-nav-link{display:flex;align-items:center;gap:10px;padding:11px 12px;color:inherit;text-decoration:none}
+  .admin-nav-link:hover,.admin-nav-link.is-active{background:#e4e6d1}
+  .sprint-create-panel,.sprint-admin-card{padding:clamp(18px,3vw,26px);border:1px solid #dedbd4;border-radius:14px;background:#fff}
+  .sprint-create-panel h2,.sprint-admin-list-section>h2{margin:0 0 18px;font-size:22px}
+  .sprint-admin-form{display:grid;gap:12px}
+  .sprint-admin-form label{display:grid;gap:6px;font-size:13px;font-weight:700}
+  .sprint-admin-form input,.sprint-admin-form textarea,.sprint-admin-form select{width:100%;min-width:0;padding:10px 12px;border:1px solid #dedbd4;border-radius:8px;background:#fff;color:#171815;font:inherit}
+  .sprint-admin-form input:focus,.sprint-admin-form textarea:focus,.sprint-admin-form select:focus{outline:2px solid var(--violet);outline-offset:2px}
+  .sprint-admin-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .admin-primary-button,.sprint-review-button{justify-self:start;padding:10px 15px;border:1px solid var(--violet);border-radius:999px;background:var(--violet);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+  .sprint-admin-list-section{margin-top:32px}
+  .sprint-admin-list{display:grid;gap:16px}
+  .sprint-admin-card-heading,.sprint-enrollment-heading{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+  .sprint-admin-card-heading{justify-content:space-between;margin-bottom:16px}
+  .sprint-admin-card-heading h3{margin:0;font-size:20px}
+  .sprint-status{padding:4px 8px;border-radius:999px;background:#efede6;color:#4f5049;font-size:12px;font-weight:700}
+  .sprint-status-open,.sprint-status-approved{background:#e8f1e7;color:#335f39}
+  .sprint-status-closed,.sprint-status-rejected,.sprint-status-revoked{background:#f8e8e5;color:#8f342b}
+  .sprint-enrollments{margin-top:24px;padding-top:18px;border-top:1px solid #dedbd4}
+  .sprint-enrollments h4{margin:0 0 12px}
+  .sprint-enrollment{display:grid;gap:8px;padding:14px 0;border-top:1px solid #efede6}
+  .sprint-enrollment-heading span{color:#66675f;font-size:13px}
+  .sprint-enrollment-heading .sprint-enrollment-status{padding:3px 7px;border-radius:999px;background:#efede6;text-transform:capitalize}
+  .sprint-enrollment-heading .sprint-status-pending{background:#fff1cf;color:#76530a}
+  .sprint-enrollment-heading .sprint-status-approved{background:#e8f1e7;color:#335f39}
+  .sprint-enrollment-motivation{margin:0;white-space:pre-wrap;line-height:1.55}
+  .sprint-enrollment-actions{display:flex;flex-wrap:wrap;gap:8px}
+  .sprint-review-button{padding:7px 12px;background:transparent;color:#171815;border-color:#dedbd4;font-size:13px}
+  .sprint-empty-applications{color:#66675f}
+  .admin-message{min-height:1.5em;color:#9b2c2c}
+  @media(max-width:850px){.admin-dashboard{grid-template-columns:160px minmax(0,1fr)}.admin-main{padding:24px 20px}}
+  @media(max-width:650px){.admin-dashboard{display:block}.admin-sidebar{position:static;height:auto;padding:13px 15px 10px;border-right:0;border-bottom:1px solid #dedbd4}.admin-brand{padding:0 2px;font-size:18px}.admin-nav{display:flex;gap:5px;overflow-x:auto;margin:12px -15px 0;padding:0 15px 3px}.admin-nav-link{flex:none;padding:9px;font-size:12px}.admin-sidebar-website{display:none}.admin-main{padding:24px 16px}.admin-page-header{flex-direction:column}.sprint-admin-dates{grid-template-columns:1fr}}
+  @media(max-width:600px){.admin-main{padding:24px 18px}.admin-page-header{flex-direction:column}.sprint-admin-dates{grid-template-columns:1fr}}
+</style>

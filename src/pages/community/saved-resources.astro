@@ -1,0 +1,52 @@
+---
+import ArrowIcon from '../../components/ArrowIcon.astro';
+import SaveResourceButton from '../../components/SaveResourceButton.astro';
+import Base from '../../layouts/Base.astro';
+import { getSessionAccount } from '../../lib/auth';
+import { localeHref } from '../../lib/i18n';
+import { listSavedResources } from '../../lib/saved-resources';
+
+const locale = Astro.locals.locale;
+const en = locale === 'en';
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (!account) return Astro.redirect(localeHref('/login/?next=/community/saved-resources/', locale), 302);
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+const resources = await listSavedResources(account.id, account.role === 'admin');
+---
+<Base title={en ? 'My saved resources' : 'Meine gespeicherten Ressourcen'}>
+  <section class="interior-hero wrap community-hero">
+    <div class="section-label">{en ? 'Your private collection' : 'Deine private Sammlung'}</div>
+    <h1>{en ? 'Saved resources.' : 'Gespeicherte Ressourcen.'}</h1>
+    <p>{en
+      ? 'Only you can see your saved resources. Remove an item at any time.'
+      : 'Nur du kannst deine gespeicherten Ressourcen sehen. Du kannst Einträge jederzeit entfernen.'}</p>
+    <p><a class="text-link" href={localeHref('/community/profile/', locale)}>{en ? 'Back to community profile' : 'Zurück zum Community-Profil'} <ArrowIcon /></a></p>
+    {resources.length ? <div class="saved-resource-list">
+      {resources.map((resource) => <article class="saved-resource-card">
+        <div>
+          <div class="section-label">{resource.resourceType === 'article' ? (en ? 'Article' : 'Artikel') : (en ? 'Learning resource' : 'Lernressource')}</div>
+          <h2><a href={localeHref(resource.resourceType === 'article'
+            ? `/articles/${resource.slug}/`
+            : resource.contentType === 'download'
+              ? `/api/content/${resource.resourceId}/file/`
+              : `/learn/${resource.slug}/`, locale)}>{en ? resource.titleEn ?? resource.title : resource.title}</a></h2>
+          {(en ? resource.descriptionEn ?? resource.description : resource.description) && <p>{en ? resource.descriptionEn ?? resource.description : resource.description}</p>}
+        </div>
+        <SaveResourceButton resourceType={resource.resourceType} resourceId={resource.resourceId} />
+      </article>)}
+    </div> : <p class="community-empty">{en
+      ? 'You have not saved any resources yet.'
+      : 'Du hast noch keine Ressourcen gespeichert.'}</p>}
+  </section>
+</Base>
+
+<style>
+  @import '../../styles/account.css';
+  .saved-resource-list{display:grid;gap:16px;margin-top:30px}
+  .saved-resource-card{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .saved-resource-card h2{margin:8px 0;font-size:22px}
+  .saved-resource-card h2 a{color:inherit;text-decoration:underline;text-decoration-color:var(--violet);text-underline-offset:4px}
+  .saved-resource-card p{margin:8px 0;color:var(--muted);line-height:1.55}
+  @media(max-width:600px){.saved-resource-card{align-items:flex-start;flex-direction:column}}
+</style>

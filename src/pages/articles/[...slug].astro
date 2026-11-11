@@ -5,24 +5,36 @@ import { renderArticleMarkdown, getPublishedArticle } from '../../lib/articles';
 import { formatDate } from '../../lib/content';
 import { getSessionAccount } from '../../lib/auth';
 import { hasArticleAccess, hasGuestArticleAccess } from '../../lib/commerce';
+import { hasCommunityAccess } from '../../lib/community-access';
 import { getGuestAccessEmail } from '../../lib/guest-access';
 import { getVideoEmbedUrl } from '../../lib/validation';
 import { localeHref, localizedFormatNames, localizedPillars, t } from '../../lib/i18n';
 
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
-const article = Astro.params.slug ? await getPublishedArticle(Astro.params.slug, locale) : null;
-if (article?.data.loginRequired || article?.data.requiresPurchase) {
+const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
+if (account) Astro.response.headers.set('Cache-Control', 'private, no-store');
+const article = Astro.params.slug ? await getPublishedArticle(Astro.params.slug, locale, Boolean(account)) : null;
+if (article?.data.loginRequired || article?.data.requiresPurchase || article?.data.visibility === 'community') {
   Astro.response.headers.set('Cache-Control', 'private, no-store');
-  const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
   const guestEmail = await getGuestAccessEmail(Astro.cookies.get('iftiin_guest_access')?.value);
+  const communityAllowed = Boolean(
+    article.data.visibility !== 'community'
+    || account && await hasCommunityAccess(account.id, account.role),
+  );
+  if (article.data.visibility === 'community' && account && !communityAllowed) {
+    return Astro.redirect(localeHref('/community/', locale), 302);
+  }
   const accountAllowed = Boolean(account && (
     account.role === 'admin' ||
-    !article.data.requiresPurchase ||
-    await hasArticleAccess(account.id, article.id)
+    communityAllowed && (
+      !article.data.requiresPurchase ||
+      await hasArticleAccess(account.id, article.id)
+    )
   ));
   const guestAllowed = Boolean(
     guestEmail &&
+    article.data.visibility === 'public' &&
     article.data.requiresPurchase &&
     await hasGuestArticleAccess(guestEmail, article.id),
   );

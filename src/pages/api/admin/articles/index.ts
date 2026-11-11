@@ -40,14 +40,15 @@ export const POST: APIRoute = async (context) => {
       `INSERT INTO articles
         (slug, title, title_en, description, description_en, body, body_en,
          date, updated, pillar, format, status, featured, video_url, login_required,
-         requires_purchase, tags, sources)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+         requires_purchase, tags, sources, visibility)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
        RETURNING id`,
       [
         article.slug, article.title, article.titleEn, article.description, article.descriptionEn,
         article.body, article.bodyEn, article.date, article.updated, article.pillar,
         article.format, article.status, article.featured, article.videoUrl,
         article.loginRequired, article.requiresPurchase, article.tags, JSON.stringify(article.sources),
+        article.visibility,
       ],
     );
     return json({ id: result.rows[0].id }, 201);

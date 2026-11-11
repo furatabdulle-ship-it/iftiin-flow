@@ -4,19 +4,25 @@ import AuthForm from '../components/AuthForm.astro';
 import Base from '../layouts/Base.astro';
 import { getSessionAccount } from '../lib/auth';
 import { localeHref, t } from '../lib/i18n';
+import { safeNextPath } from '../lib/safe-next';
 
 const locale = Astro.locals.locale;
 const copy = (key: Parameters<typeof t>[1]) => t(locale, key);
 const account = await getSessionAccount(Astro.cookies.get('iftiin_session')?.value);
 if (account) return Astro.redirect(localeHref(account.role === 'admin' ? '/admin/' : '/account/', locale), 302);
+const safeNext = safeNextPath(Astro.url.searchParams.get('next'));
+const redirectTo = safeNext ?? localeHref('/account/', locale);
+const loginPath = safeNext ? `/login/?next=${encodeURIComponent(safeNext)}` : '/login/';
 ---
 <Base title={copy('auth.registerTitle')} description={copy('auth.registerDescription')}>
   <section class="interior-hero wrap account-hero">
     <div class="section-label">{copy('auth.registerLabel')}</div>
-    <h1>{copy('auth.registerHeading')}</h1>
-    <p>{copy('auth.registerPrompt')}</p>
-    <AuthForm mode="register" />
-    <p class="account-switch">{copy('auth.alreadyRegistered')} <a href={localeHref('/login/', locale)}>{copy('auth.login')} <ArrowIcon /></a></p>
+    <h1>{locale === 'en' ? 'Join the community.' : 'Werde Teil der Community.'}</h1>
+    <p>{locale === 'en'
+      ? 'Explore ideas, develop your skills and connect with curious minds.'
+      : 'Entdecke Ideen, entwickle deine Fähigkeiten und vernetze dich mit neugierigen Menschen.'}</p>
+    <AuthForm mode="register" redirectTo={redirectTo} />
+    <p class="account-switch">{locale === 'en' ? 'Already a member? ' : 'Schon Mitglied? '}<a href={localeHref(loginPath, locale)}>{locale === 'en' ? 'Sign in.' : 'Melde dich an.'} <ArrowIcon /></a></p>
   </section>
 </Base>
 

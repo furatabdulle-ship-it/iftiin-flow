@@ -109,13 +109,21 @@ async function sendPlainTextEmail(
   if (!response.ok) throw new Error(`Gmail API rejected the email (HTTP ${response.status}).`);
 }
 
-export async function sendPasswordResetEmail(email: string, token: string, locale: Locale = 'de'): Promise<void> {
+export async function sendPasswordResetEmail(
+  email: string,
+  token: string,
+  locale: Locale = 'de',
+  next?: string,
+): Promise<void> {
   const config = getPasswordResetEmailConfig();
   if (!config) throw new Error('Gmail API password reset settings are missing or invalid.');
 
   const resetUrl = new URL('/reset-password/', config.siteUrl);
   resetUrl.searchParams.set('token', token);
   resetUrl.searchParams.set('lang', locale);
+  if (next?.startsWith('/') && !next.startsWith('//') && !next.includes('\\')) {
+    resetUrl.searchParams.set('next', next);
+  }
   const content = locale === 'en'
     ? [
         'You requested a password reset.',

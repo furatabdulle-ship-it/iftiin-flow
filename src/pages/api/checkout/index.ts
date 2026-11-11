@@ -32,6 +32,9 @@ export const POST: APIRoute = async (context) => {
     }
     const product = await getCheckoutProduct(parsed.data.productId, parsed.data.priceId);
     if (!product) return json({ error: copy('store.productUnavailable') }, 404);
+    if (!account && product.productType === 'online_course') {
+      return json({ error: copy('store.courseAccountRequired') }, 401);
+    }
     const result = await createCheckoutSession(account?.id ?? null, email, product, context.locals.locale);
     return json(result);
   } catch (error) {
