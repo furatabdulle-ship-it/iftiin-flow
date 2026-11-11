@@ -14,7 +14,7 @@ export type GoalSprint = {
 export async function listOpenGoalSprints(userId: string | null): Promise<GoalSprint[]> {
   const result = await query<GoalSprint>(
     `SELECT sprint.id, sprint.title, sprint.description,
-            sprint.starts_on AS "startsOn", sprint.ends_on AS "endsOn",
+            sprint.starts_on::text AS "startsOn", sprint.ends_on::text AS "endsOn",
             enrollment.status AS "registrationStatus"
      FROM goal_sprints sprint
      LEFT JOIN community_goal_sprint_enrollments enrollment
