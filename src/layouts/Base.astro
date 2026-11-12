@@ -9,7 +9,7 @@ import '../styles/home.css';
 import '../styles/brand.css';
 import '../styles/language.css';
 const locale = Astro.locals.locale;
-const { title, home = false } = Astro.props;
+const { title, home = false, communityLanding = false } = Astro.props;
 const description = Astro.props.description ?? t(locale, 'home.metaDescription');
 const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — ${t(locale, 'home.metaTitle')}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -37,7 +37,7 @@ const isAdminPage = Astro.url.pathname.startsWith('/admin/');
     <link rel="apple-touch-icon" sizes="180x180" href={root('apple-touch-icon.png')} />
     <title>{pageTitle}</title>
   </head>
-  <body class:list={{ 'home-page': home, 'admin-page': isAdminPage }}>
+  <body class:list={{ 'home-page': home, 'admin-page': isAdminPage, 'community-landing-page': communityLanding }}>
     <a class="skip" href="#content">{t(locale, 'common.skip')}</a>
     {!home && !isAdminPage && <div class="announcement">{t(locale, 'common.announcement')} <span aria-hidden="true"><ArrowIcon /></span></div>}
     {!isAdminPage && <header class="site-header wrap">

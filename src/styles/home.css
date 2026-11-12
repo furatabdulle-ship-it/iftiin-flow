@@ -169,7 +169,7 @@
   padding: 32px var(--gutter) 36px;
 }
 .hero-layout.hero-layout--single { grid-template-columns: minmax(0, 1fr); }
-.hero-layout--single .hero-copy { max-width: 800px; }
+.hero-layout--single .hero-copy { max-width: 1000px; }
 .hero-copy {
   position: relative;
   z-index: 1;
@@ -182,10 +182,11 @@
   font: 800 clamp(58px, 7.2vw, 104px)/.93 Manrope, Arial, sans-serif;
   letter-spacing: -.065em;
 }
-.hero-title--statement {
-  max-width: 15ch;
+.hero.hero--statement .hero-title--statement {
+  max-width: none;
   font-size: clamp(52px, 6.6vw, 88px);
   line-height: 1.03;
+  white-space: pre-line;
 }
 .hero-subheading {
   margin: 20px 0 0;
@@ -824,7 +825,7 @@
   .orbit { top: -200px; right: -270px; left: auto; width: 540px; height: 540px; margin: 0; opacity: .13; }
   .orbit-star { --sun-scale: .68; --sun-pulse-scale: .704; }
   .hero-title { font-size: clamp(56px, 13vw, 88px); }
-  .hero-title--statement { font-size: clamp(38px, 10.5vw, 56px); }
+  .hero.hero--statement .hero-title--statement { font-size: clamp(24px, 8vw, 36px); }
   .outline { -webkit-text-stroke-width: 1.5px; }
   .hero-foot { grid-template-columns: 1fr 56px 1fr; gap: 8px; }
   .hero-foot-side { font-size: 8px; letter-spacing: .04em; }

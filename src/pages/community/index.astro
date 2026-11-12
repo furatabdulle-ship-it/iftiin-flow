@@ -145,7 +145,7 @@ if (account && hasAccess) {
 const firstName = account?.displayName.trim().split(/\s+/)[0] || (locale === 'en' ? 'there' : 'dir');
 ---
 
-<Base title={localized('community.metaTitle')} description={localized('community.metaDescription')}>
+<Base title={localized('community.metaTitle')} description={localized('community.metaDescription')} communityLanding={!hasAccess}>
   {!hasAccess ? (
     <section class="community-public">
       <div class="wrap community-public-inner">
@@ -154,40 +154,75 @@ const firstName = account?.displayName.trim().split(/\s+/)[0] || (locale === 'en
           <h1>{localized('community.landingHeadline')}</h1>
           <p class="community-lede">{localized('community.landingDescription')}</p>
           <div class="community-actions">
-            <a class="pill-link" href={root('explore/')}>{localized('community.exploreCta')}<ArrowIcon /></a>
-            <a class="community-secondary-link" href={root('store/?type=online_course')}>{localized('community.courseCta')}<ArrowIcon /></a>
-            <a class="community-secondary-link" href={root('community/sprints/')}>{localized('community.sprintsCta')}<ArrowIcon /></a>
-            {!account && <a class="community-secondary-link" href={root('login/?next=%2Fcommunity%2F')}>{localized('community.signInCta')}<ArrowIcon /></a>}
+            <a class="pill-link community-primary-cta" href={account ? '#community-start' : root('register/?next=%2Fcommunity%2F')}>{localized('community.joinCta')}<ArrowIcon /></a>
+            {!account && <a class="community-secondary-link community-sign-in-link" href={root('login/?next=%2Fcommunity%2F')}>{localized('community.signInCta')}<ArrowIcon /></a>}
           </div>
-          <p class="community-privacy-note">{localized('community.accessRequirement')}</p>
-          <p class="community-privacy-note">{localized('community.privateProfileNote')}</p>
         </div>
         <div class="community-public-art" aria-hidden="true">
           <span class="community-art-orbit community-art-orbit-one"></span>
           <span class="community-art-orbit community-art-orbit-two"></span>
+          <span class="community-art-orbit community-art-orbit-three"></span>
+          <span class="community-art-node community-art-node-one"></span>
+          <span class="community-art-node community-art-node-two"></span>
+          <span class="community-art-node community-art-node-three"></span>
           <span class="community-art-center">IFTIIN</span>
+          <span class="community-art-label community-art-label-skills">{localized('community.orbitSkills')}</span>
+          <span class="community-art-label community-art-label-knowledge">{localized('community.orbitKnowledge')}</span>
+          <span class="community-art-label community-art-label-paths">{localized('community.orbitPaths')}</span>
         </div>
       </div>
-      <div class="wrap community-pillars">
-        <article class="community-pillar">
-          <span class="community-pillar-number">01</span>
+      <div class="wrap community-start" id="community-start">
+        <h2 class="community-start-title">{localized('community.startTitle')}</h2>
+        <div class="community-pillars">
+          <article class="community-pillar community-pillar--explore">
+            <span class="community-pillar-number">{localized('community.exploreTag')}</span>
+            <span class="community-pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 56 48" fill="none">
+                <path d="M4 7c9-3 17-1 24 4v31c-7-5-15-6-24-3V7Z" />
+                <path d="M52 7c-9-3-17-1-24 4v31c7-5 15-6 24-3V7Z" />
+              </svg>
+            </span>
           <h2>{localized('community.knowledgeTitle')}</h2>
-          <p>{localized('community.knowledgeDescription')}</p>
-          <div class="community-pillar-topics"><span>Future Skills</span><span>AI Literacy</span><span>Media Literacy</span><span>Storytelling &amp; Communication</span></div>
-          <a href={root('explore/')}>{localized('community.exploreCta')}<ArrowIcon /></a>
-        </article>
-        <article class="community-pillar">
-          <span class="community-pillar-number">02</span>
-          <h2>{localized('community.exchangeTitle')}</h2>
-          <p>{localized('community.exchangeDescription')}</p>
-          <a href={root('community/sprints/')}>{localized('community.sprintsCta')}<ArrowIcon /></a>
-        </article>
-        <article class="community-pillar">
-          <span class="community-pillar-number">03</span>
-          <h2>{localized('community.actionTitle')}</h2>
-          <p>{localized('community.actionDescription')}</p>
-          <a href={root('store/?type=online_course')}>{localized('community.courseCta')}<ArrowIcon /></a>
-        </article>
+            <p>{localized('community.exploreCardDescription')}</p>
+            <a href={root('explore/')}>{localized('community.exploreCardCta')}<ArrowIcon /></a>
+          </article>
+          <article class="community-pillar community-pillar--course">
+            <span class="community-pillar-number">{localized('community.courseTag')}</span>
+            <span class="community-pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" fill="none">
+                <path d="M32 5v13m0 28v13M5 32h13m28 0h13M13 13l9 9m20 20 9 9m0-38-9 9M22 42l-9 9" />
+                <circle cx="32" cy="32" r="4" />
+              </svg>
+            </span>
+            <h2>{localized('community.courseCardTitle')}</h2>
+            <p>{localized('community.courseCardDescription')}</p>
+            <a href={root('store/?type=online_course')}>{localized('community.courseCardCta')}<ArrowIcon /></a>
+          </article>
+          <article class="community-pillar community-pillar--sprints">
+            <span class="community-pillar-number">{localized('community.sprintsTag')}</span>
+            <span class="community-pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" fill="none">
+                <circle cx="32" cy="32" r="24" />
+                <circle cx="32" cy="32" r="14" />
+                <circle cx="32" cy="32" r="4" />
+              </svg>
+            </span>
+            <h2>{localized('community.sprintCardTitle')}</h2>
+            <p>{localized('community.sprintCardDescription')}</p>
+            <a href={root('community/sprints/')}>{localized('community.sprintsCta')}<ArrowIcon /></a>
+          </article>
+        </div>
+      </div>
+      <div class="wrap community-public-notes">
+        <p class="community-access-note">{localized('community.accessRequirement')}</p>
+        <span class="community-note-divider" aria-hidden="true"></span>
+        <p class="community-privacy-note">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <rect x="4" y="8" width="12" height="9" rx="1" />
+            <path d="M6.5 8V5.8a3.5 3.5 0 0 1 7 0V8" />
+          </svg>
+          <span>{localized('community.privateProfileNote')}</span>
+        </p>
       </div>
     </section>
   ) : (
@@ -299,32 +334,69 @@ const firstName = account?.displayName.trim().split(/\s+/)[0] || (locale === 'en
 </Base>
 
 <style>
-  .community-public { min-height: calc(100vh - 130px); overflow: hidden; background: var(--cream); }
-  .community-public-inner { display: grid; min-height: 580px; grid-template-columns: minmax(0, 1fr) minmax(300px, .75fr); align-items: center; gap: clamp(2rem, 8vw, 8rem); padding-block: clamp(4rem, 8vw, 7rem); }
-  .community-public-copy { max-width: 760px; }
-  .community-public-copy h1 { max-width: 15ch; margin: 1.15rem 0 1.5rem; font: 800 clamp(3rem, 5.7vw, 5.4rem)/1 Manrope, Arial, sans-serif; letter-spacing: -.075em; }
-  .community-lede { max-width: 620px; color: var(--muted); font-size: clamp(1.05rem, 1.5vw, 1.25rem); line-height: 1.75; }
-  .community-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.6rem; margin-top: 2rem; }
-  .community-actions .pill-link { gap: 2rem; }
+  :global(body.community-landing-page .announcement) { display: none; }
+  :global(body.community-landing-page .site-header .community-nav-link) { border-bottom: 3px solid var(--violet); }
+  .community-public { min-height: calc(100vh - 90px); overflow: hidden; background: var(--cream); color: var(--ink); }
+  .community-public-inner { display: grid; min-height: 0; grid-template-columns: minmax(0, .95fr) minmax(360px, 1fr); align-items: center; gap: clamp(2rem, 5vw, 4.5rem); padding-block: clamp(2.5rem, 5vw, 4rem) 1.5rem; }
+  .community-public-copy { max-width: 620px; }
+  .community-public-copy .section-label { margin: 0; color: var(--violet); }
+  .community-public-copy h1 { max-width: 15ch; margin: 1.1rem 0 1rem; font: 800 clamp(2.75rem, 3.8vw, 3.35rem)/1.03 Manrope, Arial, sans-serif; letter-spacing: -.075em; }
+  .community-lede { max-width: 540px; margin: 0; color: var(--muted); font-size: clamp(1.05rem, 1.4vw, 1.2rem); line-height: 1.6; }
+  .community-actions { display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; margin-top: 1.6rem; }
+  .community-primary-cta { gap: 2rem; background: var(--ink); color: var(--paper); }
+  .community-primary-cta svg { color: var(--yellow); }
+  .community-primary-cta:hover { background: #292a2a; color: var(--paper); }
+  .community-sign-in-link { color: var(--ink); font-size: .88rem; }
   .community-secondary-link,.community-section-heading > a,.community-resource-card a,.community-empty-state a,.community-profile-shortcut {
     display: inline-flex; align-items: center; gap: .55rem; font-size: .9rem; font-weight: 700; text-underline-offset: .2em;
   }
   .community-secondary-link:hover,.community-section-heading > a:hover,.community-resource-card a:hover,.community-empty-state a:hover,.community-profile-shortcut:hover { color: var(--violet); text-decoration: underline; }
-  .community-privacy-note { margin: 1.25rem 0 0; color: var(--muted); font-size: .82rem; }
-  .community-public-art { position: relative; display: grid; width: min(100%, 430px); aspect-ratio: 1; place-items: center; justify-self: center; }
-  .community-art-orbit { position: absolute; width: 76%; aspect-ratio: 1; border: 1px solid var(--violet); border-radius: 50%; }
-  .community-art-orbit-one { transform: scaleX(.48) rotate(40deg); }
-  .community-art-orbit-two { transform: scaleX(.48) rotate(-40deg); }
-  .community-art-center { display: grid; width: 38%; aspect-ratio: 1; place-items: center; border-radius: 50%; background: var(--ink); color: var(--yellow); font: 800 clamp(1rem, 2vw, 1.5rem) Manrope, Arial, sans-serif; letter-spacing: .12em; }
-  .community-pillars { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; padding-block: 1.5rem clamp(3.5rem,7vw,6rem); }
-  .community-pillar { min-width: 0; padding: clamp(1.3rem,2.4vw,2rem); border: 1px solid var(--line); background: var(--paper); }
-  .community-pillar-number { color: var(--violet); font-size: .72rem; font-weight: 800; letter-spacing: .1em; }
-  .community-pillar h2 { margin: 1.1rem 0 .65rem; font: 750 clamp(1.35rem,2vw,1.8rem)/1.15 Manrope,Arial,sans-serif; letter-spacing: -.04em; }
-  .community-pillar p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.7; }
-  .community-pillar > a { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1.2rem; font-size: .84rem; font-weight: 700; text-underline-offset: .2em; }
+  .community-public-art { position: relative; display: grid; width: min(100%, 470px); aspect-ratio: 1; place-items: center; justify-self: center; }
+  .community-art-orbit { position: absolute; width: 82%; aspect-ratio: 1; border: 1.5px solid var(--violet); border-radius: 50%; }
+  .community-art-orbit-one { animation: community-orbit-one 28s linear infinite; }
+  .community-art-orbit-two { animation: community-orbit-two 36s linear infinite; }
+  .community-art-orbit-three { animation: community-orbit-three 44s linear infinite; }
+  @keyframes community-orbit-one {
+    from { transform: rotate(38deg) scaleX(.62); }
+    to { transform: rotate(398deg) scaleX(.62); }
+  }
+  @keyframes community-orbit-two {
+    from { transform: rotate(-38deg) scaleX(.62); }
+    to { transform: rotate(322deg) scaleX(.62); }
+  }
+  @keyframes community-orbit-three {
+    from { transform: rotate(90deg) scaleX(.62); }
+    to { transform: rotate(450deg) scaleX(.62); }
+  }
+  .community-art-center { z-index: 1; display: grid; width: 38%; aspect-ratio: 1; place-items: center; border-radius: 50%; background: var(--ink); color: var(--yellow); font: 800 clamp(1.2rem, 2.4vw, 1.7rem) Manrope, Arial, sans-serif; letter-spacing: .12em; }
+  .community-art-node { position: absolute; z-index: 2; width: 13px; aspect-ratio: 1; border-radius: 50%; background: var(--violet); }
+  .community-art-node-one { top: 24%; left: 22%; }
+  .community-art-node-two { top: 39%; right: 13%; }
+  .community-art-node-three { bottom: 17%; left: 47%; width: 20px; background: var(--yellow); }
+  .community-art-label { position: absolute; z-index: 3; display: inline-flex; width: max-content; padding: .5rem .8rem; border: 1px solid var(--ink); border-radius: 999px; background: var(--paper); color: var(--ink); font-size: .8rem; font-weight: 750; white-space: nowrap; }
+  .community-art-label-skills { top: 9%; left: 8%; }
+  .community-art-label-knowledge { top: 29%; right: -2%; }
+  .community-art-label-paths { right: 0; bottom: 9%; }
+  .community-start { padding-bottom: .3rem; }
+  .community-start-title { margin: 0 0 1.1rem; font: 750 clamp(1.7rem, 2.5vw, 2.15rem)/1.12 Manrope, Arial, sans-serif; letter-spacing: -.05em; }
+  .community-pillars { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; padding: 0; }
+  .community-pillar { position: relative; display: flex; min-width: 0; min-height: 205px; flex-direction: column; align-items: flex-start; padding: 1.3rem; border: 2px solid var(--line); border-radius: 16px; background: var(--paper); transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+  .community-pillar:hover,.community-pillar:focus-within { transform: translateY(-4px); border-color: var(--violet); box-shadow: 0 12px 28px rgba(24,25,24,.08); }
+  .community-pillar-number { color: var(--violet); font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+  .community-pillar-icon { position: absolute; top: 1.1rem; right: 1.2rem; width: 2.5rem; height: 2.5rem; color: var(--violet); }
+  .community-pillar-icon svg { display: block; width: 100%; height: 100%; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .community-pillar h2 { max-width: 100%; margin: 1.25rem 0 .55rem; font: 750 clamp(1.3rem,1.8vw,1.6rem)/1.15 Manrope,Arial,sans-serif; letter-spacing: -.04em; }
+  .community-pillar p { max-width: 42ch; margin: 0 0 .9rem; color: var(--muted); font-size: .88rem; line-height: 1.6; }
+  .community-pillar > a { display: inline-flex; align-items: center; gap: .5rem; margin-top: auto; font-size: .84rem; font-weight: 700; text-underline-offset: .2em; }
   .community-pillar > a:hover { color: var(--violet); text-decoration: underline; }
-  .community-pillar-topics { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1rem; }
-  .community-pillar-topics span { padding: .3rem .55rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .7rem; font-weight: 700; }
+  .community-pillar > a svg { transition: transform 180ms ease; }
+  .community-pillar:hover > a svg,.community-pillar:focus-within > a svg { transform: translate(2px,-2px); }
+  .community-pillar--course .community-pillar-icon,.community-pillar--course > a,.community-pillar--sprints .community-pillar-icon,.community-pillar--sprints > a { color: var(--violet); }
+  .community-public-notes { display: flex; align-items: center; gap: 1.2rem; padding-block: 1.25rem 2rem; }
+  .community-access-note,.community-privacy-note { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+  .community-note-divider { width: 1px; height: 1.25rem; flex: 0 0 auto; background: var(--line); }
+  .community-privacy-note { display: inline-flex; align-items: center; gap: .55rem; }
+  .community-privacy-note svg { width: 1rem; height: 1rem; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.6; }
   .community-welcome { background: var(--ink); color: var(--paper); }
   .community-welcome-inner { display: flex; align-items: end; justify-content: space-between; gap: 2rem; padding-block: clamp(3.5rem, 7vw, 6rem); }
   .community-welcome .section-label { color: var(--yellow); }
@@ -371,15 +443,19 @@ const firstName = account?.displayName.trim().split(/\s+/)[0] || (locale === 'en
   .community-connect-card > p { color: rgba(255,255,255,.7); }
   .community-connect-card .community-card-link { color: var(--yellow); }
   @media (max-width: 800px) {
-    .community-public-inner { min-height: 0; grid-template-columns: 1fr; gap: 1rem; }
-    .community-public-art { width: min(72%, 300px); }
+    .community-public-inner { min-height: 0; grid-template-columns: 1fr; gap: .5rem; }
+    .community-public-art { width: min(72vw, 330px); margin-top: 1rem; }
     .community-pillars { grid-template-columns: 1fr; }
+    .community-public-notes { align-items: flex-start; flex-direction: column; gap: .7rem; }
+    .community-note-divider { display: none; }
     .community-resource-grid,.community-personal-grid,.community-discussion-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   }
   @media (max-width: 560px) {
-    .community-public-inner { padding-block: 3.5rem 2rem; }
-    .community-public-copy h1 { font-size: clamp(3rem,12vw,4.2rem); }
-    .community-pillars { padding-block: .5rem 3.5rem; }
+    .community-public-inner { padding-block: 2.5rem 1rem; }
+    .community-public-copy h1 { max-width: none; font-size: clamp(2.5rem,10vw,3.1rem); }
+    .community-public-art { width: min(82vw, 300px); }
+    .community-pillars { padding-block: 0; }
+    .community-public-notes { padding-block: 1rem 2rem; }
     .community-welcome-inner { align-items: flex-start; flex-direction: column; }
     .community-profile-shortcut { align-self: flex-start; }
     .community-section-heading { align-items: flex-start; flex-direction: column; }
@@ -388,6 +464,8 @@ const firstName = account?.displayName.trim().split(/\s+/)[0] || (locale === 'en
     .community-empty-state { align-items: flex-start; flex-direction: column; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .community-personal-card { transition: none; }
+    .community-art-orbit { animation: none; }
+    .community-pillar,.community-pillar > a svg,.community-personal-card { transition: none; }
+    .community-pillar:hover,.community-pillar:focus-within { transform: none; box-shadow: none; }
   }
 </style>
